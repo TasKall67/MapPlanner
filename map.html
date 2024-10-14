@@ -20,7 +20,7 @@
     const map = new mapboxgl.Map({
         container: 'map',
         style: 'mapbox://styles/mapbox/streets-v11',
-        center: [63.801794216165074, 38.04398429264144], // Starting position [lng, lat]
+        center: [13.801794216165074, 38.04398429264144], // Starting position [lng, lat]
         zoom: 14
     });
 
@@ -31,7 +31,7 @@
         const coordinates = e.lngLat;
         if (!startLocation) {
             startLocation = coordinates;
-            new mapboxgl.Marker({ color: 'white' })
+            new mapboxgl.Marker({ color: 'red' })
                 .setLngLat(coordinates)
                 .addTo(map);
             alert('Start location set!');
