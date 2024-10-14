@@ -46,7 +46,11 @@
             alert('You have already set both locations. Please refresh to start over.');
         }
     });
-    
+    if (endLocation) {
+    const startCoords = { lat: startLocation.lat, lng: startLocation.lng };
+    const endCoords = { lat: endLocation.lat, lng: endLocation.lng };
+    window.ReactNativeWebView.postMessage(JSON.stringify({ startCoords, endCoords }));
+}
 </script>
 
 </body>
