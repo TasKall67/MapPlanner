@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Map Planner</title>
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.js"></script>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.css" rel="stylesheet" />
+    <style>
+        body { margin: 0; padding: 0; }
+        #map { width: 100%; height: 100vh; }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <script>
+        mapboxgl.accessToken = 'YOUR_MAPBOX_ACCESS_TOKEN'; // Replace with your Mapbox access token
+        const map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/streets-v11',
+            center: [23.801794216165074, 38.04398429264144], // Starting position [lng, lat]
+            zoom: 14
+        });
+
+        let startMarker = null;
+        let endMarker = null;
+
+        let startCoords = null;
+        let endCoords = null;
+
+        // Function to create a marker
+        function createMarker(coords, color) {
+            return new mapboxgl.Marker({ color: color }).setLngLat(coords).addTo(map);
+        }
+
+        // Listen for clicks on the map
+        map.on('click', (e) => {
+            const coords = [e.lngLat.lng, e.lngLat.lat]; // [lng, lat]
+            if (!startCoords) {
+                startCoords = coords; // Set start coordinates
+                // Remove previous start marker if it exists
+                if (startMarker) startMarker.remove();
+                startMarker = createMarker(coords, 'green'); // Create a green marker for start
+                sendMessageToThunkable(`{"startCoords": {"lat": ${coords[1]}, "lng": ${coords[0]}}}`);
+                alert(`Start location set: ${coords[1]}, ${coords[0]}`);
+            } else if (!endCoords) {
+                endCoords = coords; // Set end coordinates
+                // Remove previous end marker if it exists
+                if (endMarker) endMarker.remove();
+                endMarker = createMarker(coords, 'red'); // Create a red marker for end
+                sendMessageToThunkable(`{"endCoords": {"lat": ${coords[1]}, "lng": ${coords[0]}}}`);
+                alert(`End location set: ${coords[1]}, ${coords[0]}`);
+                // Reset coordinates for the next selection
+                startCoords = null;
+                endCoords = null;
+            }
+        });
+
+        function sendMessageToThunkable(message) {
+            // Send message to Thunkable
+            window.Thunkable.sendMessage(message);
+        }
+    </script>
+</body>
+</html>
