@@ -1,57 +1,51 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Map</title>
-    <meta charset="utf-8" />
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.css" rel="stylesheet" />
+    <title>Map Planner</title>
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.js"></script>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.css" rel="stylesheet" />
     <style>
         body { margin: 0; padding: 0; }
-        #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+        #map { width: 100%; height: 100vh; }
     </style>
 </head>
 <body>
+    <div id="map"></div>
+    <script>
+        mapboxgl.accessToken = 'YOUR_MAPBOX_ACCESS_TOKEN'; // Replace with your Mapbox access token
+        const map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/streets-v11',
+            center: [23.801794216165074, 38.04398429264144], // Starting position [lng, lat]
+            zoom: 14
+        });
 
-<div id="map"></div>
+        let startCoords = null;
+        let endCoords = null;
 
-<script src="https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.js"></script>
-<script>
-    mapboxgl.accessToken = 'pk.eyJ1IjoidGFza2FsbCIsImEiOiJjbTI0amdhNGkwZGtkMm1xd3BudHJ0dmN0In0.yK-2hu2fVVC6NwmdAXaAwQ';
-    const map = new mapboxgl.Map({
-        container: 'map',
-        style: 'mapbox://styles/mapbox/streets-v11',
-        center: [23.801794216165074, 38.04398429264144], // Starting position [lng, lat]
-        zoom: 14
-    });
+        // Listen for clicks on the map
+        map.on('click', (e) => {
+            const coords = [e.lngLat.lng, e.lngLat.lat]; // [lng, lat]
+            if (!startCoords) {
+                startCoords = coords; // Set start coordinates
+                sendMessageToThunkable(`{"startCoords": {"lat": ${coords[1]}, "lng": ${coords[0]}}}`);
+                alert(`Start location set: ${coords[1]}, ${coords[0]}`);
+            } else if (!endCoords) {
+                endCoords = coords; // Set end coordinates
+                sendMessageToThunkable(`{"endCoords": {"lat": ${coords[1]}, "lng": ${coords[0]}}}`);
+                alert(`End location set: ${coords[1]}, ${coords[0]}`);
+                // Reset coordinates for the next selection
+                startCoords = null;
+                endCoords = null;
+            }
+        });
 
-    let startLocation = null;
-    let endLocation = null;
-
-    map.on('click', (e) => {
-        const coordinates = e.lngLat;
-        if (!startLocation) {
-            startLocation = coordinates;
-            new mapboxgl.Marker({ color: 'green' })
-                .setLngLat(coordinates)
-                .addTo(map);
-            alert('Start location set!');
-        } else if (!endLocation) {
-            endLocation = coordinates;
-            new mapboxgl.Marker({ color: 'red' })
-                .setLngLat(coordinates)
-                .addTo(map);
-            alert('End location set!');
-            // Optionally, you can call a Thunkable API function to process the coordinates
-        } else {
-            alert('You have already set both locations. Please refresh to start over.');
+        function sendMessageToThunkable(message) {
+            // Send message to Thunkable
+            window.Thunkable.sendMessage(message);
         }
-    });
-    if (endLocation) {
-    const startCoords = { lat: startLocation.lat, lng: startLocation.lng };
-    const endCoords = { lat: endLocation.lat, lng: endLocation.lng };
-    window.ReactNativeWebView.postMessage(JSON.stringify({ startCoords, endCoords }));
-}
-</script>
-
+    </script>
 </body>
 </html>
