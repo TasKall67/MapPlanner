@@ -37,7 +37,7 @@
             alert('Start location set!');
         } else if (!endLocation) {
             endLocation = coordinates;
-            new mapboxgl.Marker({ color: 'red' })
+            new mapboxgl.Marker({ color: 'black' })
                 .setLngLat(coordinates)
                 .addTo(map);
             alert('End location set!');
