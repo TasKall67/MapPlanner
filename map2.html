@@ -56,11 +56,16 @@
             }
         });
 
-        function sendMessageToThunkable(message) {
-             alert("Sending message to Thunkable: " + JSON.stringify(message)); // Add this line
-            // Send message to Thunkable
-            window.ReactNativeWebView.postMessage(JSON.stringify(message));
-        }
+     unction sendMessageToThunkable(message) {
+  // Detect if we are in the Thunkable mobile app environment
+  if (window.ReactNativeWebView) {
+    // Use this for mobile apps
+    window.ReactNativeWebView.postMessage(JSON.stringify(message));
+  } else {
+    // Use this for web browsers
+    window.parent.postMessage(JSON.stringify(message), "*");
+  }
+}
     </script>
 </body>
 </html>
