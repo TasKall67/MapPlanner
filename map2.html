@@ -62,7 +62,14 @@
     start: { lat: startLat, lng: startLng },
     end: { lat: endLat, lng: endLng }
   };
-  window.ReactNativeWebView.postMessage(JSON.stringify(message));
+        // Detect if we are in the Thunkable mobile app environment
+  if (window.ReactNativeWebView) {
+    // Use this for mobile apps
+    window.ReactNativeWebView.postMessage(JSON.stringify(message));
+  } else {
+    // Use this for web browsers
+    window.parent.postMessage(JSON.stringify(message), "*");
+  }
 }
     
     
