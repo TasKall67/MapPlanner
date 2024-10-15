@@ -57,12 +57,8 @@
         });
 
 
-    function sendCoordinatesToThunkable(startLat, startLng, endLat, endLng) {
-  const message = {
-    start: { lat: startLat, lng: startLng },
-    end: { lat: endLat, lng: endLng }
-  };
-        // Detect if we are in the Thunkable mobile app environment
+function sendMessageToThunkable(message) {
+  // Detect if we are in the Thunkable mobile app environment
   if (window.ReactNativeWebView) {
     // Use this for mobile apps
     window.ReactNativeWebView.postMessage(JSON.stringify(message));
