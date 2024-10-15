@@ -62,6 +62,10 @@ function sendCoordinatesToThunkable(startLat, startLng, endLat, endLng) {
     start: { lat: startLat, lng: startLng },
     end: { lat: endLat, lng: endLng }
   };
+
+    // DEBUG: Display the message content before sending it
+    alert("Sending coordinates: " + JSON.stringify(message));
+    
   // Detect if we are in the Thunkable mobile app environment
   if (window.ReactNativeWebView) {
     // Use this for mobile apps
