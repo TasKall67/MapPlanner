@@ -57,6 +57,7 @@
         });
 
         function sendMessageToThunkable(message) {
+             alert("Sending message to Thunkable: " + JSON.stringify(message)); // Add this line
             // Send message to Thunkable
             window.ReactNativeWebView.postMessage(JSON.stringify(message));
         }
