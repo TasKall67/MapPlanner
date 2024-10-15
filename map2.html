@@ -18,7 +18,7 @@
         const map = new mapboxgl.Map({
             container: 'map',
             style: 'mapbox://styles/mapbox/streets-v11',
-            center: [23.801794216165074, 38.04398429264144], // Starting position [lng, lat]
+            center: [23.78908, 38.04985], // Starting position [lng, lat]
             zoom: 14
         });
 
@@ -56,7 +56,7 @@
             }
         });
 
-     function sendMessageToThunkable(message) {
+    function sendMessageToThunkable(message) {
   // Detect if we are in the Thunkable mobile app environment
   if (window.ReactNativeWebView) {
     // Use this for mobile apps
@@ -66,6 +66,7 @@
     window.parent.postMessage(JSON.stringify(message), "*");
   }
 }
+
     </script>
 </body>
 </html>
