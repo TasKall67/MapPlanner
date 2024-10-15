@@ -40,14 +40,14 @@
                 startCoords = coords; // Set start coordinates
                 // Remove previous start marker if it exists
                 if (startMarker) startMarker.remove();
-                startMarker = createMarker(coords, 'red'); // Create a green marker for start
+                startMarker = createMarker(coords, 'yellow'); // Create a green marker for start
                 sendMessageToThunkable(`{"startCoords": {"lat": ${coords[1]}, "lng": ${coords[0]}}}`);
                 alert(`Start location set: ${coords[1]}, ${coords[0]}`);
             } else if (!endCoords) {
                 endCoords = coords; // Set end coordinates
                 // Remove previous end marker if it exists
                 if (endMarker) endMarker.remove();
-                endMarker = createMarker(coords, 'green'); // Create a red marker for end
+                endMarker = createMarker(coords, 'red'); // Create a red marker for end
                 sendMessageToThunkable(`{"endCoords": {"lat": ${coords[1]}, "lng": ${coords[0]}}}`);
                 alert(`End location set: ${coords[1]}, ${coords[0]}`);
                 // Reset coordinates for the next selection
