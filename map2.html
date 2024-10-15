@@ -40,7 +40,7 @@
                 startCoords = coords; // Set start coordinates
                 // Remove previous start marker if it exists
                 if (startMarker) startMarker.remove();
-                startMarker = createMarker(coords, 'yellow'); // Create a green marker for start
+                startMarker = createMarker(coords, 'black'); // Create a green marker for start
                 sendMessageToThunkable(`{"startCoords": {"lat": ${coords[1]}, "lng": ${coords[0]}}}`);
                 alert(`Start location set: ${coords[1]}, ${coords[0]}`);
             } else if (!endCoords) {
