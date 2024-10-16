@@ -32,6 +32,7 @@
     // Function to send message to Thunkable or show alert in browser
     function sendCoordinatesToThunkable(startLat, startLng, endLat, endLng) {
       const message = {
+	type: "coordinates",
         start: { lat: startLat, lng: startLng },
         end: { lat: endLat, lng: endLng }
       };
