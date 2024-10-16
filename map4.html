@@ -56,7 +56,7 @@
 
 	// Function to get route from Mapbox Directions API
   function getRoute(startLat, startLng, endLat, endLng) {
-    const directionsAPI = `https://api.mapbox.com/directions/v5/mapbox/cycling/${startLng},${startLat};${endLng},${endLat}?geometries=geojson&access_token=YOUR_MAPBOX_ACCESS_TOKEN`;
+    const directionsAPI = `https://api.mapbox.com/directions/v5/mapbox/cycling/${startLng},${startLat};${endLng},${endLat}?geometries=geojson&access_token=pk.eyJ1IjoidGFza2FsbCIsImEiOiJjbTI0amdhNGkwZGtkMm1xd3BudHJ0dmN0In0.yK-2hu2fVVC6NwmdAXaAwQ`;
 
     fetch(directionsAPI)
       .then(response => response.json())
