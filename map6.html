@@ -100,7 +100,7 @@
     // When the user clicks on the map, select start and end points
     map.on('click', function (e) {
       if (!startMarker) {
-        startMarker = new mapboxgl.Marker({ color: 'yellow' })
+        startMarker = new mapboxgl.Marker({ color: 'black' })
           .setLngLat(e.lngLat)
           .addTo(map);
         startCoords = e.lngLat;
@@ -108,7 +108,7 @@
         // DEBUG: Show alert for start coordinates
         alert("Start location selected: " + JSON.stringify(startCoords));
       } else if (!endMarker) {
-        endMarker = new mapboxgl.Marker({ color: 'red' })
+        endMarker = new mapboxgl.Marker({ color: 'black' })
           .setLngLat(e.lngLat)
           .addTo(map);
         endCoords = e.lngLat;
@@ -147,7 +147,7 @@ window.addEventListener('message', function(event) {
 // Function to draw the full route
 function drawFullRoute(coordinates) {
     // Assuming `coordinates` is an array of [lng, lat] points
-    const routeLine = L.polyline(coordinates, { color: 'blue' }).addTo(map);
+    const routeLine = L.polyline(coordinates, { color: 'blue', weight: 24  }).addTo(map);
 
     // Zoom the map to fit the full route
     map.fitBounds(routeLine.getBounds());
