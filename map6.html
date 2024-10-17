@@ -148,14 +148,14 @@
 
 //Debug with Simple Coordinates
 // Example coordinates to test drawing the route
-function drawFullRoute(coordinates) {
+function drawFullRoute(mycoordinates) {
   // Check if coordinates are received
   alert("Route coordinates function called!");
-  console.log("Coordinates received:", coordinates);
-  alert("Coordinates received: " + JSON.stringify(coordinates));
+  console.log("Coordinates received:", mycoordinates);
+  alert("Coordinates received: " + JSON.stringify(mycoordinates));
 
   // Draw the polyline with a thicker width
-  const routeLine = L.polyline(coordinates, { color: 'blue', weight: 8 }).addTo(map);
+  const routeLine = L.polyline(mycoordinates, { color: 'blue', weight: 8 }).addTo(map);
 
   // Check if the line is drawn
   alert("Line should be drawn now.");
