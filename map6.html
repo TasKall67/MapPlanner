@@ -123,36 +123,25 @@
 	
 	
 
-	
-	//draw routes and receive message
-	window.addEventListener("message", function(event) {
-  const message = JSON.parse(event.data);
+// Function to draw the route on the map
+function drawRoute(coordinates) {
+    // Create a polyline from the coordinates
+    const route = L.polyline(coordinates, {color: 'blue'}).addTo(map);
+    
+    // Fit the map to the polyline
+    map.fitBounds(route.getBounds());
+}
 
-  if (message.start && message.end) {
-    const startLat = message.start.lat;
-    const startLng = message.start.lng;
-    const endLat = message.end.lat;
-    const endLng = message.end.lng;
-
-    // Call the function to draw the route
-    drawRoute(startLat, startLng, endLat, endLng);
-  }
+// Listen for messages from Thunkable
+window.ReactNativeWebView.postMessage("Message from map");
+window.addEventListener('message', function(event) {
+    const message = JSON.parse(event.data);
+    
+    if (message.coordinates) {
+        drawRoute(message.coordinates); // Call the drawRoute function with coordinates
+    }
 });
 
-function drawRoute(startLat, startLng, endLat, endLng) {
-  // Ensure valid coordinates
-  if (!startLat || !startLng || !endLat || !endLng) {
-    alert("Invalid coordinates received.");
-    return;
-  }
-
-  let routeLatLngs = [
-    [startLat, startLng],
-    [endLat, endLng]
-  ];
-  let polyline = L.polyline(routeLatLngs, { color: 'blue' }).addTo(map);
-  map.fitBounds(polyline.getBounds());  // Adjust map view to fit the route
-}
 	
   </script>
 </body>
