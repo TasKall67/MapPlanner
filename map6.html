@@ -148,23 +148,32 @@ window.addEventListener('message', function(event) {
 
 //Debug with Simple Coordinates
 // Example coordinates to test drawing the route
-const testCoordinates = [
-    [23.806131, 38.047133],
-    [23.617323, 37.933029],
-    [23.664301, 37.844416],
-    [23.820872, 37.634908]
-];
-
-// Function to draw the route with a thicker line
 function drawFullRoute(coordinates) {
-    const routeLine = L.polyline(coordinates, {
-        color: 'blue',  // Color of the line
-        weight: 108       // Width of the line in pixels
-    }).addTo(map);
+  // Check if coordinates are received
+  alert("Route coordinates function called!");
+  console.log("Coordinates received:", coordinates);
+  alert("Coordinates received: " + JSON.stringify(coordinates));
+
+  // Draw the polyline with a thicker width
+  const routeLine = L.polyline(coordinates, { color: 'blue', weight: 8 }).addTo(map);
+
+  // Check if the line is drawn
+  alert("Line should be drawn now.");
 }
 
-// Call the function to draw the route with the test coordinates
-drawFullRoute(testCoordinates);
+// Call the function with test coordinates (for debugging)
+const testCoordinates = [
+  [38.047133, 23.806131],
+  [37.933029, 23.617323],
+  [37.844416, 23.664301],
+  [37.634908, 23.820872]
+];
+
+  map.setView([38.047133, 23.806131], 13);  // Center the map on the first coordinate
+
+
+drawFullRoute(testCoordinates);  // For debugging purposes
+
 
 	  
 	
