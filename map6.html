@@ -123,17 +123,17 @@
 	
 	//-----------------------------------------------------DRAWING LINE------------------------------------TASSOS-------------
 
-window.addEventListener('message', function(event) {
-    const message = JSON.parse(event.data); // Parse the message
-    console.log("Message received:", message);
+//window.addEventListener('message', function(event) {
+   // const message = JSON.parse(event.data); // Parse the message
+    //console.log("Message received:", message);
     
-    if (Array.isArray(message)) {  // Check if the message is an array (full route coordinates)
-        alert("Route coordinates received!");  // Debugging alert
-        drawFullRoute(message);  // Pass the coordinates to the route drawing function
-    } else {
-        alert("No route coordinates received!");
-    }
-});
+    //if (Array.isArray(message)) {  // Check if the message is an array (full route coordinates)
+       // alert("Route coordinates received!");  // Debugging alert
+       // drawFullRoute(message);  // Pass the coordinates to the route drawing function
+  //  } else {
+   //     alert("No route coordinates received!");
+  //  }
+//});
 
 // Function to draw the full route
 //function drawFullRoute(coordinates) {
