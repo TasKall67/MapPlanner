@@ -100,7 +100,7 @@
     // When the user clicks on the map, select start and end points
     map.on('click', function (e) {
       if (!startMarker) {
-        startMarker = new mapboxgl.Marker({ color: 'black' })
+        startMarker = new mapboxgl.Marker({ color: 'red' })
           .setLngLat(e.lngLat)
           .addTo(map);
         startCoords = e.lngLat;
@@ -108,7 +108,7 @@
         // DEBUG: Show alert for start coordinates
         alert("Start location selected: " + JSON.stringify(startCoords));
       } else if (!endMarker) {
-        endMarker = new mapboxgl.Marker({ color: 'black' })
+        endMarker = new mapboxgl.Marker({ color: 'red' })
           .setLngLat(e.lngLat)
           .addTo(map);
         endCoords = e.lngLat;
@@ -136,14 +136,46 @@ window.addEventListener('message', function(event) {
 });
 
 // Function to draw the full route
-function drawFullRoute(coordinates) {
+//function drawFullRoute(coordinates) {
     // Assuming `coordinates` is an array of [lng, lat] points
-    const routeLine = L.polyline(coordinates, { color: 'blue', weight: 24  }).addTo(map);
+    //const routeLine = L.polyline(coordinates, { color: 'blue', weight: 24  }).addTo(map);
 
     // Zoom the map to fit the full route
-    map.fitBounds(routeLine.getBounds());
-}
+   // map.fitBounds(routeLine.getBounds());
+//}
 
+
+
+//Debug with Simple Coordinates
+const testCoordinates = [
+    [23.801794216165074, 38.04398429264144], 
+    [23.802786633430454, 38.04747802167849]
+];
+map.addSource('route', {
+    'type': 'geojson',
+    'data': {
+        'type': 'Feature',
+        'geometry': {
+            'type': 'LineString',
+            'coordinates': testCoordinates
+        }
+    }
+});
+map.addLayer({
+    'id': 'route',
+    'type': 'line',
+    'source': 'route',
+    'layout': {
+        'line-join': 'round',
+        'line-cap': 'round'
+    },
+    'paint': {
+        'line-color': '#3887be',
+        'line-width': 5
+    }
+});
+
+	  
 	
   </script>
 </body>
