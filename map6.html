@@ -123,15 +123,6 @@
 	
 	
 
-// Function to draw the route on the map
-function drawRoute(coordinates) {
-    // Create a polyline from the coordinates
-    const route = L.polyline(coordinates, {color: 'blue'}).addTo(map);
-    
-    // Fit the map to the polyline
-    map.fitBounds(route.getBounds());
-}
-
 window.addEventListener('message', function(event) {
     const message = JSON.parse(event.data); // Parse the message
     console.log("Message received:", message);
