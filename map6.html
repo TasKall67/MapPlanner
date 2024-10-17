@@ -100,7 +100,7 @@
     // When the user clicks on the map, select start and end points
     map.on('click', function (e) {
       if (!startMarker) {
-        startMarker = new mapboxgl.Marker({ color: 'green' })
+        startMarker = new mapboxgl.Marker({ color: 'yellow' })
           .setLngLat(e.lngLat)
           .addTo(map);
         startCoords = e.lngLat;
@@ -133,13 +133,26 @@ function drawRoute(coordinates) {
 }
 
 window.addEventListener('message', function(event) {
-    console.log("Message received:", event.data); // Log the received message
-    if (event.data === "Hello from Thunkable!") {
-        alert("Simple message received!"); // Alert for confirmation
+    const message = JSON.parse(event.data); // Parse the message
+    console.log("Message received:", message);
+    
+    if (Array.isArray(message)) {  // Check if the message is an array (full route coordinates)
+        alert("Route coordinates received!");  // Debugging alert
+        drawFullRoute(message);  // Pass the coordinates to the route drawing function
     } else {
-        alert("Unexpected message received: " + event.data); // For unexpected messages
+        alert("No route coordinates received!");
     }
 });
+
+// Function to draw the full route
+function drawFullRoute(coordinates) {
+    // Assuming `coordinates` is an array of [lng, lat] points
+    const routeLine = L.polyline(coordinates, { color: 'blue' }).addTo(map);
+
+    // Zoom the map to fit the full route
+    map.fitBounds(routeLine.getBounds());
+}
+
 	
   </script>
 </body>
