@@ -80,7 +80,11 @@
       duration: duration, // in seconds
       route: routeCoordinates // coordinates of the route
     };
-	
+
+	// DEBUG: Show alert to check if the function is being triggered
+      alert("Tassos - Sending Distance & Duration: " + JSON.stringify(message));
+
+	  
     // Send route details to Thunkable
     if (window.ReactNativeWebView) {
     // Use this for mobile apps
