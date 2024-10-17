@@ -136,13 +136,14 @@ function drawRoute(coordinates) {
 //window.ReactNativeWebView.postMessage("Message from map");
 window.addEventListener('message', function(event) {
     const message = JSON.parse(event.data);
-    
+    console.log("Message received:", message); // For debugging
+    // Check if coordinates are present
     if (message.coordinates) {
-        drawRoute(message.coordinates); // Call the drawRoute function with coordinates
-	    alert("Route coordinates received: " + JSON.stringify(message.coordinates)); // For debugging
+        drawRoute(message.coordinates); // Call your draw function
+    } else {
+        alert("No coordinates received"); // Alert if no coordinates found
     }
 });
-
 	
   </script>
 </body>
