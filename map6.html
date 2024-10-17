@@ -121,7 +121,7 @@
       }
     });
 	
-	
+	//-----------------------------------------------------DRAWING LINE------------------------------------TASSOS-------------
 
 window.addEventListener('message', function(event) {
     const message = JSON.parse(event.data); // Parse the message
@@ -147,33 +147,24 @@ window.addEventListener('message', function(event) {
 
 
 //Debug with Simple Coordinates
+// Example coordinates to test drawing the route
 const testCoordinates = [
-    [23.801794216165074, 38.04398429264144], 
-    [23.802786633430454, 38.04747802167849]
+    [23.806131, 38.047133],
+    [23.617323, 37.933029],
+    [23.664301, 37.844416],
+    [23.820872, 37.634908]
 ];
-map.addSource('route', {
-    'type': 'geojson',
-    'data': {
-        'type': 'Feature',
-        'geometry': {
-            'type': 'LineString',
-            'coordinates': testCoordinates
-        }
-    }
-});
-map.addLayer({
-    'id': 'route',
-    'type': 'line',
-    'source': 'route',
-    'layout': {
-        'line-join': 'round',
-        'line-cap': 'round'
-    },
-    'paint': {
-        'line-color': '#3887be',
-        'line-width': 5
-    }
-});
+
+// Function to draw the route with a thicker line
+function drawFullRoute(coordinates) {
+    const routeLine = L.polyline(coordinates, {
+        color: 'blue',  // Color of the line
+        weight: 8       // Width of the line in pixels
+    }).addTo(map);
+}
+
+// Call the function to draw the route with the test coordinates
+drawFullRoute(testCoordinates);
 
 	  
 	
