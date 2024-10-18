@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Simple Map with Polyline</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    #map { height: 100vh; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    // Initialize the map
+    const map = L.map('map').setView([38.047133, 23.806131], 10); // Starting center
+
+    // Add a tile layer (the background map)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    // Function to draw a line (polyline) on the map
+    function drawLine() {
+      const lineCoordinates = [
+        [38.047133, 23.806131],
+        [37.933029, 23.617323],
+        [37.844416, 23.664301],
+        [37.634908, 23.820872]
+      ];
+
+      // Draw the polyline with blue color and thicker line
+      const routeLine = L.polyline(lineCoordinates, { color: 'blue', weight: 6 }).addTo(map);
+
+      // Automatically adjust the map view to fit the polyline
+      map.fitBounds(routeLine.getBounds());
+    }
+
+    // Call the drawLine function to draw the polyline immediately when the map is ready
+    map.whenReady(function() {
+      drawLine();
+    });
+  </script>
+</body>
+</html>
