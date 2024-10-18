@@ -100,7 +100,7 @@
     // When the user clicks on the map, select start and end points
     map.on('click', function (e) {
       if (!startMarker) {
-        startMarker = new mapboxgl.Marker({ color: 'red' })
+        startMarker = new mapboxgl.Marker({ color: 'green' })
           .setLngLat(e.lngLat)
           .addTo(map);
         startCoords = e.lngLat;
@@ -108,7 +108,7 @@
         // DEBUG: Show alert for start coordinates
         alert("Start location selected: " + JSON.stringify(startCoords));
       } else if (!endMarker) {
-        endMarker = new mapboxgl.Marker({ color: 'red' })
+        endMarker = new mapboxgl.Marker({ color: 'green' })
           .setLngLat(e.lngLat)
           .addTo(map);
         endCoords = e.lngLat;
@@ -123,7 +123,8 @@
 	
 	//-----------------------------------------------------DRAWING LINE------------------------------------TASSOS-------------
 
-function drawRoute(coordinates) {
+// Function to draw the route on the map
+    function drawRoute(coordinates) {
         // Draw the polyline using the provided coordinates
         const routeLine = new mapboxgl.LngLatBounds();
         
@@ -163,18 +164,21 @@ function drawRoute(coordinates) {
         });
     }
 
-    // Example coordinates to draw (replace with your actual coordinates)
-    const routeCoordinates = [
-        [23.806131, 38.047133],
-        [23.617323, 37.933029],
-        [23.664301, 37.844416],
-        [23.820872, 37.634908]
-    ];
+    // Example response from Thunkable (this should match your Thunkable output)
+    const responseFromThunkable = {
+        "coordinates": [
+            [23.806131, 38.047133],
+            [23.617323, 37.933029],
+            [23.664301, 37.844416],
+            [23.820872, 37.634908]
+        ]
+    };
 
-    // Call the drawRoute function with example coordinates
-    drawRoute(routeCoordinates)
+    // Use the coordinates directly from the response
+    const routeCoordinates = responseFromThunkable.coordinates;
 
-	  
+    // Call the drawRoute function with the extracted coordinates
+    drawRoute(routeCoordinates);
 	
   </script>
 </body>
