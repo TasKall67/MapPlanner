@@ -100,7 +100,7 @@
     // When the user clicks on the map, select start and end points
     map.on('click', function (e) {
       if (!startMarker) {
-        startMarker = new mapboxgl.Marker({ color: 'red' })
+        startMarker = new mapboxgl.Marker({ color: 'green' })
           .setLngLat(e.lngLat)
           .addTo(map);
         startCoords = e.lngLat;
@@ -108,7 +108,7 @@
         // DEBUG: Show alert for start coordinates
         alert("Start location selected: " + JSON.stringify(startCoords));
       } else if (!endMarker) {
-        endMarker = new mapboxgl.Marker({ color: 'red' })
+        endMarker = new mapboxgl.Marker({ color: 'green' })
           .setLngLat(e.lngLat)
           .addTo(map);
         endCoords = e.lngLat;
@@ -123,54 +123,70 @@
 	
 	//-----------------------------------------------------DRAWING LINE------------------------------------TASSOS-------------
 
-//Debug with Simple Coordinates
-	  
-// Predefined coordinates for the line
-    const predefinedCoordinates = [
-      [23.806131, 38.047133],
-      [23.617323, 37.933029],
-      [23.664301, 37.844416],
-      [23.634908, 37.820872]
-    ];
+// Function to draw a line on the map
+        function drawLine(coordinates) {
+            // Clear previous layers if they exist
+            if (map.getLayer('route')) {
+                map.removeLayer('route');
+                map.removeSource('route');
+            }
 
-    // Function to draw a polyline on the map using Mapbox GeoJSON
-    function drawLine(coordinates) {
-      // Check if coordinates are received
-      console.log("Coordinates received:", coordinates);
+            // Add a GeoJSON source with the route coordinates
+            map.addSource('route', {
+                'type': 'geojson',
+                'data': {
+                    'type': 'Feature',
+                    'geometry': {
+                        'type': 'LineString',
+                        'coordinates': coordinates
+                    }
+                }
+            });
 
-      // Adding a GeoJSON line layer
-      map.addSource('route', {
-        'type': 'geojson',
-        'data': {
-          'type': 'Feature',
-          'properties': {},
-          'geometry': {
-            'type': 'LineString',
-            'coordinates': coordinates  // Received coordinates
-          }
+            // Add a layer to visualize the route
+            map.addLayer({
+                'id': 'route',
+                'type': 'line',
+                'source': 'route',
+                'layout': {
+                    'line-join': 'round',
+                    'line-cap': 'round'
+                },
+                'paint': {
+                    'line-color': 'blue',
+                    'line-width': 5
+                }
+            });
+
+            // Fit the map bounds to the route
+            const bounds = coordinates.reduce((bounds, coord) => {
+                return bounds.extend(coord);
+            }, new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
+
+            map.fitBounds(bounds, { padding: { top: 50, bottom: 50, left: 50, right: 50 } });
         }
-      });
 
-      map.addLayer({
-        'id': 'route',
-        'type': 'line',
-        'source': 'route',
-        'layout': {
-          'line-join': 'round',
-          'line-cap': 'round'
-        },
-        'paint': {
-          'line-color': '#1DA1F2',  // Line color
-          'line-width': 4  // Line width
-        }
-      });
-    }
+        // Listen for messages from Thunkable
+        window.addEventListener('message', function(event) {
+            const message = JSON.parse(event.data);
+            if (message && message.coordinates) {
+                // Draw the line using received coordinates
+                drawLine(message.coordinates);
+            } else {
+                console.log("No coordinates received or message format is incorrect.");
+            }
+        });
 
-    // Draw the predefined line when the map is ready
-    map.on('load', function() {
-      drawLine(predefinedCoordinates);  // Call the function to draw the line
-    });
-
+        // Optionally, you can also draw a test route on map load for debugging
+        map.on('load', function() {
+            const testCoordinates = [
+                [23.806131, 38.047133],
+                [23.617323, 37.933029],
+                [23.664301, 37.844416],
+                [23.820872, 37.634908]
+            ];
+            drawLine(testCoordinates); // Draw test coordinates on map load
+        });
 
 	  
 	
