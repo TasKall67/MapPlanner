@@ -100,7 +100,7 @@
     // When the user clicks on the map, select start and end points
     map.on('click', function (e) {
       if (!startMarker) {
-        startMarker = new mapboxgl.Marker({ color: 'black' })
+        startMarker = new mapboxgl.Marker({ color: 'white' })
           .setLngLat(e.lngLat)
           .addTo(map);
         startCoords = e.lngLat;
@@ -108,7 +108,7 @@
         // DEBUG: Show alert for start coordinates
         alert("Start location selected: " + JSON.stringify(startCoords));
       } else if (!endMarker) {
-        endMarker = new mapboxgl.Marker({ color: 'black' })
+        endMarker = new mapboxgl.Marker({ color: 'white' })
           .setLngLat(e.lngLat)
           .addTo(map);
         endCoords = e.lngLat;
@@ -147,12 +147,6 @@
 
 
 //Debug with Simple Coordinates
-const testCoordinates = [
-  [38.047133, 23.806131],
-  [37.933029, 23.617323],
-  [37.844416, 23.664301],
-  [37.634908, 23.820872]
-];
 	  
 // Example coordinates to test drawing the route
 function drawFullRoute(testcoordinates) {
@@ -161,6 +155,13 @@ function drawFullRoute(testcoordinates) {
   console.log("Coordinates received:", testcoordinates);
   alert("Coordinates received: " + JSON.stringify(testcoordinates));
 
+const testCoordinates = [
+  [38.047133, 23.806131],
+  [37.933029, 23.617323],
+  [37.844416, 23.664301],
+  [37.634908, 23.820872]
+];
+	
   // Draw the polyline with a thicker width
   const routeLine = L.polyline(testcoordinates, { color: 'blue', weight: 8 }).addTo(map);
 
@@ -173,8 +174,11 @@ function drawFullRoute(testcoordinates) {
 // Call the function with test coordinates (for debugging)
 
 
-drawFullRoute(testCoordinates);  // For debugging purposes
-
+//drawFullRoute(testCoordinates);  // For debugging purposes
+// Call the drawLine function to draw the polyline immediately when the map is ready
+    map.whenReady(function() {
+      drawFullRoute();
+    });
 
 	  
 	
