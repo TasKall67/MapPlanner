@@ -100,7 +100,7 @@
     // When the user clicks on the map, select start and end points
     map.on('click', function (e) {
       if (!startMarker) {
-        startMarker = new mapboxgl.Marker({ color: 'black' })
+        startMarker = new mapboxgl.Marker({ color: 'red' })
           .setLngLat(e.lngLat)
           .addTo(map);
         startCoords = e.lngLat;
@@ -108,7 +108,7 @@
         // DEBUG: Show alert for start coordinates
         alert("Start location selected: " + JSON.stringify(startCoords));
       } else if (!endMarker) {
-        endMarker = new mapboxgl.Marker({ color: 'black' })
+        endMarker = new mapboxgl.Marker({ color: 'red' })
           .setLngLat(e.lngLat)
           .addTo(map);
         endCoords = e.lngLat;
@@ -123,22 +123,65 @@
 	
 	//-----------------------------------------------------DRAWING LINE------------------------------------TASSOS-------------
 
- // Function to draw a route on the map
+  // Function to draw a route on the map
         function drawRoute(coordinates, color = 'blue', weight = 5) {
-            const routeLine = L.polyline(coordinates, { color: color, weight: weight }).addTo(map);
-            map.fitBounds(routeLine.getBounds()); // Fit map to route
+            const geojson = {
+                type: 'Feature',
+                geometry: {
+                    type: 'LineString',
+                    coordinates: coordinates
+                }
+            };
+
+            // Add the route to the map
+            map.on('load', () => {
+                map.addSource('route', {
+                    type: 'geojson',
+                    data: geojson
+                });
+
+                // Draw the route
+                map.addLayer({
+                    id: 'route',
+                    type: 'line',
+                    source: 'route',
+                    layout: {
+                        'line-join': 'round',
+                        'line-cap': 'round'
+                    },
+                    paint: {
+                        'line-color': color,
+                        'line-width': weight
+                    }
+                });
+
+                // Fit map to the route
+                const bounds = new mapboxgl.LngLatBounds();
+                coordinates.forEach(coord => bounds.extend(coord));
+                map.fitBounds(bounds, { padding: 20 });
+            });
         }
 
-        // Test coordinates to draw
+        // Listen for messages from Thunkable
+        window.addEventListener('message', (event) => {
+            // Check if the message is valid
+            if (event.data && event.data.coordinates) {
+                const coordinates = JSON.parse(event.data.coordinates);
+                drawRoute(coordinates, 'red', 5); // Draw the route using the received coordinates
+                alert("Route drawn with coordinates: " + JSON.stringify(coordinates)); // Debug alert
+            }
+        });
+
+        // Test coordinates (remove after testing)
         const testCoordinates = [
-            [38.047133, 23.806131], // Point 1
-            [37.933029, 23.617323], // Point 2
-            [37.844416, 23.664301], // Point 3
-            [37.634908, 23.820872]  // Point 4
+            [23.806131, 38.047133], // Point 1
+            [23.617323, 37.933029], // Point 2
+            [23.664301, 37.844416], // Point 3
+            [23.820872, 37.634908]  // Point 4
         ];
 
-        // Call drawRoute with test coordinates
-        drawRoute(testCoordinates, 'yellow', 2); // Drawing test line in red with a weight of 5
+        // Call drawRoute with test coordinates for debugging
+        drawRoute(testCoordinates, 'red', 5); // Drawing test line in red
 	
   </script>
 </body>
