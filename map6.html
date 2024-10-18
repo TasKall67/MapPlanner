@@ -100,7 +100,7 @@
     // When the user clicks on the map, select start and end points
     map.on('click', function (e) {
       if (!startMarker) {
-        startMarker = new mapboxgl.Marker({ color: 'white' })
+        startMarker = new mapboxgl.Marker({ color: 'red' })
           .setLngLat(e.lngLat)
           .addTo(map);
         startCoords = e.lngLat;
@@ -108,7 +108,7 @@
         // DEBUG: Show alert for start coordinates
         alert("Start location selected: " + JSON.stringify(startCoords));
       } else if (!endMarker) {
-        endMarker = new mapboxgl.Marker({ color: 'white' })
+        endMarker = new mapboxgl.Marker({ color: 'red' })
           .setLngLat(e.lngLat)
           .addTo(map);
         endCoords = e.lngLat;
@@ -123,51 +123,54 @@
 	
 	//-----------------------------------------------------DRAWING LINE------------------------------------TASSOS-------------
 
-//window.addEventListener('message', function(event) {
-   // const message = JSON.parse(event.data); // Parse the message
-    //console.log("Message received:", message);
-    
-    //if (Array.isArray(message)) {  // Check if the message is an array (full route coordinates)
-       // alert("Route coordinates received!");  // Debugging alert
-       // drawFullRoute(message);  // Pass the coordinates to the route drawing function
-  //  } else {
-   //     alert("No route coordinates received!");
-  //  }
-//});
-
-// Function to draw the full route
-//function drawFullRoute(coordinates) {
-    // Assuming `coordinates` is an array of [lng, lat] points
-    //const routeLine = L.polyline(coordinates, { color: 'blue', weight: 24  }).addTo(map);
-
-    // Zoom the map to fit the full route
-   // map.fitBounds(routeLine.getBounds());
-//}
-
-
-
 //Debug with Simple Coordinates
 	  
-// Function to draw a line (polyline) on the map
-    function drawLine() {
-      const lineCoordinates = [
-        [38.047133, 23.806131],
-        [37.933029, 23.617323],
-        [37.844416, 23.664301],
-        [37.634908, 23.820872]
-      ];
+// Predefined coordinates for the line
+    const predefinedCoordinates = [
+      [23.806131, 38.047133],
+      [23.617323, 37.933029],
+      [23.664301, 37.844416],
+      [23.634908, 37.820872]
+    ];
 
-      // Draw the polyline with blue color and thicker line
-      const routeLine = L.polyline(lineCoordinates, { color: 'blue', weight: 6 }).addTo(map);
+    // Function to draw a polyline on the map using Mapbox GeoJSON
+    function drawLine(coordinates) {
+      // Check if coordinates are received
+      console.log("Coordinates received:", coordinates);
 
-      // Automatically adjust the map view to fit the polyline
-      map.fitBounds(routeLine.getBounds());
+      // Adding a GeoJSON line layer
+      map.addSource('route', {
+        'type': 'geojson',
+        'data': {
+          'type': 'Feature',
+          'properties': {},
+          'geometry': {
+            'type': 'LineString',
+            'coordinates': coordinates  // Received coordinates
+          }
+        }
+      });
+
+      map.addLayer({
+        'id': 'route',
+        'type': 'line',
+        'source': 'route',
+        'layout': {
+          'line-join': 'round',
+          'line-cap': 'round'
+        },
+        'paint': {
+          'line-color': '#1DA1F2',  // Line color
+          'line-width': 4  // Line width
+        }
+      });
     }
 
-    // Call the drawLine function to draw the polyline immediately when the map is ready
-    map.whenReady(function() {
-      drawLine();
+    // Draw the predefined line when the map is ready
+    map.on('load', function() {
+      drawLine(predefinedCoordinates);  // Call the function to draw the line
     });
+
 
 	  
 	
