@@ -100,7 +100,7 @@
     // When the user clicks on the map, select start and end points
     map.on('click', function (e) {
       if (!startMarker) {
-        startMarker = new mapboxgl.Marker({ color: 'red' })
+        startMarker = new mapboxgl.Marker({ color: 'green' })
           .setLngLat(e.lngLat)
           .addTo(map);
         startCoords = e.lngLat;
@@ -108,7 +108,7 @@
         // DEBUG: Show alert for start coordinates
         alert("Start location selected: " + JSON.stringify(startCoords));
       } else if (!endMarker) {
-        endMarker = new mapboxgl.Marker({ color: 'red' })
+        endMarker = new mapboxgl.Marker({ color: 'green' })
           .setLngLat(e.lngLat)
           .addTo(map);
         endCoords = e.lngLat;
@@ -173,27 +173,43 @@ alert("Coordinates received: " + JSON.stringify(coordinates)); // Debug alert
     }
 
     // Listener to receive messages from Thunkable
-    window.addEventListener('message', function(event) {
-        // Check if the message is the expected one
-        if (event.data) {
-            // Parse the incoming coordinates
-            const thunkableCoordinatesMessage = event.data; // The message received from Thunkable
-            alert("Raw message from Thunkable: " + thunkableCoordinatesMessage);
+window.addEventListener('message', function(event) {
+    // Check if the message is the expected one
+    if (event.data) {
+        // Log the raw message
+        alert("Raw message from Thunkable: " + event.data);
 
-            try {
-                // Parse the coordinates from the message
-                const parsedCoordinates = JSON.parse(thunkableCoordinatesMessage);
-                alert("Parsed Coordinates: " + JSON.stringify(parsedCoordinates));
+        // Try to parse the incoming coordinates
+        try {
+            const parsedCoordinates = JSON.parse(event.data); // Parse the JSON string
+            alert("Parsed Coordinates: " + JSON.stringify(parsedCoordinates));
 
-                // Call the drawLine function with parsed coordinates
-                drawLine(parsedCoordinates);
-            } catch (error) {
-                console.error("Error parsing coordinates:", error);
+            // Validate that parsedCoordinates is an array and has valid pairs
+            if (Array.isArray(parsedCoordinates) && parsedCoordinates.length > 0) {
+                // Check if each coordinate pair is valid
+                const validCoordinates = parsedCoordinates.every(pair => 
+                    Array.isArray(pair) && pair.length === 2 && 
+                    typeof pair[0] === 'number' && typeof pair[1] === 'number'
+                );
+
+                if (validCoordinates) {
+                    alert("Coordinates received: " + JSON.stringify(parsedCoordinates));
+                    // Call the drawLine function with parsed coordinates
+                    drawLine(parsedCoordinates);
+                } else {
+                    alert("No valid coordinates found in the message.");
+                }
+            } else {
+                alert("No valid coordinates found in the message.");
             }
-        } else {
-            alert("No valid coordinates found in the message.");
+        } catch (error) {
+            console.error("Error parsing coordinates:", error);
+            alert("Failed to parse coordinates.");
         }
-    });
+    } else {
+        alert("No valid coordinates found in the message.");
+    }
+});
 
 
 	
