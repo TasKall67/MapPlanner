@@ -165,13 +165,16 @@
 
         // Listen for messages from Thunkable
         window.addEventListener('message', (event) => {
+    // Log the entire message to see the structure
+    alert("Message received from Thunkable: " + JSON.stringify(event.data));
+    console.log("Message received from Thunkable:", event.data);
+
+    // Check if the message contains coordinates
     if (event.data && event.data.coordinates) {
-        // Parse the JSON string to get the coordinates
-        const coordinates = event.data.coordinates; // No need to parse if already an array
-        alert("Received coordinates: " + JSON.stringify(coordinates)); // Debug alert
-        drawRoute(coordinates, 'red', 5); // Draw the route using the received coordinates
+        alert("Coordinates received: " + JSON.stringify(event.data.coordinates));
+        console.log("Coordinates received:", event.data.coordinates);
     } else {
-        alert("No valid coordinates received.");
+        alert("No valid coordinates found in the message.");
     }
 });
 
