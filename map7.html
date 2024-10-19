@@ -122,45 +122,6 @@
     });
 	
 	
-		//-----------------------------------------------------DRAWING LINE------------------------------------TASSOS-------------
-
-  // Function to draw a route on the map
-        function drawRoute(coordinates, color = 'blue', weight = 5) {
-		alert("Drawing route with coordinates: " + JSON.stringify(coordinates)); // Debug alert
-            const geojson = {
-                type: 'Feature',
-                geometry: {
-                    type: 'LineString',
-                    coordinates: coordinates
-                }
-            };
-
-            // Add the route to the map
-            map.on('load', () => {
-                map.addSource('route', {
-                    type: 'geojson',
-                    data: geojson
-                });
-
-                // Draw the route
-                map.addLayer({
-                    id: 'route',
-                    type: 'line',
-                    source: 'route',
-                    layout: {
-                        'line-join': 'round',
-                        'line-cap': 'round'
-                    },
-                    paint: {
-                        'line-color': color,
-                        'line-width': weight
-                    }
-                });
-
-      
-
-        // Call drawRoute with test coordinates for debugging
-       drawRoute(testCoordinates, 'red', 5); // Drawing test line in red
 	
   </script>
 </body>
