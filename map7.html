@@ -128,9 +128,9 @@
 
 
 // Function to draw a polyline on the map
-    function drawLine(setcoordinates) {
+    function drawLine(coordinates) {
         // Check if coordinates are valid
-        if (!setcoordinates || setcoordinates.length === 0) {
+        if (!coordinates || coordinates.length === 0) {
             alert("No valid coordinates received!");
             return;
         }
@@ -144,7 +144,7 @@
             'properties': {},
             'geometry': {
               'type': 'LineString',
-              'coordinates': setCoordinates
+              'coordinates': Coordinates
             }
           }
         });
@@ -164,7 +164,7 @@
         });
 	// Fit the map bounds to the line coordinates
             const bounds = new mapboxgl.LngLatBounds();
-            setcoordinates.forEach(coord => bounds.extend(coord));
+            coordinates.forEach(coord => bounds.extend(coord));
             map.fitBounds(bounds, { padding: 50 });
         });
     }
