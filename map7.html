@@ -134,7 +134,8 @@
             alert("No valid coordinates received!");
             return;
         }
-
+alert("Coordinates received: " + JSON.stringify(coordinates)); // Debug alert
+	    
       // Adding a GeoJSON line layer
       map.on('load', function () {
         map.addSource('route', {
@@ -144,7 +145,7 @@
             'properties': {},
             'geometry': {
               'type': 'LineString',
-              'coordinates': Coordinates
+              'coordinates': coordinates
             }
           }
         });
@@ -162,6 +163,8 @@
             'line-width': 5  // Line width
           }
         });
+
+	      
 	// Fit the map bounds to the line coordinates
             const bounds = new mapboxgl.LngLatBounds();
             coordinates.forEach(coord => bounds.extend(coord));
@@ -169,13 +172,21 @@
         });
     }
 
-    // Example: Receive coordinates from Thunkable
-    // This should be replaced with the actual message listener from Thunkable
-    const thunkableCoordinatesMessage = '[[23.806784, 38.048329], [23.617323, 37.933029], [23.664301, 37.844416]]'; // Sample message from Thunkable
-    const routeCoordinates = JSON.parse(thunkableCoordinatesMessage); // Parse the message to get coordinates
+    // Simulate receiving coordinates from Thunkable
+    // Replace this with the actual message from Thunkable
+    const thunkableCoordinatesMessage = '[[23.806784, 38.048329], [23.617323, 38.933029], [23.664301, 37.844416]]'; // Example input
+    let routeCoordinates;
+
+    try {
+        routeCoordinates = JSON.parse(thunkableCoordinatesMessage); // Parse the message to get coordinates
+        alert("Parsed coordinates: " + JSON.stringify(routeCoordinates)); // Debug alert
+    } catch (e) {
+        alert("Error parsing coordinates: " + e.message); // Catch any parsing errors
+    }
 
     // Call the drawLine function with Thunkable coordinates
     drawLine(routeCoordinates); // Draw the line with coordinates from Thunkable
+
 
 	
   </script>
