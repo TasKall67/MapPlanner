@@ -159,10 +159,14 @@
             'line-cap': 'round'
           },
           'paint': {
-            'line-color': 'red',  // Line color
+            'line-color': 'green',  // Line color
             'line-width': 5  // Line width
           }
         });
+	// Fit the map bounds to the line coordinates
+            const bounds = new mapboxgl.LngLatBounds();
+            coordinates.forEach(coord => bounds.extend(coord));
+            map.fitBounds(bounds, { padding: 50 });
       });
     }
 
