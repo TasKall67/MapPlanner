@@ -100,7 +100,7 @@
     // When the user clicks on the map, select start and end points
     map.on('click', function (e) {
       if (!startMarker) {
-        startMarker = new mapboxgl.Marker({ color: 'yellow' })
+        startMarker = new mapboxgl.Marker({ color: 'red' })
           .setLngLat(e.lngLat)
           .addTo(map);
         startCoords = e.lngLat;
@@ -108,7 +108,7 @@
         // DEBUG: Show alert for start coordinates
         alert("Start location selected: " + JSON.stringify(startCoords));
       } else if (!endMarker) {
-        endMarker = new mapboxgl.Marker({ color: 'white' })
+        endMarker = new mapboxgl.Marker({ color: 'red' })
           .setLngLat(e.lngLat)
           .addTo(map);
         endCoords = e.lngLat;
@@ -169,7 +169,23 @@ window.addEventListener('message', (event) => {
     console.log("Raw message from Thunkable:", event.data);
     alert("Raw message from Thunkable: " + event.data);
 
+    // Ignore empty or undefined messages
+    if (!event.data || event.data === 'undefined') {
+        console.log("Ignoring empty or undefined message.");
+        return;  // Exit the function without doing anything
+    }
+
      // Try parsing the data if it's a stringified JSON
+    let parsedData;
+    try {
+        parsedData = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+    } catch (error) {
+        alert("Error parsing the message: " + error.message);
+        console.error("Error parsing the message:", error);
+        return;
+    }
+
+    // Try parsing the data if it's a stringified JSON
     let parsedData;
     try {
         parsedData = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
