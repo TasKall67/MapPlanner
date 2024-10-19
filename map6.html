@@ -100,7 +100,7 @@
     // When the user clicks on the map, select start and end points
     map.on('click', function (e) {
       if (!startMarker) {
-        startMarker = new mapboxgl.Marker({ color: 'black' })
+        startMarker = new mapboxgl.Marker({ color: 'yellow' })
           .setLngLat(e.lngLat)
           .addTo(map);
         startCoords = e.lngLat;
@@ -164,21 +164,35 @@
         }
 
         // Listen for messages from Thunkable
-        window.addEventListener('message', (event) => {
-    // Log the entire message to see the structure
-    alert("Message received from Thunkable: " + JSON.stringify(event.data));
-    console.log("Message received from Thunkable:", event.data);
+window.addEventListener('message', (event) => {
+    // Log the entire message to see the structure and type
+    console.log("Raw message from Thunkable:", event.data);
+    alert("Raw message from Thunkable: " + event.data);
 
-    // Check if the message is an array of coordinates
-    if (Array.isArray(event.data)) {
-        alert("Coordinates received: " + JSON.stringify(event.data));
-        console.log("Coordinates received:", event.data);
-        drawRoute(event.data, 'blue', 5);  // Call your drawRoute function with the received coordinates
+     // Try parsing the data if it's a stringified JSON
+    let parsedData;
+    try {
+        parsedData = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+    } catch (error) {
+        alert("Error parsing the message: " + error.message);
+        console.error("Error parsing the message:", error);
+        return;
+    }
+
+    // Log the parsed data
+    alert("Parsed data: " + JSON.stringify(parsedData));
+    console.log("Parsed data from Thunkable:", parsedData);
+
+    // Check if the parsedData is an array of coordinates
+    if (Array.isArray(parsedData)) {
+        alert("Coordinates received: " + JSON.stringify(parsedData));
+        console.log("Coordinates received:", parsedData);
+        drawRoute(parsedData, 'blue', 5);  // Call your drawRoute function with the received coordinates
     } else {
         alert("No valid coordinates found in the message.");
+        console.log("No valid coordinates found in the message:", parsedData);
     }
 });
-
         // Test coordinates (remove after testing)
         const testCoordinates = [
             [23.806131, 38.047133], // Point 1
