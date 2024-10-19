@@ -127,89 +127,79 @@
 
 
 
-// Function to draw a polyline on the map
-    function drawLine(coordinates) {
-        // Check if coordinates are valid
-        if (!coordinates || coordinates.length === 0) {
-            alert("No valid coordinates received!");
-            return;
-        }
-alert("Coordinates received: " + JSON.stringify(coordinates)); // Debug alert
-	    
-      // Adding a GeoJSON line layer
-      map.on('load', function () {
-        map.addSource('route', {
-          'type': 'geojson',
-          'data': {
-            'type': 'Feature',
-            'properties': {},
-            'geometry': {
-              'type': 'LineString',
-              'coordinates': coordinates
-            }
-          }
-        });
+// Variable to hold coordinates received from Thunkable
+let thunkableCoordinates = [];
 
-        map.addLayer({
-          'id': 'route',
-          'type': 'line',
-          'source': 'route',
-          'layout': {
-            'line-join': 'round',
-            'line-cap': 'round'
-          },
-          'paint': {
-            'line-color': 'green',  // Line color
-            'line-width': 5  // Line width
-          }
-        });
-
-	      
-	// Fit the map bounds to the line coordinates
-            const bounds = new mapboxgl.LngLatBounds();
-            coordinates.forEach(coord => bounds.extend(coord));
-            map.fitBounds(bounds, { padding: 50 });
-        });
-    }
-
-    // Listener to receive messages from Thunkable
+// Listener to receive messages from Thunkable
 window.addEventListener('message', function(event) {
-    // Check if the message is the expected one
-    if (event.data) {
-        // Log the raw message
-        alert("Raw message from Thunkable: " + event.data);
+    // Log the raw message received
+    console.log("Raw message from Thunkable:", event.data);
 
-        // Try to parse the incoming coordinates
+    // Check if the message is defined and has valid content
+    if (event.data && event.data.trim()) {
+        // Parse the incoming coordinates
         try {
-            const parsedCoordinates = JSON.parse(event.data); // Parse the JSON string
-            alert("Parsed Coordinates: " + JSON.stringify(parsedCoordinates));
+            const parsedCoordinates = JSON.parse(event.data);
+            console.log("Parsed Coordinates:", parsedCoordinates);
 
-            // Validate that parsedCoordinates is an array and has valid pairs
+            // Check if the parsed coordinates are an array
             if (Array.isArray(parsedCoordinates) && parsedCoordinates.length > 0) {
-                // Check if each coordinate pair is valid
-                const validCoordinates = parsedCoordinates.every(pair => 
-                    Array.isArray(pair) && pair.length === 2 && 
-                    typeof pair[0] === 'number' && typeof pair[1] === 'number'
-                );
+                // Set the global coordinates variable
+                thunkableCoordinates = parsedCoordinates;
 
-                if (validCoordinates) {
-                    alert("Coordinates received: " + JSON.stringify(parsedCoordinates));
-                    // Call the drawLine function with parsed coordinates
-                    drawLine(parsedCoordinates);
-                } else {
-                    alert("No valid coordinates found in the message.");
-                }
+                // Alert and draw the line if valid coordinates are found
+                alert("Coordinates received: " + JSON.stringify(thunkableCoordinates));
+                drawLine(thunkableCoordinates); // Call function to draw the line
             } else {
-                alert("No valid coordinates found in the message.");
+                console.log("No valid coordinates found in the message.");
             }
         } catch (error) {
             console.error("Error parsing coordinates:", error);
             alert("Failed to parse coordinates.");
         }
     } else {
-        alert("No valid coordinates found in the message.");
+        console.log("No valid coordinates found in the message.");
     }
 });
+
+// Function to draw a polyline on the map
+function drawLine(lineCoordinates) {
+    // Remove any existing route before adding a new one
+    if (map.getLayer('route')) {
+        map.removeLayer('route');
+        map.removeSource('route');
+    }
+
+    // Adding a GeoJSON line layer
+    map.on('load', function () {
+        map.addSource('route', {
+            'type': 'geojson',
+            'data': {
+                'type': 'Feature',
+                'properties': {},
+                'geometry': {
+                    'type': 'LineString',
+                    'coordinates': lineCoordinates
+                }
+            }
+        });
+
+        map.addLayer({
+            'id': 'route',
+            'type': 'line',
+            'source': 'route',
+            'layout': {
+                'line-join': 'round',
+                'line-cap': 'round'
+            },
+            'paint': {
+                'line-color': 'red',  // Line color
+                'line-width': 5  // Line width
+            }
+        });
+    });
+}
+
 
 
 	
