@@ -100,7 +100,7 @@
     // When the user clicks on the map, select start and end points
     map.on('click', function (e) {
       if (!startMarker) {
-        startMarker = new mapboxgl.Marker({ color: 'black' })
+        startMarker = new mapboxgl.Marker({ color: 'green' })
           .setLngLat(e.lngLat)
           .addTo(map);
         startCoords = e.lngLat;
@@ -108,7 +108,7 @@
         // DEBUG: Show alert for start coordinates
         alert("Start location selected: " + JSON.stringify(startCoords));
       } else if (!endMarker) {
-        endMarker = new mapboxgl.Marker({ color: 'black' })
+        endMarker = new mapboxgl.Marker({ color: 'green' })
           .setLngLat(e.lngLat)
           .addTo(map);
         endCoords = e.lngLat;
@@ -128,13 +128,12 @@
 
 
 // Function to draw a polyline on the map
-    function drawLine() {
-      const lineCoordinates = [
-        [23.80599, 38.048894],
-        [23.817323, 38.033029],
-        [23.816430, 38.044416],
-        [23.814301, 38.0444416]
-      ];
+    function drawLine(setcoordinates) {
+        // Check if coordinates are valid
+        if (!setcoordinates || setcoordinates.length === 0) {
+            alert("No valid coordinates received!");
+            return;
+        }
 
       // Adding a GeoJSON line layer
       map.on('load', function () {
@@ -145,7 +144,7 @@
             'properties': {},
             'geometry': {
               'type': 'LineString',
-              'coordinates': lineCoordinates
+              'coordinates': setCoordinates
             }
           }
         });
@@ -165,13 +164,18 @@
         });
 	// Fit the map bounds to the line coordinates
             const bounds = new mapboxgl.LngLatBounds();
-            coordinates.forEach(coord => bounds.extend(coord));
+            setcoordinates.forEach(coord => bounds.extend(coord));
             map.fitBounds(bounds, { padding: 50 });
-      });
+        });
     }
 
-    // Call the drawLine function to draw the polyline
-    drawLine();
+    // Example: Receive coordinates from Thunkable
+    // This should be replaced with the actual message listener from Thunkable
+    const thunkableCoordinatesMessage = '[[23.806784, 38.048329], [23.617323, 37.933029], [23.664301, 37.844416]]'; // Sample message from Thunkable
+    const routeCoordinates = JSON.parse(thunkableCoordinatesMessage); // Parse the message to get coordinates
+
+    // Call the drawLine function with Thunkable coordinates
+    drawLine(routeCoordinates); // Draw the line with coordinates from Thunkable
 
 	
   </script>
