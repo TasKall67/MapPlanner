@@ -100,7 +100,7 @@
     // When the user clicks on the map, select start and end points
     map.on('click', function (e) {
       if (!startMarker) {
-        startMarker = new mapboxgl.Marker({ color: 'red' })
+        startMarker = new mapboxgl.Marker({ color: 'black' })
           .setLngLat(e.lngLat)
           .addTo(map);
         startCoords = e.lngLat;
@@ -108,7 +108,7 @@
         // DEBUG: Show alert for start coordinates
         alert("Start location selected: " + JSON.stringify(startCoords));
       } else if (!endMarker) {
-        endMarker = new mapboxgl.Marker({ color: 'red' })
+        endMarker = new mapboxgl.Marker({ color: 'white' })
           .setLngLat(e.lngLat)
           .addTo(map);
         endCoords = e.lngLat;
@@ -169,10 +169,11 @@
     alert("Message received from Thunkable: " + JSON.stringify(event.data));
     console.log("Message received from Thunkable:", event.data);
 
-    // Check if the message contains coordinates
-    if (event.data && event.data.coordinates) {
-        alert("Coordinates received: " + JSON.stringify(event.data.coordinates));
-        console.log("Coordinates received:", event.data.coordinates);
+    // Check if the message is an array of coordinates
+    if (Array.isArray(event.data)) {
+        alert("Coordinates received: " + JSON.stringify(event.data));
+        console.log("Coordinates received:", event.data);
+        drawRoute(event.data, 'blue', 5);  // Call your drawRoute function with the received coordinates
     } else {
         alert("No valid coordinates found in the message.");
     }
