@@ -37,7 +37,7 @@
       };
 
       // DEBUG: Show alert to check if the function is being triggered
-      alert("Tassos mind that - Sending coordinates: " + JSON.stringify(message));
+     // alert("Tassos mind that - Sending coordinates: " + JSON.stringify(message));
 
       
 
@@ -82,7 +82,7 @@
     };
 
 	// DEBUG: Show alert to check if the function is being triggered
-      alert("Tassos - Sending Distance & Duration: " + JSON.stringify(message));
+    //  alert("Tassos - Sending Distance & Duration: " + JSON.stringify(message));
 
 	  
     // Send route details to Thunkable
@@ -100,21 +100,21 @@
     // When the user clicks on the map, select start and end points
     map.on('click', function (e) {
       if (!startMarker) {
-        startMarker = new mapboxgl.Marker({ color: 'red' })
+        startMarker = new mapboxgl.Marker({ color: 'green' })
           .setLngLat(e.lngLat)
           .addTo(map);
         startCoords = e.lngLat;
 
         // DEBUG: Show alert for start coordinates
-        alert("Start location selected: " + JSON.stringify(startCoords));
+     //   alert("Start location selected: " + JSON.stringify(startCoords));
       } else if (!endMarker) {
-        endMarker = new mapboxgl.Marker({ color: 'red' })
+        endMarker = new mapboxgl.Marker({ color: 'green' })
           .setLngLat(e.lngLat)
           .addTo(map);
         endCoords = e.lngLat;
 
         // DEBUG: Show alert for end coordinates
-        alert("End location selected: " + JSON.stringify(endCoords));
+      //  alert("End location selected: " + JSON.stringify(endCoords));
 
         // Once both start and end are selected, send the coordinates
         sendCoordinatesToThunkable(startCoords.lat, startCoords.lng, endCoords.lat, endCoords.lng);
