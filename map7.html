@@ -100,7 +100,7 @@
     // When the user clicks on the map, select start and end points
     map.on('click', function (e) {
       if (!startMarker) {
-        startMarker = new mapboxgl.Marker({ color: 'green' })
+        startMarker = new mapboxgl.Marker({ color: 'red' })
           .setLngLat(e.lngLat)
           .addTo(map);
         startCoords = e.lngLat;
@@ -108,7 +108,7 @@
         // DEBUG: Show alert for start coordinates
         alert("Start location selected: " + JSON.stringify(startCoords));
       } else if (!endMarker) {
-        endMarker = new mapboxgl.Marker({ color: 'green' })
+        endMarker = new mapboxgl.Marker({ color: 'red' })
           .setLngLat(e.lngLat)
           .addTo(map);
         endCoords = e.lngLat;
@@ -172,20 +172,28 @@ alert("Coordinates received: " + JSON.stringify(coordinates)); // Debug alert
         });
     }
 
-    // Simulate receiving coordinates from Thunkable
-    // Replace this with the actual message from Thunkable
-    const thunkableCoordinatesMessage = '[[23.806784, 38.048329], [23.807323, 38.0433029], [23.804301, 38.044416]]'; // Example input
-    let routeCoordinates;
+    // Listener to receive messages from Thunkable
+    window.addEventListener('message', function(event) {
+        // Check if the message is the expected one
+        if (event.data) {
+            // Parse the incoming coordinates
+            const thunkableCoordinatesMessage = event.data; // The message received from Thunkable
+            alert("Raw message from Thunkable: " + thunkableCoordinatesMessage);
 
-    try {
-        routeCoordinates = JSON.parse(thunkableCoordinatesMessage); // Parse the message to get coordinates
-        alert("Parsed coordinates: " + JSON.stringify(routeCoordinates)); // Debug alert
-    } catch (e) {
-        alert("Error parsing coordinates: " + e.message); // Catch any parsing errors
-    }
+            try {
+                // Parse the coordinates from the message
+                const parsedCoordinates = JSON.parse(thunkableCoordinatesMessage);
+                alert("Parsed Coordinates: " + JSON.stringify(parsedCoordinates));
 
-    // Call the drawLine function with Thunkable coordinates
-    drawLine(routeCoordinates); // Draw the line with coordinates from Thunkable
+                // Call the drawLine function with parsed coordinates
+                drawLine(parsedCoordinates);
+            } catch (error) {
+                console.error("Error parsing coordinates:", error);
+            }
+        } else {
+            alert("No valid coordinates found in the message.");
+        }
+    });
 
 
 	
