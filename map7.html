@@ -100,7 +100,7 @@
     // When the user clicks on the map, select start and end points
     map.on('click', function (e) {
       if (!startMarker) {
-        startMarker = new mapboxgl.Marker({ color: 'yellow' })
+        startMarker = new mapboxgl.Marker({ color: 'black' })
           .setLngLat(e.lngLat)
           .addTo(map);
         startCoords = e.lngLat;
@@ -108,7 +108,7 @@
         // DEBUG: Show alert for start coordinates
         alert("Start location selected: " + JSON.stringify(startCoords));
       } else if (!endMarker) {
-        endMarker = new mapboxgl.Marker({ color: 'green' })
+        endMarker = new mapboxgl.Marker({ color: 'black' })
           .setLngLat(e.lngLat)
           .addTo(map);
         endCoords = e.lngLat;
@@ -125,102 +125,78 @@
 		//-----------------------------------------------------DRAWING LINE------------------------------------TASSOS-------------
 
 
+// Variable to hold coordinates received from Thunkable
+let thunkableCoordinates = [];
 
+// Listener to receive messages from Thunkable
+window.addEventListener('message', function(event) {
+    // Log the raw message received
+    console.log("Raw message from Thunkable:", event.data);
 
-function drawLine() {
-      const lineCoordinates = [
-[23.740947,37.962133],
-[23.742083,37.962243],
-[23.742611,37.96165],
-[23.743475,37.962142],
-[23.746449,37.958831],
-[23.748878,37.960023],
-[23.755416,37.957769],
-[23.759543,37.95942],
-[23.760019,37.958918],
-[23.761244,37.959548],
-[23.76313,37.959103],
-[23.765707,37.965106],
-[23.76794,37.964669],
-[23.769818,37.965867],
-[23.771912,37.965179],
-[23.773094,37.96572],
-[23.774786,37.965346],
-[23.774783,37.967243],
-[23.777241,37.966747],
-[23.780876,37.96708],
-[23.786571,37.966043],
-[23.78983,37.964849],
-[23.790657,37.965423],
-[23.793543,37.96557],
-[23.794871,37.96687],
-[23.797463,37.966691],
-[23.807201,37.968557],
-[23.809862,37.969597],
-[23.811542,37.969094],
-[23.811862,37.970982],
-[23.816061,37.971366],
-[23.816875,37.972739],
-[23.818579,37.973854],
-[23.823174,37.973189],
-[23.825165,37.973805],
-[23.826642,37.973344],
-[23.825759,37.972511],
-[23.826231,37.970551],
-[23.828486,37.96927],
-[23.830161,37.966451],
-[23.833281,37.965251],
-[23.838998,37.961067],
-[23.841796,37.960915],
-[23.844088,37.959995],
-[23.84682,37.957138],
-[23.849501,37.955821],
-[23.849289,37.955233],
-[23.858635,37.952691],
-[23.857994,37.951517],
-[23.862531,37.950562],
-[23.863191,37.95114],
-[23.869922,37.948342],
-[23.870961,37.945605],
-[23.876794,37.939604],
-[23.882209,37.93676],
-[23.886403,37.933714],
-[23.889815,37.93229],
-[23.89519,37.931029],
-[23.89845,37.929228]
-];
+    // Check if the message is defined and has valid content
+    if (event.data && event.data.trim()) {
+        // Parse the incoming coordinates
+        try {
+            const parsedCoordinates = JSON.parse(event.data);
+            console.log("Parsed Coordinates:", parsedCoordinates);
+	debugger;
+            // Check if the parsed coordinates are an array
+            if (Array.isArray(parsedCoordinates) && parsedCoordinates.length > 0) {
+                // Set the global coordinates variable
+                thunkableCoordinates = parsedCoordinates;
 
-      // Adding a GeoJSON line layer
-      map.on('load', function () {
-        map.addSource('route', {
-          'type': 'geojson',
-          'data': {
-            'type': 'Feature',
-            'properties': {},
-            'geometry': {
-              'type': 'LineString',
-              'coordinates': lineCoordinates
+                // Alert and draw the line if valid coordinates are found
+                alert("Coordinates received: " + JSON.stringify(thunkableCoordinates));
+                drawLine(thunkableCoordinates); // Call function to draw the line
+            } else {
+                console.log("No valid coordinates found in the message.");
             }
-          }
+        } catch (error) {
+            console.error("Error parsing coordinates:", error);
+            alert("Failed to parse coordinates.");
+        }
+    } else {
+        console.log("No valid coordinates found in the message.");
+    }
+});
+
+// Function to draw a polyline on the map
+function drawLine(lineCoordinates) {
+    // Remove any existing route before adding a new one
+    if (map.getLayer('route')) {
+        map.removeLayer('route');
+        map.removeSource('route');
+    }
+
+    // Adding a GeoJSON line layer
+    map.on('load', function () {
+        map.addSource('route', {
+            'type': 'geojson',
+            'data': {
+                'type': 'Feature',
+                'properties': {},
+                'geometry': {
+                    'type': 'LineString',
+                    'coordinates': lineCoordinates
+                }
+            }
         });
 
         map.addLayer({
-          'id': 'route',
-          'type': 'line',
-          'source': 'route',
-          'layout': {
-            'line-join': 'round',
-            'line-cap': 'round'
-          },
-          'paint': {
-            'line-color': '#1DA1F2',  // Line color
-            'line-width': 6  // Line width
-          }
+            'id': 'route',
+            'type': 'line',
+            'source': 'route',
+            'layout': {
+                'line-join': 'round',
+                'line-cap': 'round'
+            },
+            'paint': {
+                'line-color': 'red',  // Line color
+                'line-width': 5  // Line width
+            }
         });
-      });
-    }
-// Call the drawLine function to draw the polyline
-    drawLine();
+    });
+}
 
 
 
