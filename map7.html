@@ -100,7 +100,7 @@
     // When the user clicks on the map, select start and end points
     map.on('click', function (e) {
       if (!startMarker) {
-        startMarker = new mapboxgl.Marker({ color: 'green' })
+        startMarker = new mapboxgl.Marker({ color: 'red' })
           .setLngLat(e.lngLat)
           .addTo(map);
         startCoords = e.lngLat;
@@ -141,7 +141,7 @@ window.addEventListener('message', function(event) {
         try {
             const parsedCoordinates = JSON.parse(event.data);
             console.log("Parsed Coordinates:", parsedCoordinates);
-
+	debugger;
             // Check if the parsed coordinates are an array
             if (Array.isArray(parsedCoordinates) && parsedCoordinates.length > 0) {
                 // Set the global coordinates variable
