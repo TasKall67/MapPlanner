@@ -2,92 +2,82 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
-    <title>Elevation Profile</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elevation Chart</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        body { margin: 0; padding: 0; }
-        #chart-container {
-            height: 100vh;
-            width: 100vw;
-            background-color: rgba(255, 255, 255, 0.9);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        #chart-canvas {
-            width: 80%;
-            height: 80%;
-        }
-    </style>
 </head>
 <body>
+    <canvas id="elevationChart" width="400" height="200"></canvas>
 
-<div id="chart-container">
-    <canvas id="chart-canvas"></canvas>
-</div>
+    <script>
+        let chart;
 
-<script>
-    const myLineChart = new Chart(document.getElementById('chart-canvas'), {
-        type: 'line',
-        data: {
-            labels: [],  // X-axis labels (we'll use segments for now)
-            datasets: [{
-                label: 'Elevation (m)',
-                data: [],  // Elevation values (Y-axis data)
-                fill: false,
-                borderColor: '#37a2eb',
-                tension: 0.2
-            }]
-        },
-        options: {
-            plugins: {
-                legend: { display: true },
-                title: { display: true, text: 'Elevation Route Profile' }
-            },
-            maintainAspectRatio: false,
-            responsive: true,
-            scales: {
-                x: {
-                    grid: { display: false },
-                    title: { display: true, text: 'Route Segments' }
+        // Initialize the chart with empty data
+        function initChart() {
+            const ctx = document.getElementById('elevationChart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [], // Empty at first
+                    datasets: [{
+                        label: 'Elevation (m)',
+                        data: [],
+                        borderColor: 'rgb(75, 192, 192)',
+                        tension: 0.1
+                    }]
                 },
-                y: {
-                    title: { display: true, text: 'Elevation (m)' }
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
                 }
-            },
-            elements: {
-                point: { radius: 0 }
-            }
+            });
         }
-    });
 
-    // Function to update the chart with new elevation data
-    function updateElevationProfile(elevations) {
-        // Set the X-axis labels and Y-axis data
-        myLineChart.data.labels = elevations.map((_, index) => `Segment ${index + 1}`);
-        myLineChart.data.datasets[0].data = elevations;
-        myLineChart.update();
-    }
+        // Function to update the chart with new data
+        function updateChart(coordinates, elevations) {
+            console.log("Coordinates received for chart:", coordinates);
+            console.log("Elevations received for chart:", elevations);
 
-    // Listen for messages from the Thunkable app
-    window.addEventListener('message', async (event) => {
-        const data = JSON.parse(event.data);
+            // Use coordinate index as labels (can be improved by using distances)
+            const labels = coordinates.map((_, index) => `Point ${index + 1}`);
 
-        if (data.coordinates) {
-            // Process coordinates and get elevation for each
-            const elevations = [];
-
-            for (const coord of data.coordinates) {
-                const elevation = map.queryTerrainElevation([coord[0], coord[1]]);
-                elevations.push(elevation || 0);  // Push 0 if no elevation data found
-            }
-
-            // Update the chart with the retrieved elevation data
-            updateElevationProfile(elevations);
+            chart.data.labels = labels;
+            chart.data.datasets[0].data = elevations;
+            chart.update();
         }
-    });
-</script>
 
+        // Handle incoming messages from Thunkable Web Viewer
+        window.addEventListener('message', function (event) {
+            alert("Message received from Thunkable!");
+            console.log("Raw message from Thunkable:", event.data);
+
+            try {
+                const data = JSON.parse(event.data);
+                const coordinates = data.coordinates;
+                if (coordinates && coordinates.length > 0) {
+                    console.log("Coordinates parsed successfully:", coordinates);
+                    alert(`Received ${coordinates.length} coordinate pairs.`);
+
+                    // Dummy elevations for debugging
+                    const dummyElevations = coordinates.map((coord, index) => index * 10 + 50);
+
+                    // Update the chart with the coordinates and dummy elevations
+                    updateChart(coordinates, dummyElevations);
+                } else {
+                    alert("No coordinates received.");
+                    console.log("No coordinates found in the message.");
+                }
+            } catch (error) {
+                alert("Error parsing message.");
+                console.log("Error parsing incoming message:", error);
+            }
+        });
+
+        // Initialize chart on page load
+        initChart();
+    </script>
 </body>
 </html>
