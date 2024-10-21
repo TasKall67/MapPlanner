@@ -20,7 +20,7 @@
                 data: {
                     labels: [], // Empty at first
                     datasets: [{
-                        label: 'Elevation (m)',
+                        label: 'Route Elevation (m)',
                         data: [],
                         borderColor: 'rgb(75, 192, 192)',
                         tension: 0.1
@@ -55,8 +55,7 @@
             console.log("Raw message from Thunkable:", event.data);
 
             try {
-                const data = JSON.parse(event.data);
-                const coordinates = data.coordinates;
+                const coordinates = JSON.parse(event.data);
                 if (coordinates && coordinates.length > 0) {
                     console.log("Coordinates parsed successfully:", coordinates);
                     alert(`Received ${coordinates.length} coordinate pairs.`);
