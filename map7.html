@@ -37,7 +37,7 @@
       };
 
       // DEBUG: Show alert to check if the function is being triggered
-      alert("Tassos mind that - Sending coordinates: " + JSON.stringify(message));
+     // alert("Tassos mind that - Sending coordinates: " + JSON.stringify(message));
 
       
 
@@ -173,9 +173,11 @@
       const parsedCoordinates = JSON.parse(message);  // Parse the coordinates
       if (Array.isArray(parsedCoordinates) && parsedCoordinates.length > 0) {
         console.log("Parsed Coordinates:", parsedCoordinates);
+	      alert("Parsed Coordinates:", parsedCoordinates);
         drawRoute(parsedCoordinates);  // Call the function to draw the route
       } else {
         console.error("No valid coordinates found in the message.");
+	      alert("No valid coordinates found in the message.");
       }
     } catch (e) {
       console.error("Failed to parse the message:", e);
