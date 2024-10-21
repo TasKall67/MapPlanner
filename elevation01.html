@@ -2,117 +2,105 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Map with Elevation Data</title>
-    <link href='https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.css' rel='stylesheet' />
-    <script src='https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.js'></script>
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>Elevation Profile</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
     <style>
         body { margin: 0; padding: 0; }
-        #map { position: absolute; top: 0; bottom: 0; width: 100%; }
-        #elevationData { position: absolute; top: 10px; left: 10px; background: white; padding: 10px; z-index: 1; }
+        #chart-container {
+            height: 100vh;
+            width: 100vw;
+            background-color: rgba(255, 255, 255, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #chart-canvas {
+            width: 80%;
+            height: 80%;
+        }
     </style>
 </head>
 <body>
 
-<div id="map"></div>
-<div id="elevationData"></div> <!-- Container to display elevation data -->
+<div id="chart-container">
+    <canvas id="chart-canvas"></canvas>
+</div>
 
 <script>
-    // Your Mapbox Access Token
-    mapboxgl.accessToken = 'pk.eyJ1IjoidGFza2FsbCIsImEiOiJjbTI0amdhNGkwZGtkMm1xd3BudHJ0dmN0In0.yK-2hu2fVVC6NwmdAXaAwQ'; // Replace with your Mapbox access token
+    // Define start and end coordinates for the line
+    const startCoordinates = [23.80599, 38.048894]; // Start point
+    const endCoordinates = [23.817323, 38.033029];  // End point
 
-    // Initialize the map
-    const map = new mapboxgl.Map({
-        container: 'map',
-        style: 'mapbox://styles/mapbox/streets-v11',
-        center: [23.801794, 38.043984], // Starting position [lng, lat]
-        zoom: 14 // Starting zoom
+    // Create GeoJSON LineString
+    const lineData = {
+        type: 'Feature',
+        geometry: {
+            type: 'LineString',
+            coordinates: [startCoordinates, endCoordinates]
+        }
+    };
+
+    const myLineChart = new Chart(document.getElementById('chart-canvas'), {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Route Elevation (m)',
+                data: [],
+                fill: false,
+                borderColor: '#37a2eb',
+                tension: 0.4
+            }]
+        },
+        options: {
+            plugins: {
+                legend: { display: true },
+                title: { display: true, text: 'Elevation Profile' }
+            },
+            maintainAspectRatio: false,
+            responsive: true,
+            scales: {
+                x: {
+                    grid: { display: false },
+                    title: { display: true, text: 'Segments' }
+                },
+                y: {
+                    title: { display: true, text: 'Elevation (m)' }
+                }
+            },
+            elements: {
+                point: { radius: 0 }
+            }
+        }
     });
 
-    // Define fixed route coordinates
-    const routeCoordinates = [
-        [23.80599, 38.048894], // Longitude, Latitude
-        [23.817323, 38.033029],
-        [23.816430, 38.044416],
-        [23.814301, 38.0444416]
-    ];
+    async function updateElevationProfile() {
+        // Split the line into 1 km segments
+        const chunks = turf.lineChunk(lineData, 1).features;
 
-    // Function to request elevation data for the route
-    function requestElevationData(coordinates) {
-        // Convert coordinates to a string format suitable for the API request
-        const points = coordinates.map(coord => coord[1] + ',' + coord[0]).join('|'); // Correct order [lat,lng]
-        const apiUrl = `https://api.mapbox.com/elevation/v1/mapbox/line?access_token=${mapboxgl.accessToken}&points=${points}`;
+        // Get the elevation for the leading coordinate of each segment
+        const elevations = await Promise.all(chunks.map((feature) => {
+            return fetch(`https://api.mapbox.com/elevation/v1/mapbox/line?access_token=YOUR_ACCESS_TOKEN&points=${feature.geometry.coordinates[0][1]},${feature.geometry.coordinates[0][0]}`)
+                .then(response => response.json())
+                .then(data => data.elevations[0].elevation);
+        }));
 
-        console.log('Requesting elevation data from URL:', apiUrl); // Log the URL being requested
+        // Add the last coordinate elevation
+        const lastElevation = await fetch(`https://api.mapbox.com/elevation/v1/mapbox/line?access_token=YOUR_ACCESS_TOKEN&points=${chunks[chunks.length - 1].geometry.coordinates[1][1]},${chunks[chunks.length - 1].geometry.coordinates[1][0]}`)
+            .then(response => response.json())
+            .then(data => data.elevations[0].elevation);
+        elevations.push(lastElevation);
 
-        fetch(apiUrl)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                // Check if the response contains elevation data
-                if (data.elevations && data.elevations.length > 0) {
-                    console.log('Elevation Data:', data);
-                    const elevations = data.elevations; // Get elevation details for the points
-                    displayElevationData(elevations);
-                    drawLine(routeCoordinates);
-                } else {
-                    console.error('No elevation data found:', data);
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching elevation data:', error);
-            });
+        // Update chart with elevation data
+        myLineChart.data.labels = Array.from({ length: elevations.length }, (_, i) => `Segment ${i + 1}`);
+        myLineChart.data.datasets[0].data = elevations;
+        myLineChart.update();
     }
 
-    // Function to display elevation data in the HTML
-    function displayElevationData(elevations) {
-        const elevationContainer = document.getElementById('elevationData');
-        elevationContainer.innerHTML = '<h3>Elevation Data:</h3>';
-        
-        elevations.forEach((elevation, index) => {
-            elevationContainer.innerHTML += `Point ${index + 1}: ${elevation.ele.toFixed(2)} meters<br>`;
-        });
-    }
-
-    // Function to draw the route on the map
-    function drawLine(coordinates) {
-        // Add a GeoJSON line layer
-        map.on('load', function () {
-            map.addSource('route', {
-                'type': 'geojson',
-                'data': {
-                    'type': 'Feature',
-                    'properties': {},
-                    'geometry': {
-                        'type': 'LineString',
-                        'coordinates': coordinates
-                    }
-                }
-            });
-
-            // Add the line layer
-            map.addLayer({
-                'id': 'route',
-                'type': 'line',
-                'source': 'route',
-                'layout': {
-                    'line-join': 'round',
-                    'line-cap': 'round'
-                },
-                'paint': {
-                    'line-color': 'red',  // Line color
-                    'line-width': 5  // Line width
-                }
-            });
-        });
-    }
-
-    // Call the function to request elevation data
-    requestElevationData(routeCoordinates);
+    // Trigger the first chart draw
+    updateElevationProfile();
 </script>
 
 </body>
