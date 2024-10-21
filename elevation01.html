@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Map with Elevation Data</title>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.css' rel='stylesheet' />
+    <script src='https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.js'></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+        #elevationData { position: absolute; top: 10px; left: 10px; background: white; padding: 10px; z-index: 1; }
+    </style>
+</head>
+<body>
+
+<div id="map"></div>
+<div id="elevationData"></div> <!-- Container to display elevation data -->
+
+<script>
+    // Your Mapbox Access Token
+    mapboxgl.accessToken = 'pk.eyJ1IjoidGFza2FsbCIsImEiOiJjbTI0amdhNGkwZGtkMm1xd3BudHJ0dmN0In0.yK-2hu2fVVC6NwmdAXaAwQ'; // Replace with your Mapbox access token
+
+    // Initialize the map
+    const map = new mapboxgl.Map({
+        container: 'map',
+        style: 'mapbox://styles/mapbox/streets-v11',
+        center: [23.801794, 38.043984], // Starting position [lng, lat]
+        zoom: 14 // Starting zoom
+    });
+
+    // Define fixed route coordinates
+    const routeCoordinates = [
+        [23.80599, 38.048894], // Longitude, Latitude
+        [23.817323, 38.033029],
+        [23.816430, 38.044416],
+        [23.814301, 38.0444416]
+    ];
+
+    // Function to request elevation data for the route
+    function requestElevationData(coordinates) {
+        // Convert coordinates to a string format suitable for the API request
+        const points = coordinates.map(coord => coord[1] + ',' + coord[0]).join('|'); // Correct order [lat,lng]
+        const apiUrl = `https://api.mapbox.com/elevation/v1/mapbox/line?access_token=${mapboxgl.accessToken}&points=${points}`;
+
+        console.log('Requesting elevation data from URL:', apiUrl); // Log the URL being requested
+
+        fetch(apiUrl)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Check if the response contains elevation data
+                if (data.elevations && data.elevations.length > 0) {
+                    console.log('Elevation Data:', data);
+                    const elevations = data.elevations; // Get elevation details for the points
+                    displayElevationData(elevations);
+                    drawLine(routeCoordinates);
+                } else {
+                    console.error('No elevation data found:', data);
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching elevation data:', error);
+            });
+    }
+
+    // Function to display elevation data in the HTML
+    function displayElevationData(elevations) {
+        const elevationContainer = document.getElementById('elevationData');
+        elevationContainer.innerHTML = '<h3>Elevation Data:</h3>';
+        
+        elevations.forEach((elevation, index) => {
+            elevationContainer.innerHTML += `Point ${index + 1}: ${elevation.ele.toFixed(2)} meters<br>`;
+        });
+    }
+
+    // Function to draw the route on the map
+    function drawLine(coordinates) {
+        // Add a GeoJSON line layer
+        map.on('load', function () {
+            map.addSource('route', {
+                'type': 'geojson',
+                'data': {
+                    'type': 'Feature',
+                    'properties': {},
+                    'geometry': {
+                        'type': 'LineString',
+                        'coordinates': coordinates
+                    }
+                }
+            });
+
+            // Add the line layer
+            map.addLayer({
+                'id': 'route',
+                'type': 'line',
+                'source': 'route',
+                'layout': {
+                    'line-join': 'round',
+                    'line-cap': 'round'
+                },
+                'paint': {
+                    'line-color': 'red',  // Line color
+                    'line-width': 5  // Line width
+                }
+            });
+        });
+    }
+
+    // Call the function to request elevation data
+    requestElevationData(routeCoordinates);
+</script>
+
+</body>
+</html>
