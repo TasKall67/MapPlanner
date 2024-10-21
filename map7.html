@@ -108,7 +108,7 @@
         // DEBUG: Show alert for start coordinates
         //alert("Start location selected: " + JSON.stringify(startCoords));
       } else if (!endMarker) {
-        endMarker = new mapboxgl.Marker({ color: 'green' })
+        endMarker = new mapboxgl.Marker({ color: 'red' })
           .setLngLat(e.lngLat)
           .addTo(map);
         endCoords = e.lngLat;
@@ -173,7 +173,7 @@
       const parsedCoordinates = JSON.parse(message);  // Parse the coordinates
       if (Array.isArray(parsedCoordinates) && parsedCoordinates.length > 0) {
         console.log("Parsed Coordinates:", parsedCoordinates);
-	      alert("Parsed Coordinates:", parsedCoordinates);
+	      alert("My Parsed Coordinates:", +JSON.stringify(parsedCoordinates));
         drawRoute(parsedCoordinates);  // Call the function to draw the route
       } else {
         console.error("No valid coordinates found in the message.");
