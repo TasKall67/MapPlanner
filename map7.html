@@ -106,7 +106,7 @@
         startCoords = e.lngLat;
 
         // DEBUG: Show alert for start coordinates
-        alert("Start location selected: " + JSON.stringify(startCoords));
+        //alert("Start location selected: " + JSON.stringify(startCoords));
       } else if (!endMarker) {
         endMarker = new mapboxgl.Marker({ color: 'black' })
           .setLngLat(e.lngLat)
@@ -114,7 +114,7 @@
         endCoords = e.lngLat;
 
         // DEBUG: Show alert for end coordinates
-        alert("End location selected: " + JSON.stringify(endCoords));
+       // alert("End location selected: " + JSON.stringify(endCoords));
 
         // Once both start and end are selected, send the coordinates
         sendCoordinatesToThunkable(startCoords.lat, startCoords.lng, endCoords.lat, endCoords.lng);
