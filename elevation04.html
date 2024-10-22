@@ -9,7 +9,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { margin: 0; padding: 0; }
-        #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+        #map { position: absolute; top: 0; bottom: 0; width: 100%; display: none; }  <!-- Hide map but still need it for terrain elevation-->
         #chart-container {
             position: absolute;
             bottom: 0;
@@ -57,10 +57,10 @@
         data: {
             labels: [],
             datasets: [{
-                label: 'Elevation (m)',
+                label: 'The Elevation (m)',
                 data: [],
                 fill: false,
-                borderColor: 'red',
+                borderColor: 'rgba(75, 192, 192, 1)',
                 tension: 0.1
             }]
         },
@@ -90,23 +90,30 @@
         elevationChart.data.labels = [];
         elevationChart.data.datasets[0].data = [];
 
-        const promises = coordinates.map((coord, index) => {
+        const elevationPromises = coordinates.map((coord, index) => {
+            // Debug coordinate format
+            console.log(`Coordinate [${index + 1}]:`, coord);
+            
             // Check if terrain tiles are loaded before querying
             const elevation = map.queryTerrainElevation([coord[1], coord[0]]);
+            
             if (elevation === null) {
                 console.log(`Elevation data not available for Point ${index + 1}`);
                 return Promise.resolve(null);  // Return null for missing data
             } else {
+                console.log(`Fetching elevation for Point ${index + 1}`);
                 return elevation;
             }
         });
 
-        Promise.all(promises).then((elevations) => {
+        Promise.all(elevationPromises).then((elevations) => {
             elevations.forEach((elevation, index) => {
                 if (elevation !== null) {
                     console.log(`Elevation for Point ${index + 1}:`, elevation);
                     elevationChart.data.labels.push(`Point ${index + 1}`);
                     elevationChart.data.datasets[0].data.push(elevation);
+                } else {
+                    console.log(`No elevation for Point ${index + 1}`);
                 }
             });
             elevationChart.update();
