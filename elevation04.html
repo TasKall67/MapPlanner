@@ -38,6 +38,18 @@
         zoom: 14
     });
 
+    // Add the DEM terrain source to the map
+    map.on('load', () => {
+        map.addSource('mapbox-dem', {
+            'type': 'raster-dem',
+            'url': 'mapbox://mapbox.terrain-rgb',
+            'tileSize': 512,
+            'maxzoom': 14
+        });
+        map.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1 });
+        console.log("Mapbox DEM source added and terrain set.");
+    });
+
     // Initialize Chart.js
     const ctx = document.getElementById('elevationChart').getContext('2d');
     const elevationChart = new Chart(ctx, {
@@ -45,10 +57,10 @@
         data: {
             labels: [],
             datasets: [{
-                label: 'My Elevation (m)',
+                label: 'Elevation (m)',
                 data: [],
                 fill: false,
-                borderColor: 'yellow',
+                borderColor: 'red',
                 tension: 0.1
             }]
         },
@@ -78,24 +90,28 @@
         elevationChart.data.labels = [];
         elevationChart.data.datasets[0].data = [];
 
-        // Get elevation data for each coordinate
         const promises = coordinates.map((coord, index) => {
-            return map.queryTerrainElevation([coord[1], coord[0]])
-                .then(elevation => {
-                    // Log each elevation value fetched
-                    console.log(`Elevation for Point ${index + 1}:`, elevation);
-                    
-                    elevationChart.data.labels.push(`Point ${index + 1}`);
-                    elevationChart.data.datasets[0].data.push(elevation);
-                })
-                .catch(err => {
-                    console.error("Error fetching elevation data:", err);
-                });
+            // Check if terrain tiles are loaded before querying
+            const elevation = map.queryTerrainElevation([coord[1], coord[0]]);
+            if (elevation === null) {
+                console.log(`Elevation data not available for Point ${index + 1}`);
+                return Promise.resolve(null);  // Return null for missing data
+            } else {
+                return elevation;
+            }
         });
 
-        // Update chart after all elevation data is fetched
-        Promise.all(promises).then(() => {
+        Promise.all(promises).then((elevations) => {
+            elevations.forEach((elevation, index) => {
+                if (elevation !== null) {
+                    console.log(`Elevation for Point ${index + 1}:`, elevation);
+                    elevationChart.data.labels.push(`Point ${index + 1}`);
+                    elevationChart.data.datasets[0].data.push(elevation);
+                }
+            });
             elevationChart.update();
+        }).catch((err) => {
+            console.error("Error fetching elevation data:", err);
         });
     }
 
@@ -118,7 +134,9 @@
         if (Array.isArray(coordinates) && coordinates.length > 0) {
             alert("Received " + coordinates.length + " coordinate pairs.");
             console.log("Coordinates received:", coordinates);
-            updateElevationChart(coordinates); // Call function to update chart
+            map.once('idle', () => {
+                updateElevationChart(coordinates); // Call function to update chart once the map is idle
+            });
         } else {
             alert("No coordinates received.");
             console.log("No coordinates received.");
