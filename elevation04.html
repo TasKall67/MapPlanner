@@ -57,10 +57,10 @@
         data: {
             labels: [],
             datasets: [{
-                label: 'Route Elevation (m)',
+                label: 'My Elevation (m)',
                 data: [],
                 fill: false,
-                borderColor: 'rgba(75, 55, 68, 1)',
+                borderColor: 'rgba(222, 33, 192, 1)',
                 tension: 0.1
             }]
         },
@@ -93,14 +93,14 @@
         const elevationPromises = coordinates.map((coord, index) => {
             console.log(`Coordinate [${index + 1}]:`, coord);
 
-            // Check if terrain tiles are loaded before querying
+            // Query terrain elevation for each coordinate
             const elevation = map.queryTerrainElevation([coord[1], coord[0]]);
-            
+
             if (elevation === null) {
                 console.log(`Elevation data not available for Point ${index + 1}`);
                 return Promise.resolve(null);  // Return null for missing data
             } else {
-                console.log(`Fetching elevation for Point ${index + 1}`);
+                console.log(`Elevation for Point ${index + 1}: ${elevation} meters`);
                 return elevation;
             }
         });
