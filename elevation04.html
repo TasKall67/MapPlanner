@@ -57,10 +57,10 @@
         data: {
             labels: [],
             datasets: [{
-                label: 'My Elevation (m)',
+                label: 'Here is the Elevation (m)',
                 data: [],
                 fill: false,
-                borderColor: 'rgba(222, 63, 92, 1)',
+                borderColor: 'rgba(75, 192, 192, 1)',
                 tension: 0.1
             }]
         },
@@ -90,8 +90,9 @@
         elevationChart.data.labels = [];
         elevationChart.data.datasets[0].data = [];
 
+        // Start creating promises for each coordinate
         const elevationPromises = coordinates.map((coord, index) => {
-            console.log(`Coordinate [${index + 1}]:`, coord);
+            console.log(`Processing Coordinate [${index + 1}]:`, coord);
 
             // Query terrain elevation for each coordinate
             const elevation = map.queryTerrainElevation([coord[1], coord[0]]);
@@ -105,8 +106,10 @@
             }
         });
 
+        console.log("Created elevation promises:", elevationPromises);
+
+        // Run Promise.all to resolve all elevation queries
         Promise.all(elevationPromises).then((elevations) => {
-            alert("Elevations fetched:", elevations); // Debuggin Alert
             console.log("Elevations fetched:", elevations); // Debugging line for fetched elevations
 
             // Filter out null values and only keep valid elevations
