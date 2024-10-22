@@ -19,9 +19,12 @@
             background-color: #f0f0f0;
         }
         #chart-container {
-            width: 80%;
-            height: 40%;
-            margin: 20px;
+            height: 100vh;
+            width: 100vw;
+            background-color: rgba(255, 255, 255, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         canvas {
             width: 100% !important; 
@@ -46,7 +49,7 @@
                 label: 'Route Elevation (m)',
                 data: [],
                 fill: false,
-                borderColor: 'black',
+                borderColor: 'red',
                 tension: 0.1
             }]
         },
