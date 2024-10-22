@@ -22,7 +22,7 @@
                     datasets: [{
                         label: 'Route Elevation (m)',
                         data: [],
-                        borderColor: 'red',
+                        borderColor: 'blue',
                         tension: 0.1
                     }]
                 },
@@ -66,34 +66,20 @@
 
         
         // Handle incoming messages from Thunkable
-        window.addEventListener('message', async function (event) {
+        window.addEventListener('message', function (event) {
             alert("Message received from Thunkable!");
             console.log("Raw message from Thunkable:", event.data);
 
             try {
-                const coordinates = JSON.parse(event.data);
-                if (coordinates && coordinates.length > 0) {
-                    alert(`Received ${coordinates.length} coordinate pairs.`);
+                const { coordinates, elevations } = JSON.parse(event.data);
 
-                    // Load the map but do not display it
-                    const map = new mapboxgl.Map({
-                        container: document.createElement('div'), // Invisible container
-                        style: 'mapbox://styles/mapbox/outdoors-v12',
-                        bounds: [coordinates[0], coordinates[coordinates.length - 1]],
-                        interactive: false // We do not need interaction, just for querying terrain
-                    });
+                if (coordinates && elevations && coordinates.length === elevations.length) {
+                    alert(`Received ${coordinates.length} coordinate pairs and corresponding elevations.`);
 
-                    // Wait for the map to load terrain data
-                    map.on('load', async () => {
-                        // Get real elevation data
-                        const elevations = await fetchElevationData(coordinates, map);
-
-                        // Update the chart with real elevation data
-                        updateChart(coordinates, elevations);
-                    });
+                    // Update the chart with the received data
+                    updateChart(coordinates, elevations);
                 } else {
-                    alert("No coordinates received.");
-                    console.log("No coordinates found in the message.");
+                    alert("Coordinates and elevations do not match.");
                 }
             } catch (error) {
                 alert("Error parsing message.");
@@ -101,6 +87,7 @@
             }
         });
 
+      
         // Initialize chart on page load
         initChart();
     </script>
