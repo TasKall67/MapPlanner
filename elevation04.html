@@ -57,7 +57,7 @@
         data: {
             labels: [],
             datasets: [{
-                label: 'Here is the Elevation (m)',
+                label: 'Elevation (m)',
                 data: [],
                 fill: false,
                 borderColor: 'rgba(75, 192, 192, 1)',
@@ -98,11 +98,11 @@
             const elevation = map.queryTerrainElevation([coord[1], coord[0]]);
 
             if (elevation === null) {
-                console.log(`Elevation data not available for Point ${index + 1}`);
+                console.log(`Elevation data not available for Point ${index + 1} (Returned null).`);
                 return Promise.resolve(null);  // Return null for missing data
             } else {
                 console.log(`Elevation for Point ${index + 1}: ${elevation} meters`);
-                return elevation;
+                return Promise.resolve(elevation);  // Resolve the promise with the elevation data
             }
         });
 
@@ -157,6 +157,8 @@
         if (Array.isArray(coordinates) && coordinates.length > 0) {
             alert("Received " + coordinates.length + " coordinate pairs.");
             console.log("Coordinates received:", coordinates);
+            
+            // Only query elevation once the map is fully ready
             map.once('idle', () => {
                 updateElevationChart(coordinates); // Call function to update chart once the map is idle
             });
