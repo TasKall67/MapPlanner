@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>Elevation Profile</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        #chart-container {
+            height: 100vh;
+            width: 100vw;
+            background-color: rgba(255, 255, 255, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #chart-canvas {
+            width: 80%;
+            height: 80%;
+        }
+    </style>
+</head>
+<body>
+
+<div id="chart-container">
+    <canvas id="chart-canvas"></canvas>
+</div>
+
+<script>
+ // Add the mapbox token for terrain query
+mapboxgl.accessToken = 'pk.eyJ1IjoidGFza2FsbCIsImEiOiJjbTI0amdhNGkwZGtkMm1xd3BudHJ0dmN0In0.yK-2hu2fVVC6NwmdAXaAwQ';
+
+// Initialize map only for terrain queries (but it will not be displayed)
+const map = new mapboxgl.Map({
+    container: null, // Not displayed
+    style: 'mapbox://styles/mapbox/outdoors-v12', // Required for queryTerrainElevation
+    bounds: [-71.4, 44.36, -71.08, 44.25279] // Initial bounds (just for terrain query purposes)
+});
+
+// Wait until the map is fully loaded to query terrain data
+map.on('load', function () {
+    // Listen for message from Thunkable
+    window.addEventListener('message', async function (event) {
+        alert("Message received from Thunkable!");
+
+        try {
+            const { coordinates } = JSON.parse(event.data);  // Extract coordinates
+            alert(`Received ${coordinates.length} coordinate pairs.`);
+
+            // Query elevations for each coordinate
+            const elevations = await getElevationsForCoordinates(coordinates);
+
+            // If we have matching coordinates and elevations, update the chart
+            if (coordinates.length === elevations.length) {
+                updateChart(coordinates, elevations);
+            } else {
+                alert("Mismatch between coordinates and elevations.");
+            }
+        } catch (error) {
+            alert("Error parsing message.");
+            console.log("Error parsing incoming message:", error);
+        }
+    });
+});
+
+// Function to query elevations for given coordinates
+async function getElevationsForCoordinates(coordinates) {
+    const elevations = [];
+
+    for (const coord of coordinates) {
+        const elevation = await map.queryTerrainElevation(coord);  // Query elevation
+        elevations.push(elevation !== null ? elevation : 0);  // Fallback to 0 if no data
+    }
+
+    return elevations;
+}
+
+// Function to update the chart
+function updateChart(coordinates, elevations) {
+    // Assuming you are using a chart library like Chart.js, update the chart with the received data
+    const ctx = document.getElementById('chart-canvas').getContext('2d');
+
+    // Create a chart with coordinates as x-axis (or indices) and elevations as y-axis
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: coordinates.map((_, index) => `Point ${index + 1}`), // Optional: use coordinates or simple labels
+            datasets: [{
+                label: 'Elevation (m)',
+                data: elevations,
+                fill: false,
+                borderColor: 'rgb(75, 192, 192)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            scales: {
+                x: {
+                    display: true
+                },
+                y: {
+                    display: true,
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+</script>
+
+</body>
+</html>
