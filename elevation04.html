@@ -60,7 +60,7 @@
                 label: 'My Elevation (m)',
                 data: [],
                 fill: false,
-                borderColor: 'rgba(222, 33, 192, 1)',
+                borderColor: 'rgba(222, 63, 92, 1)',
                 tension: 0.1
             }]
         },
@@ -106,6 +106,7 @@
         });
 
         Promise.all(elevationPromises).then((elevations) => {
+            alert("Elevations fetched:", elevations); // Debuggin Alert
             console.log("Elevations fetched:", elevations); // Debugging line for fetched elevations
 
             // Filter out null values and only keep valid elevations
