@@ -22,7 +22,7 @@
                     datasets: [{
                         label: 'Route Elevation (m)',
                         data: [],
-                        borderColor: 'rgb(75, 192, 192)',
+                        borderColor: 'red',
                         tension: 0.1
                     }]
                 },
@@ -49,22 +49,48 @@
             chart.update();
         }
 
-        // Handle incoming messages from Thunkable Web Viewer
-        window.addEventListener('message', function (event) {
+        // Function to query real elevation data
+        async function fetchElevationData(coordinates, map) {
+            const elevations = [];
+            for (let i = 0; i < coordinates.length; i++) {
+                const [lng, lat] = coordinates[i];
+                const elevation = map.queryTerrainElevation([lng, lat]);
+                if (elevation !== null) {
+                    elevations.push(elevation);
+                } else {
+                    elevations.push(0); // Use 0 as a fallback if elevation is unavailable
+                }
+            }
+            return elevations;
+        }
+
+        
+        // Handle incoming messages from Thunkable
+        window.addEventListener('message', async function (event) {
             alert("Message received from Thunkable!");
             console.log("Raw message from Thunkable:", event.data);
 
             try {
                 const coordinates = JSON.parse(event.data);
                 if (coordinates && coordinates.length > 0) {
-                    console.log("Coordinates parsed successfully:", coordinates);
                     alert(`Received ${coordinates.length} coordinate pairs.`);
 
-                    // Dummy elevations for debugging
-                    const dummyElevations = coordinates.map((coord, index) => index * 10 + 50);
+                    // Load the map but do not display it
+                    const map = new mapboxgl.Map({
+                        container: document.createElement('div'), // Invisible container
+                        style: 'mapbox://styles/mapbox/outdoors-v12',
+                        bounds: [coordinates[0], coordinates[coordinates.length - 1]],
+                        interactive: false // We do not need interaction, just for querying terrain
+                    });
 
-                    // Update the chart with the coordinates and dummy elevations
-                    updateChart(coordinates, dummyElevations);
+                    // Wait for the map to load terrain data
+                    map.on('load', async () => {
+                        // Get real elevation data
+                        const elevations = await fetchElevationData(coordinates, map);
+
+                        // Update the chart with real elevation data
+                        updateChart(coordinates, elevations);
+                    });
                 } else {
                     alert("No coordinates received.");
                     console.log("No coordinates found in the message.");
