@@ -29,7 +29,7 @@
 
 <script>
     // Initialize Mapbox GL JS
-    mapboxgl.accessToken = 'pk.eyJ1IjoidGFza2FsbCIsImEiOiJjbTI0amdhNGkwZGtkMm1xd3BudHJ0dmN0In0.yK-2hu2fVVC6NwmdAXaAwQ'; // Replace with your Mapbox access token
+    mapboxgl.accessToken = 'YOUR_MAPBOX_ACCESS_TOKEN'; // Replace with your Mapbox access token
 
     const map = new mapboxgl.Map({
         container: 'map',
@@ -57,7 +57,7 @@
         data: {
             labels: [],
             datasets: [{
-                label: 'The Elevation (m)',
+                label: 'Route Elevation (m)',
                 data: [],
                 fill: false,
                 borderColor: 'rgba(75, 192, 192, 1)',
@@ -91,9 +91,8 @@
         elevationChart.data.datasets[0].data = [];
 
         const elevationPromises = coordinates.map((coord, index) => {
-            // Debug coordinate format
             console.log(`Coordinate [${index + 1}]:`, coord);
-            
+
             // Check if terrain tiles are loaded before querying
             const elevation = map.queryTerrainElevation([coord[1], coord[0]]);
             
@@ -107,15 +106,28 @@
         });
 
         Promise.all(elevationPromises).then((elevations) => {
-            elevations.forEach((elevation, index) => {
-                if (elevation !== null) {
-                    console.log(`Elevation for Point ${index + 1}:`, elevation);
-                    elevationChart.data.labels.push(`Point ${index + 1}`);
-                    elevationChart.data.datasets[0].data.push(elevation);
-                } else {
-                    console.log(`No elevation for Point ${index + 1}`);
-                }
+            console.log("Elevations fetched:", elevations); // Debugging line for fetched elevations
+
+            // Filter out null values and only keep valid elevations
+            const validElevations = elevations.filter(elevation => elevation !== null);
+            
+            if (validElevations.length === 0) {
+                console.error("No valid elevation data found.");
+                return;
+            }
+
+            console.log("Valid Elevations:", validElevations);  // Log valid elevations
+
+            // Add points to chart
+            validElevations.forEach((elevation, index) => {
+                console.log(`Elevation for Point ${index + 1}:`, elevation);
+                elevationChart.data.labels.push(`Point ${index + 1}`);
+                elevationChart.data.datasets[0].data.push(elevation);
             });
+
+            console.log("Final chart data:", elevationChart.data);  // Log final chart data
+
+            // Update the chart
             elevationChart.update();
         }).catch((err) => {
             console.error("Error fetching elevation data:", err);
