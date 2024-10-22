@@ -4,9 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Elevation Chart</title>
+    <!-- Link to Mapbox GL JS -->
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js"></script>
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css" rel="stylesheet">
+    
+    <!-- Link to Chart.js for drawing the chart -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <style>
         body { margin: 0; padding: 0; }
         #chart-container { 
@@ -32,27 +36,28 @@
 // Add the mapbox token for terrain query
 mapboxgl.accessToken = 'pk.eyJ1IjoidGFza2FsbCIsImEiOiJjbTI0amdhNGkwZGtkMm1xd3BudHJ0dmN0In0.yK-2hu2fVVC6NwmdAXaAwQ';
 
-// Initialize map in the background only for terrain queries
+// Initialize a Mapbox map instance (in the background just for terrain querying)
 const map = new mapboxgl.Map({
-    container: null, // Not displayed
-    style: 'mapbox://styles/mapbox/outdoors-v12', // Required for queryTerrainElevation
-    bounds: [-71.4, 44.36, -71.08, 44.25279] // Initial bounds (just for terrain query purposes)
+    container: null,  // Map will not be displayed
+    style: 'mapbox://styles/mapbox/outdoors-v12',  // Necessary for elevation queries
+    bounds: [-71.4, 44.36, -71.08, 44.25279]  // Default bounds, not relevant to display
 });
 
-// Once the map has loaded, start listening for messages
+// After the map has loaded, start listening for messages from Thunkable
 map.on('load', function () {
-    // Listen for messages from Thunkable
+    // Listen for messages sent from Thunkable
     window.addEventListener('message', async function (event) {
         alert("Message received from Thunkable!");
 
         try {
-            const { coordinates } = JSON.parse(event.data);  // Extract coordinates
+            const parsedMessage = JSON.parse(event.data);  // Parse the incoming message
+            const { coordinates } = parsedMessage;  // Extract the coordinates array
             alert(`Received ${coordinates.length} coordinate pairs.`);
 
-            // Query elevations for each coordinate
+            // Fetch elevations for each coordinate
             const elevations = await getElevationsForCoordinates(coordinates);
 
-            // If we have matching coordinates and elevations, update the chart
+            // Ensure we have matching number of coordinates and elevations
             if (coordinates.length === elevations.length) {
                 updateChart(coordinates, elevations);
             } else {
@@ -65,44 +70,39 @@ map.on('load', function () {
     });
 });
 
-// Function to query elevations for given coordinates
+// Function to query elevations for each coordinate
 async function getElevationsForCoordinates(coordinates) {
     const elevations = [];
 
     for (const coord of coordinates) {
-        const elevation = await map.queryTerrainElevation(coord);  // Query elevation
-        elevations.push(elevation !== null ? elevation : 0);  // Fallback to 0 if no data
+        const elevation = await map.queryTerrainElevation(coord);  // Query elevation from Mapbox terrain
+        elevations.push(elevation !== null ? elevation : 0);  // Use 0 if no data found
     }
 
     return elevations;
 }
 
-// Function to update the chart
+// Function to update and draw the elevation chart using Chart.js
 function updateChart(coordinates, elevations) {
     const ctx = document.getElementById('chart-canvas').getContext('2d');
 
-    // Create a chart with coordinates as x-axis (or simple labels) and elevations as y-axis
+    // Create a new line chart displaying the elevation data
     new Chart(ctx, {
         type: 'line',
         data: {
-            labels: coordinates.map((_, index) => `Point ${index + 1}`), // Optional: use coordinates or simple labels
+            labels: coordinates.map((_, index) => `Point ${index + 1}`),  // Labels for each point (e.g., Point 1, Point 2)
             datasets: [{
-                label: 'Elevation (m)',
-                data: elevations,
-                fill: false,
-                borderColor: 'rgb(75, 192, 192)',
-                tension: 0.1
+                label: 'Elevation (m)',  // Label for the dataset
+                data: elevations,  // The elevation values for each point
+                fill: false,  // Don't fill under the line
+                borderColor: 'rgb(75, 192, 192)',  // Line color
+                tension: 0.1  // Line curve tension
             }]
         },
         options: {
             scales: {
-                x: {
-                    display: true
-                },
-                y: {
-                    display: true,
-                    beginAtZero: true
-                }
+                x: { display: true },  // Show x-axis labels
+                y: { display: true, beginAtZero: true }  // Show y-axis and start at 0
             }
         }
     });
