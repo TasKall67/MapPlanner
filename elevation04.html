@@ -2,141 +2,127 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
-    <title>Elevation Profile</title>
+    <title>Elevation Chart</title>
+    <meta name="viewport" content="initial-scale=1.0, width=device-width">
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.8.1/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.8.1/mapbox-gl.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { margin: 0; padding: 0; }
-        #chart-container {
-            height: 100vh;
-            width: 100vw;
-            background-color: rgba(255, 255, 255, 0.9);
+        body {
+            margin: 0;
+            padding: 0;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f0f0f0;
         }
-        #chart-canvas {
+        #chart-container {
             width: 80%;
-            height: 80%;
+            height: 40%;
+            margin: 20px;
+        }
+        canvas {
+            width: 100% !important; 
+            height: 100% !important;
         }
     </style>
 </head>
 <body>
 
 <div id="chart-container">
-    <canvas id="chart-canvas"></canvas>
+    <canvas id="elevationChart"></canvas>
 </div>
 
 <script>
-    const myLineChart = new Chart(document.getElementById('chart-canvas'), {
+    // Initialize Chart.js
+    const ctx = document.getElementById('elevationChart').getContext('2d');
+    const elevationChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: [],  // X-axis labels (we'll use segments for now)
+            labels: [],
             datasets: [{
                 label: 'Elevation (m)',
-                data: [],  // Elevation values (Y-axis data)
+                data: [],
                 fill: false,
-                borderColor: '#37a2eb',
-                tension: 0.4
+                borderColor: 'black',
+                tension: 0.1
             }]
         },
         options: {
-            plugins: {
-                legend: { display: true },
-                title: { display: true, text: 'Elevation Profile' }
-            },
-            maintainAspectRatio: false,
-            responsive: true,
             scales: {
                 x: {
-                    grid: { display: false },
-                    title: { display: true, text: 'Segments' }
+                    title: {
+                        display: true,
+                        text: 'Segment'
+                    }
                 },
                 y: {
-                    title: { display: true, text: 'Elevation (m)' }
+                    title: {
+                        display: true,
+                        text: 'Elevation (m)'
+                    }
                 }
-            },
-            elements: {
-                point: { radius: 0 }
             }
         }
     });
 
-    // Add the mapbox token for terrain query
-mapboxgl.accessToken = 'pk.eyJ1IjoidGFza2FsbCIsImEiOiJjbTI0amdhNGkwZGtkMm1xd3BudHJ0dmN0In0.yK-2hu2fVVC6NwmdAXaAwQ';
+    // Function to update the chart with elevation data
+    function updateElevationChart(coordinates) {
+        console.log("Coordinates received for elevation:", coordinates);
 
-// Initialize a Mapbox map instance (in the background just for terrain querying)
-const map = new mapboxgl.Map({
-    container: null,  // Map will not be displayed
-    style: 'mapbox://styles/mapbox/outdoors-v12',  // Necessary for elevation queries
-    bounds: [-71.4, 44.36, -71.08, 44.25279]  // Default bounds, not relevant to display
-});
+        // Clear previous chart data
+        elevationChart.data.labels = [];
+        elevationChart.data.datasets[0].data = [];
 
-// After the map has loaded, start listening for messages from Thunkable
-map.on('load', function () {
-    // Listen for messages sent from Thunkable
-    window.addEventListener('message', async function (event) {
-        alert("Message received from Thunkable!");
+        const promises = coordinates.map((coord, index) => {
+            return mapboxgl.accessToken
+                ? fetch(`https://api.mapbox.com/terrain/v1/elevation?access_token=${mapboxgl.accessToken}&points=${coord[1]},${coord[0]}`)
+                      .then(response => response.json())
+                      .then(data => {
+                          const elevation = data.elevations[0] ? data.elevations[0].elevation : 0;
+                          elevationChart.data.labels.push(`Point ${index + 1}`);
+                          elevationChart.data.datasets[0].data.push(elevation);
+                      })
+                      .catch(err => {
+                          console.error("Error fetching elevation data:", err);
+                      })
+                : Promise.reject("Mapbox access token not set");
+        });
 
-        try {
-            const parsedMessage = JSON.parse(event.data);  // Parse the incoming message
-            const { coordinates } = parsedMessage;  // Extract the coordinates array
-            alert(`Received ${coordinates.length} coordinate pairs.`);
-
-            // Fetch elevations for each coordinate
-            const elevations = await getElevationsForCoordinates(coordinates);
-
-            // Ensure we have matching number of coordinates and elevations
-            if (coordinates.length === elevations.length) {
-                updateChart(coordinates, elevations);
-            } else {
-                alert("Mismatch between coordinates and elevations.");
-            }
-        } catch (error) {
-            alert("Error parsing message.");
-            console.log("Error parsing incoming message:", error);
-        }
-    });
-});
-
-// Function to query elevations for each coordinate
-async function getElevationsForCoordinates(coordinates) {
-    const elevations = [];
-
-    for (const coord of coordinates) {
-        const elevation = await map.queryTerrainElevation(coord);  // Query elevation from Mapbox terrain
-        elevations.push(elevation !== null ? elevation : 0);  // Use 0 if no data found
+        Promise.all(promises).then(() => {
+            elevationChart.update();
+        });
     }
 
-    return elevations;
-}
+    // Listen for messages from Thunkable
+    window.addEventListener("message", function(event) {
+        alert("Message received from Thunkable!"); // Confirm message received
+        console.log("Raw message from Thunkable:", event.data);
 
-// Function to update and draw the elevation chart using Chart.js
-function updateChart(coordinates, elevations) {
-    const ctx = document.getElementById('chart-canvas').getContext('2d');
-
-    // Create a new line chart displaying the elevation data
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: coordinates.map((_, index) => `Point ${index + 1}`),  // Labels for each point (e.g., Point 1, Point 2)
-            datasets: [{
-                label: 'Elevation (m)',  // Label for the dataset
-                data: elevations,  // The elevation values for each point
-                fill: false,  // Don't fill under the line
-                borderColor: 'rgb(75, 192, 192)',  // Line color
-                tension: 0.1  // Line curve tension
-            }]
-        },
-        options: {
-            scales: {
-                x: { display: true },  // Show x-axis labels
-                y: { display: true, beginAtZero: true }  // Show y-axis and start at 0
-            }
+        let message;
+        try {
+            message = JSON.parse(event.data);
+        } catch (error) {
+            console.error("Error parsing incoming message:", error);
+            alert("Error parsing message.");
+            return;
         }
-    });
-}
-</script>
 
+        // Check if coordinates are received
+        if (message.coordinates && Array.isArray(message.coordinates) && message.coordinates.length > 0) {
+            alert("Received " + message.coordinates.length + " coordinate pairs.");
+            console.log("Coordinates received:", message.coordinates);
+            updateElevationChart(message.coordinates); // Call function to update chart
+        } else {
+            alert("No coordinates received.");
+            console.log("No coordinates received.");
+        }
+    }, false);
+
+    // Set your Mapbox access token here
+    mapboxgl.accessToken = 'pk.eyJ1IjoidGFza2FsbCIsImEiOiJjbTI0amdhNGkwZGtkMm1xd3BudHJ0dmN0In0.yK-2hu2fVVC6NwmdAXaAwQ'; // Replace with your Mapbox access token
+</script>
 </body>
 </html>
