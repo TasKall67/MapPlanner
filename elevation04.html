@@ -2,27 +2,22 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elevation Chart</title>
-    <!-- Link to Mapbox GL JS -->
-    <script src="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js"></script>
-    <link href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css" rel="stylesheet">
-    
-    <!-- Link to Chart.js for drawing the chart -->
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>Elevation Profile</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
     <style>
         body { margin: 0; padding: 0; }
-        #chart-container { 
-            height: 100vh; 
-            width: 100%; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
+        #chart-container {
+            height: 100vh;
+            width: 100vw;
+            background-color: rgba(255, 255, 255, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
-        #chart-canvas { 
-            width: 90%; 
-            height: 60%; 
+        #chart-canvas {
+            width: 80%;
+            height: 80%;
         }
     </style>
 </head>
@@ -33,7 +28,41 @@
 </div>
 
 <script>
-// Add the mapbox token for terrain query
+    const myLineChart = new Chart(document.getElementById('chart-canvas'), {
+        type: 'line',
+        data: {
+            labels: [],  // X-axis labels (we'll use segments for now)
+            datasets: [{
+                label: 'Elevation (m)',
+                data: [],  // Elevation values (Y-axis data)
+                fill: false,
+                borderColor: '#37a2eb',
+                tension: 0.4
+            }]
+        },
+        options: {
+            plugins: {
+                legend: { display: true },
+                title: { display: true, text: 'Elevation Profile' }
+            },
+            maintainAspectRatio: false,
+            responsive: true,
+            scales: {
+                x: {
+                    grid: { display: false },
+                    title: { display: true, text: 'Segments' }
+                },
+                y: {
+                    title: { display: true, text: 'Elevation (m)' }
+                }
+            },
+            elements: {
+                point: { radius: 0 }
+            }
+        }
+    });
+
+    // Add the mapbox token for terrain query
 mapboxgl.accessToken = 'pk.eyJ1IjoidGFza2FsbCIsImEiOiJjbTI0amdhNGkwZGtkMm1xd3BudHJ0dmN0In0.yK-2hu2fVVC6NwmdAXaAwQ';
 
 // Initialize a Mapbox map instance (in the background just for terrain querying)
