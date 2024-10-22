@@ -2,43 +2,42 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="initial-scale=1.0">
     <title>Elevation Chart</title>
-    <meta name="viewport" content="initial-scale=1.0, width=device-width">
-    <link href="https://api.mapbox.com/mapbox-gl-js/v2.8.1/mapbox-gl.css" rel="stylesheet">
-    <script src="https://api.mapbox.com/mapbox-gl-js/v2.8.1/mapbox-gl.js"></script>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.css" rel="stylesheet" />
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            background-color: #f0f0f0;
-        }
+        body { margin: 0; padding: 0; }
+        #map { position: absolute; top: 0; bottom: 0; width: 100%; }
         #chart-container {
-            height: 100vh;
-            width: 100vw;
-            background-color: rgba(255, 255, 255, 0.9);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        canvas {
-            width: 80% ; 
-            height: 80% ;
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 300px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px;
         }
     </style>
 </head>
 <body>
 
+<div id="map"></div>
 <div id="chart-container">
     <canvas id="elevationChart"></canvas>
 </div>
 
 <script>
+    // Initialize Mapbox GL JS
+    mapboxgl.accessToken = 'pk.eyJ1IjoidGFza2FsbCIsImEiOiJjbTI0amdhNGkwZGtkMm1xd3BudHJ0dmN0In0.yK-2hu2fVVC6NwmdAXaAwQ'; // Replace with your Mapbox access token
+
+    const map = new mapboxgl.Map({
+        container: 'map',
+        style: 'mapbox://styles/mapbox/outdoors-v12',
+        center: [23.797629, 38.047217], // Set to the first coordinate's longitude and latitude
+        zoom: 14
+    });
+
     // Initialize Chart.js
     const ctx = document.getElementById('elevationChart').getContext('2d');
     const elevationChart = new Chart(ctx, {
@@ -46,10 +45,10 @@
         data: {
             labels: [],
             datasets: [{
-                label: 'Route Elevation (m)',
+                label: 'My Elevation (m)',
                 data: [],
                 fill: false,
-                borderColor: 'red',
+                borderColor: 'yellow',
                 tension: 0.1
             }]
         },
@@ -79,9 +78,13 @@
         elevationChart.data.labels = [];
         elevationChart.data.datasets[0].data = [];
 
+        // Get elevation data for each coordinate
         const promises = coordinates.map((coord, index) => {
             return map.queryTerrainElevation([coord[1], coord[0]])
                 .then(elevation => {
+                    // Log each elevation value fetched
+                    console.log(`Elevation for Point ${index + 1}:`, elevation);
+                    
                     elevationChart.data.labels.push(`Point ${index + 1}`);
                     elevationChart.data.datasets[0].data.push(elevation);
                 })
@@ -90,6 +93,7 @@
                 });
         });
 
+        // Update chart after all elevation data is fetched
         Promise.all(promises).then(() => {
             elevationChart.update();
         });
@@ -120,9 +124,7 @@
             console.log("No coordinates received.");
         }
     }, false);
-
-    // Set your Mapbox access token here
-    mapboxgl.accessToken = 'pk.eyJ1IjoidGFza2FsbCIsImEiOiJjbTI0amdhNGkwZGtkMm1xd3BudHJ0dmN0In0.yK-2hu2fVVC6NwmdAXaAwQ'; // Replace with your Mapbox access token
 </script>
+
 </body>
 </html>
