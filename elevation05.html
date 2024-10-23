@@ -58,10 +58,10 @@
         data: {
             labels: [],
             datasets: [{
-                label: 'Elevation (m)',
+                label: 'Route Elevation (m)',
                 data: [],
                 fill: false,
-                borderColor: 'rgba(75, 192, 192, 1)',
+                borderColor: 'rgba(175, 92, 92, 1)',
                 tension: 0.1
             }]
         },
@@ -83,52 +83,51 @@
         }
     });
 
-    // Listener for coordinates from Thunkable
-    window.addEventListener('message', function(event) {
-        console.log("Message received from Thunkable!");
-        const rawData = event.data;
-
-        try {
-            const coordinates = JSON.parse(rawData);
-            if (coordinates && coordinates.length > 0) {
-                console.log("Coordinates received:", coordinates);
-                updateElevationChart(coordinates);
-            } else {
-                alert("No coordinates received.");
-            }
-        } catch (error) {
-            console.error("Error parsing incoming message:", error);
-        }
-    });
-
-    // Function to update the chart with new coordinates
+    // Function to update the chart with new coordinates and fetch elevations
     function updateElevationChart(coordinates) {
         console.log("Fetching elevation data for coordinates:", coordinates);
 
-        map.on('idle', () => {
-            if (!map.getSource('mapbox-dem')) {
-                console.error("Mapbox DEM source not found.");
-                return;
-            }
-
-            // Fetch elevation data for each coordinate
-            const elevations = coordinates.map((coord) => {
-                console.log(`Querying elevation for coordinate: ${coord}`);
-                const elevation = map.queryTerrainElevation([coord[0], coord[1]]);  // Longitude, Latitude order
-                console.log(`Elevation for ${coord}: ${elevation}`);
-                return elevation !== null ? elevation : 0;  // Handle null elevation by setting to 0
-            });
-
-            console.log("Elevations fetched:", elevations);
-
-            // Populate the chart with the elevations
-            elevationChart.data.labels = coordinates.map((_, index) => `Point ${index + 1}`);
-            elevationChart.data.datasets[0].data = elevations;
-
-            // Update the chart with new data
-            elevationChart.update();
+        // Fetch elevation synchronously for each coordinate
+        const elevations = coordinates.map((coord, index) => {
+            console.log(`Querying elevation for coordinate [${index}]: ${coord}`);
+            const elevation = map.queryTerrainElevation([coord[0], coord[1]]);  // Longitude, Latitude order
+            console.log(`Elevation for [${coord}]: ${elevation}`);
+            return elevation !== null ? elevation : 0;  // Handle null elevation by setting 0
         });
+
+        console.log("Elevations fetched:", elevations);
+
+        // Clear previous chart data
+        elevationChart.data.labels = [];
+        elevationChart.data.datasets[0].data = [];
+
+        // Populate the chart with the fetched elevations
+        coordinates.forEach((coord, index) => {
+            elevationChart.data.labels.push(`Point ${index + 1}`);
+            elevationChart.data.datasets[0].data.push(elevations[index]);
+        });
+
+        // Update the chart with new data
+        elevationChart.update();
     }
+
+    // Listener for coordinates from Thunkable
+    window.addEventListener('message', function (event) {
+        console.log("Message received from Thunkable!");
+        const messageData = event.data;
+
+        try {
+            const parsedData = JSON.parse(messageData);
+            if (parsedData.coordinates && Array.isArray(parsedData.coordinates)) {
+                console.log("Coordinates received:", parsedData.coordinates);
+                updateElevationChart(parsedData.coordinates);
+            } else {
+                console.warn("No coordinates received or invalid format.");
+            }
+        } catch (error) {
+            console.error("Error parsing message from Thunkable:", error);
+        }
+    });
 </script>
 
 </body>
