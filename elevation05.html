@@ -114,21 +114,19 @@
     // Listener for coordinates from Thunkable
     window.addEventListener('message', function (event) {
         console.log("Message received from Thunkable!");
-        
-        // Log the raw message data from Thunkable to debug its format
+
+        // Log the raw message data to ensure correct format
         console.log("Raw message received:", event.data);
 
-        const messageData = event.data;
-
         try {
-            const parsedData = JSON.parse(messageData); // Try to parse the incoming message
+            const coordinates = JSON.parse(event.data); // Parse the incoming message directly as the array
 
-            // Check if 'coordinates' exists and is in array format
-            if (parsedData.coordinates && Array.isArray(parsedData.coordinates)) {
-                console.log("Coordinates received:", parsedData.coordinates);
-                updateElevationChart(parsedData.coordinates);
+            // Check if the message is a valid array of coordinates
+            if (Array.isArray(coordinates) && coordinates.length > 0 && Array.isArray(coordinates[0])) {
+                console.log("Coordinates received:", coordinates);
+                updateElevationChart(coordinates);
             } else {
-                console.warn("No coordinates received or invalid format.", parsedData);
+                console.warn("No valid coordinates received.", coordinates);
             }
         } catch (error) {
             console.error("Error parsing message from Thunkable:", error);
