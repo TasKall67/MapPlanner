@@ -11,12 +11,12 @@
         body { margin: 0; padding: 0; }
         #map { position: absolute; top: 0; bottom: 0; width: 100%; display: none; }
         #chart-container {
-            height: 100vh;
-            width: 100vw;
-            background-color: rgba(255, 255, 255, 0.9);
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 300px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px;
         }
     </style>
 </head>
@@ -58,10 +58,10 @@
         data: {
             labels: [],
             datasets: [{
-                label: 'My Route Elevation (m)',
+                label: 'Elevation (m)',
                 data: [],
                 fill: false,
-                borderColor: 'rgba(175, 92, 92, 1)',
+                borderColor: 'rgba(75, 192, 192, 1)',
                 tension: 0.1
             }]
         },
@@ -114,15 +114,21 @@
     // Listener for coordinates from Thunkable
     window.addEventListener('message', function (event) {
         console.log("Message received from Thunkable!");
+        
+        // Log the raw message data from Thunkable to debug its format
+        console.log("Raw message received:", event.data);
+
         const messageData = event.data;
 
         try {
-            const parsedData = JSON.parse(messageData);
+            const parsedData = JSON.parse(messageData); // Try to parse the incoming message
+
+            // Check if 'coordinates' exists and is in array format
             if (parsedData.coordinates && Array.isArray(parsedData.coordinates)) {
                 console.log("Coordinates received:", parsedData.coordinates);
                 updateElevationChart(parsedData.coordinates);
             } else {
-                console.warn("No coordinates received or invalid format.");
+                console.warn("No coordinates received or invalid format.", parsedData);
             }
         } catch (error) {
             console.error("Error parsing message from Thunkable:", error);
