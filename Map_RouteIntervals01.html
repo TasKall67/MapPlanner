@@ -89,35 +89,36 @@
     }
 
     // Interpolation function to generate additional points along the route
-    function interpolateCoordinates(coords, numPoints) {
-      const interpolated = [];
+function interpolateCoordinates(coords, numPoints) {
+  const interpolated = [];
 
-      for (let i = 0; i < coords.length - 1; i++) {
-        const [x1, y1] = coords[i]; // Current point
-        const [x2, y2] = coords[i + 1]; // Next point
+  // Loop through each segment of the route
+  for (let i = 0; i < coords.length - 1; i++) {
+    const [x1, y1] = coords[i]; // Current point
+    const [x2, y2] = coords[i + 1]; // Next point
 
-        // Add the current point to the interpolated array
-        interpolated.push([x1, y1]);
+    // Add the current point to the interpolated array
+    interpolated.push([x1, y1]);
 
-        // Add additional interpolated points between current and next point
-        for (let j = 1; j <= numPoints; j++) {
-          const t = j / (numPoints + 1); // Fractional distance between points
-          const x = x1 + t * (x2 - x1);
-          const y = y1 + t * (y2 - y1);
-          interpolated.push([x, y]);
-        }
-      }
-
-      // Add the last point to the interpolated array
-      interpolated.push(coords[coords.length - 1]);
-
-      return interpolated;
+    // Compute additional points between current and next point
+    for (let j = 1; j <= numPoints; j++) {
+      const t = j / (numPoints + 1); // Fractional distance between points
+      const x = x1 + t * (x2 - x1);
+      const y = y1 + t * (y2 - y1);
+      interpolated.push([x, y]);
     }
+  }
+
+  // Ensure the last point of the route is added
+  interpolated.push(coords[coords.length - 1]);
+
+  return interpolated;
+}
 
     // When the user clicks on the map, select start and end points
     map.on('click', function (e) {
       if (!startMarker) {
-        startMarker = new mapboxgl.Marker({ color: 'black' })
+        startMarker = new mapboxgl.Marker({ color: 'red' })
           .setLngLat(e.lngLat)
           .addTo(map);
         startCoords = e.lngLat;
