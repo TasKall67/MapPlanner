@@ -78,7 +78,7 @@
 
     // Function to get route from Mapbox Directions API
     function getRoute(startLat, startLng, endLat, endLng) {
-      const directionsAPI = `https://api.mapbox.com/directions/v5/mapbox/cycling/${startLng},${startLat};${endLng},${endLat}?geometries=geojson&access_token=your_mapbox_access_token`;
+      const directionsAPI = `https://api.mapbox.com/directions/v5/mapbox/cycling/${startLng},${startLat};${endLng},${endLat}?geometries=geojson&access_token=pk.eyJ1IjoidGFza2FsbCIsImEiOiJjbTI0amdhNGkwZGtkMm1xd3BudHJ0dmN0In0.yK-2hu2fVVC6NwmdAXaAwQ`;
 
       fetch(directionsAPI)
         .then(response => response.json())
@@ -88,7 +88,7 @@
           const routeCoordinates = data.routes[0].geometry.coordinates;
 
           // INTERPOLATE: Add more points to the route
-          const numInterpolationPoints = 10; // Set this number to increase/decrease points
+          const numInterpolationPoints = 20; // Set this number to increase/decrease points
           const interpolatedRoute = interpolateCoordinates(routeCoordinates, numInterpolationPoints);
 
           // Send interpolated route back to Thunkable
@@ -123,7 +123,7 @@
     // When the user clicks on the map, select start and end points
     map.on('click', function (e) {
       if (!startMarker) {
-        startMarker = new mapboxgl.Marker({ color: 'green' })
+        startMarker = new mapboxgl.Marker({ color: 'yellow' })
           .setLngLat(e.lngLat)
           .addTo(map);
         startCoords = e.lngLat;
