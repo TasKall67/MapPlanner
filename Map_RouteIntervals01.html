@@ -37,16 +37,9 @@
         end: { lat: endLat, lng: endLng }
       };
 
-      // DEBUG: Show alert to check if the function is being triggered
-      //alert("Tassos mind that - Sending coordinates: " + JSON.stringify(message));
-
-
-
       if (window.ReactNativeWebView) {
-        // Use this for mobile apps
         window.ReactNativeWebView.postMessage(JSON.stringify(message));
       } else {
-        // Use this for web browsers
         window.parent.postMessage(JSON.stringify(message), "*");
       }
 
@@ -54,31 +47,9 @@
       getRoute(startLat, startLng, endLat, endLng);
     }
 
-    // Function to interpolate between route coordinates
-    function interpolateCoordinates(coords, numPoints) {
-      const interpolatedCoords = [];
-      for (let i = 0; i < coords.length - 1; i++) {
-        const start = coords[i];
-        const end = coords[i + 1];
-        interpolatedCoords.push(start);
-
-        // Add points between the start and end coordinates
-        for (let j = 1; j < numPoints; j++) {
-          const fraction = j / numPoints;
-          const interpolated = [
-            start[0] + (end[0] - start[0]) * fraction, // Longitude
-            start[1] + (end[1] - start[1]) * fraction  // Latitude
-          ];
-          interpolatedCoords.push(interpolated);
-        }
-      }
-      interpolatedCoords.push(coords[coords.length - 1]); // Add the last point
-      return interpolatedCoords;
-    }
-
     // Function to get route from Mapbox Directions API
     function getRoute(startLat, startLng, endLat, endLng) {
-      const directionsAPI = `https://api.mapbox.com/directions/v5/mapbox/cycling/${startLng},${startLat};${endLng},${endLat}?geometries=geojson&access_token=pk.eyJ1IjoidGFza2FsbCIsImEiOiJjbTI0amdhNGkwZGtkMm1xd3BudHJ0dmN0In0.yK-2hu2fVVC6NwmdAXaAwQ`;
+      const directionsAPI = `https://api.mapbox.com/directions/v5/mapbox/cycling/${startLng},${startLat};${endLng},${endLat}?geometries=geojson&access_token=${mapboxgl.accessToken}`;
 
       fetch(directionsAPI)
         .then(response => response.json())
@@ -87,11 +58,11 @@
           const duration = data.routes[0].duration; // Duration in seconds
           const routeCoordinates = data.routes[0].geometry.coordinates;
 
-          // INTERPOLATE: Add more points to the route
-          const numInterpolationPoints = 20; // Set this number to increase/decrease points
+          // INTERPOLATE: Call the function to add more points to the route
+          const numInterpolationPoints = 10; // Define how many extra points you want between each original point
           const interpolatedRoute = interpolateCoordinates(routeCoordinates, numInterpolationPoints);
 
-          // Send interpolated route back to Thunkable
+          // Send interpolated route details back to Thunkable
           sendRouteDetailsToThunkable(distance, duration, interpolatedRoute);
         })
         .catch(error => {
@@ -99,50 +70,69 @@
         });
     }
 
-    // Function to send distance, duration, and route to Thunkable
+    // Function to send distance, duration, and interpolated route to Thunkable
     function sendRouteDetailsToThunkable(distance, duration, routeCoordinates) {
       const message = {
         distance: distance, // in meters
         duration: duration, // in seconds
-        route: routeCoordinates // interpolated coordinates of the route
+        route: routeCoordinates // coordinates of the interpolated route
       };
-      
-      // DEBUG: Show alert to check if the function is being triggered
+
+      // DEBUG: Show an alert to check if the function is being triggered
       alert("Sending Distance & Duration: " + JSON.stringify(message));
 
-      // Send route details to Thunkable
       if (window.ReactNativeWebView) {
-        // Use this for mobile apps
         window.ReactNativeWebView.postMessage(JSON.stringify(message));
       } else {
-        // Use this for web browsers
         window.parent.postMessage(JSON.stringify(message), "*");
       }
+    }
+
+    // Interpolation function to generate additional points along the route
+    function interpolateCoordinates(coords, numPoints) {
+      const interpolated = [];
+
+      for (let i = 0; i < coords.length - 1; i++) {
+        const [x1, y1] = coords[i]; // Current point
+        const [x2, y2] = coords[i + 1]; // Next point
+
+        // Add the current point to the interpolated array
+        interpolated.push([x1, y1]);
+
+        // Add additional interpolated points between current and next point
+        for (let j = 1; j <= numPoints; j++) {
+          const t = j / (numPoints + 1); // Fractional distance between points
+          const x = x1 + t * (x2 - x1);
+          const y = y1 + t * (y2 - y1);
+          interpolated.push([x, y]);
+        }
+      }
+
+      // Add the last point to the interpolated array
+      interpolated.push(coords[coords.length - 1]);
+
+      return interpolated;
     }
 
     // When the user clicks on the map, select start and end points
     map.on('click', function (e) {
       if (!startMarker) {
-        startMarker = new mapboxgl.Marker({ color: 'yellow' })
+        startMarker = new mapboxgl.Marker({ color: 'black' })
           .setLngLat(e.lngLat)
           .addTo(map);
         startCoords = e.lngLat;
 
-        // DEBUG: Show alert for start coordinates
-        //alert("Start location selected: " + JSON.stringify(startCoords));
       } else if (!endMarker) {
         endMarker = new mapboxgl.Marker({ color: 'red' })
           .setLngLat(e.lngLat)
           .addTo(map);
         endCoords = e.lngLat;
 
-        // DEBUG: Show alert for end coordinates
-        //alert("End location selected: " + JSON.stringify(endCoords));
-
         // Once both start and end are selected, send the coordinates
         sendCoordinatesToThunkable(startCoords.lat, startCoords.lng, endCoords.lat, endCoords.lng);
       }
     });
+
 	
 	
 	//-----------------------------------------------------DRAWING LINE------------------------------------TASSOS-------------
