@@ -71,11 +71,11 @@
     }
 
     // Function to send distance, duration, and interpolated route to Thunkable
-    function sendRouteDetailsToThunkable(distance, duration, routeCoordinates) {
+    function sendRouteDetailsToThunkable(distance, duration, interpolatedRoute ) {
       const message = {
         distance: distance, // in meters
         duration: duration, // in seconds
-        route: routeCoordinates // coordinates of the interpolated route
+        route: interpolatedRoute  // coordinates of the interpolated route
       };
 
       // DEBUG: Show an alert to check if the function is being triggered
@@ -118,13 +118,13 @@ function interpolateCoordinates(coords, numPoints) {
     // When the user clicks on the map, select start and end points
     map.on('click', function (e) {
       if (!startMarker) {
-        startMarker = new mapboxgl.Marker({ color: 'red' })
+        startMarker = new mapboxgl.Marker({ color: 'green' })
           .setLngLat(e.lngLat)
           .addTo(map);
         startCoords = e.lngLat;
 
       } else if (!endMarker) {
-        endMarker = new mapboxgl.Marker({ color: 'red' })
+        endMarker = new mapboxgl.Marker({ color: 'green' })
           .setLngLat(e.lngLat)
           .addTo(map);
         endCoords = e.lngLat;
