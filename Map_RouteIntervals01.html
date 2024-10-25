@@ -59,7 +59,7 @@
           const routeCoordinates = data.routes[0].geometry.coordinates;
 
           // Interpolate coordinates
-      const interpolatedCoordinates = interpolateCoordinates(routeCoordinates, 30); // Use 10 or desired interval
+      const interpolatedCoordinates = interpolateCoordinates(routeCoordinates, 5); // Use 10 or desired interval
       
       // Send distance, duration, and interpolated route to Thunkable
       sendRouteDetailsToThunkable(distance, duration, interpolatedCoordinates);
