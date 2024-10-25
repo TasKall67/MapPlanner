@@ -58,24 +58,23 @@
           const duration = data.routes[0].duration; // Duration in seconds
           const routeCoordinates = data.routes[0].geometry.coordinates;
 
-          // INTERPOLATE: Call the function to add more points to the route
-          const numInterpolationPoints = 10; // Define how many extra points you want between each original point
-          const interpolatedRoute = interpolateCoordinates(routeCoordinates, numInterpolationPoints);
-
-          // Send interpolated route details back to Thunkable
-          sendRouteDetailsToThunkable(distance, duration, interpolatedRoute);
-        })
+          // Interpolate coordinates
+      const interpolatedCoordinates = interpolateCoordinates(routeCoordinates, 10); // Use 10 or desired interval
+      
+      // Send distance, duration, and interpolated route to Thunkable
+      sendRouteDetailsToThunkable(distance, duration, interpolatedCoordinates);
+    })
         .catch(error => {
           console.error('Error fetching route:', error);
         });
     }
 
     // Function to send distance, duration, and interpolated route to Thunkable
-    function sendRouteDetailsToThunkable(distance, duration, interpolatedRoute ) {
+    function sendRouteDetailsToThunkable(distance, duration, routeCoordinates ) {
       const message = {
         distance: distance, // in meters
         duration: duration, // in seconds
-        route: interpolatedRoute  // coordinates of the interpolated route
+        route: routeCoordinates  // coordinates of the interpolated route
       };
 
       // DEBUG: Show an alert to check if the function is being triggered
@@ -118,13 +117,13 @@ function interpolateCoordinates(coords, numPoints) {
     // When the user clicks on the map, select start and end points
     map.on('click', function (e) {
       if (!startMarker) {
-        startMarker = new mapboxgl.Marker({ color: 'green' })
+        startMarker = new mapboxgl.Marker({ color: 'red' })
           .setLngLat(e.lngLat)
           .addTo(map);
         startCoords = e.lngLat;
 
       } else if (!endMarker) {
-        endMarker = new mapboxgl.Marker({ color: 'green' })
+        endMarker = new mapboxgl.Marker({ color: 'red' })
           .setLngLat(e.lngLat)
           .addTo(map);
         endCoords = e.lngLat;
