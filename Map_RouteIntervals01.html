@@ -49,7 +49,7 @@
 
     // Function to get route from Mapbox Directions API
     function getRoute(startLat, startLng, endLat, endLng) {
-      const directionsAPI = `https://api.mapbox.com/directions/v5/mapbox/cycling/${startLng},${startLat};${endLng},${endLat}?geometries=geojson&access_token=${mapboxgl.accessToken}`;
+      const directionsAPI = `https://api.mapbox.com/directions/v5/mapbox/driving/${startLng},${startLat};${endLng},${endLat}?geometries=geojson&access_token=${mapboxgl.accessToken}`;
 
       fetch(directionsAPI)
         .then(response => response.json())
@@ -59,7 +59,7 @@
           const routeCoordinates = data.routes[0].geometry.coordinates;
 
           // Interpolate coordinates
-      const interpolatedCoordinates = interpolateCoordinates(routeCoordinates, 5); // Use 10 or desired interval
+      const interpolatedCoordinates = interpolateCoordinates(routeCoordinates, 2); // Use 10 or desired interval
       
       // Send distance, duration, and interpolated route to Thunkable
       sendRouteDetailsToThunkable(distance, duration, interpolatedCoordinates);
