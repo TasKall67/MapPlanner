@@ -56,12 +56,12 @@
     const elevationChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: [],  // Will be updated to show cumulative distances
+            labels: [],  // To hold cumulative distances
             datasets: [{
                 label: 'Route Elevation (m)',
-                data: [],
+                data: [], // To hold elevations
                 fill: false,
-                borderColor: 'black',
+                borderColor: 'yellow',
                 tension: 0.1
             }]
         },
@@ -70,11 +70,11 @@
                 x: {
                     title: {
                         display: true,
-                        text: 'Distance (m)'  // Change X-axis title to 'Distance (m)'
+                        text: 'Distance (m)'  // X-axis title
                     },
                     ticks: {
                         callback: function(value) {
-                            // Format labels to show every 100m, round to nearest hundred
+                            // Format labels to show every 100m
                             return Math.round(value / 100) * 100; 
                         },
                         stepSize: 100 // Set interval for ticks
@@ -149,8 +149,8 @@
 
             // Populate the chart with the fetched elevations and distances
             distances.forEach((distance, index) => {
-                elevationChart.data.labels.push(Math.round(distance)); // Use cumulative distance for X-axis and round
-                elevationChart.data.datasets[0].data.push(elevations[index]);
+                elevationChart.data.labels.push(Math.round(distance)); // Use cumulative distance for X-axis
+                elevationChart.data.datasets[0].data.push(elevations[index]); // Use elevation data for Y-axis
             });
 
             // Update the chart with new data
