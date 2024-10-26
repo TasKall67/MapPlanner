@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="initial-scale=1.0">
+    <title>Elevation Chart</title>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css" rel="stylesheet" />
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        #map { position: absolute; top: 0; bottom: 0; width: 100%; display: none; }
+        #chart-container {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 300px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="map"></div>
+<div id="chart-container">
+    <canvas id="elevationChart"></canvas>
+</div>
+
+<script>
+    // Mapbox access token
+    mapboxgl.accessToken = 'pk.eyJ1IjoidGFza2FsbCIsImEiOiJjbTI0amdhNGkwZGtkMm1xd3BudHJ0dmN0In0.yK-2hu2fVVC6NwmdAXaAwQ'; // Replace with your actual access token
+
+    // Initialize Mapbox GL JS map
+    const map = new mapboxgl.Map({
+        container: 'map', // ID of the element where map is placed (hidden)
+        style: 'mapbox://styles/mapbox/outdoors-v12',
+        center: [23.88502168818337, 38.00955972668331], // Some initial location
+        zoom: 14
+    });
+
+    // Add the DEM terrain source when the map is loaded
+    map.on('load', () => {
+        console.log("Map is loaded. Adding DEM source.");
+        map.addSource('mapbox-dem', {
+            'type': 'raster-dem',
+            'url': 'mapbox://mapbox.terrain-rgb',
+            'tileSize': 512,
+            'maxzoom': 14
+        });
+        map.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1 });
+    });
+
+    // Initialize Chart.js for the elevation profile
+    const ctx = document.getElementById('elevationChart').getContext('2d');
+    const elevationChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [],  // Will be updated to show cumulative distances
+            datasets: [{
+                label: 'My Route Elevation (m)',
+                data: [],
+                fill: false,
+                borderColor: 'red',
+                tension: 0.1
+            }]
+        },
+        options: {
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Distance (m)'  // Change X-axis title to 'Distance (m)'
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Elevation (m)'
+                    }
+                }
+            }
+        }
+    });
+
+    // Helper function to calculate distance between two coordinates
+    function getDistance(coord1, coord2) {
+        const R = 6371000; // Radius of the Earth in meters
+        const lat1 = coord1[1] * Math.PI / 180; // Convert degrees to radians
+        const lat2 = coord2[1] * Math.PI / 180; // Convert degrees to radians
+        const deltaLat = (coord2[1] - coord1[1]) * Math.PI / 180;
+        const deltaLon = (coord2[0] - coord1[0]) * Math.PI / 180;
+
+        const a = Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
+                  Math.cos(lat1) * Math.cos(lat2) *
+                  Math.sin(deltaLon / 2) * Math.sin(deltaLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+        return R * c; // Distance in meters
+    }
+
+    // Function to update the chart with new coordinates and fetch elevations
+    function updateElevationChart(coordinates) {
+        console.log("Fetching elevation data for coordinates:", coordinates);
+		
+        // Calculate elevations and cumulative distances
+        const elevations = [];
+        const distances = [];
+        let totalDistance = 0;
+
+        // Create a bounding box to fit the map view to all coordinates
+        const bounds = coordinates.reduce((bounds, coord) => bounds.extend(coord), new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
+
+        // Fit the map to these bounds to load terrain tiles for the full area
+        map.fitBounds(bounds, { padding: 50 });
+        
+        // Wait until map is idle and tiles are loaded, then query elevations
+        map.once('idle', () => {
+            coordinates.forEach((coord, index) => {
+                console.log(`Querying elevation for coordinate [${index}]: ${coord}`);
+                const elevation = map.queryTerrainElevation([coord[0], coord[1]]);  // Longitude, Latitude order
+                console.log(`Elevation for [${coord}]: ${elevation}`);
+                elevations.push(elevation !== null ? elevation : 0);  // Handle null elevation by setting 0
+                
+                // Calculate cumulative distance
+                if (index > 0) {
+                    const prevCoord = coordinates[index - 1];
+                    const distance = getDistance(prevCoord, coord);
+                    totalDistance += distance; // Update total distance
+                }
+                distances.push(totalDistance); // Store cumulative distance
+            });
+
+            console.log("Elevations fetched:", elevations);
+            console.log("Cumulative distances:", distances);
+
+            // Clear previous chart data
+            elevationChart.data.labels = []; // Clear existing labels
+            elevationChart.data.datasets[0].data = []; // Clear existing data
+
+            // Populate the chart with the fetched elevations and distances
+            distances.forEach((distance, index) => {
+                elevationChart.data.labels.push(distance); // Use cumulative distance for X-axis
+                elevationChart.data.datasets[0].data.push(elevations[index]);
+            });
+
+            // Update the chart with new data
+            elevationChart.update();
+
+            // Optionally, return to initial view after fetching elevation data
+            // map.easeTo({ center: [initialLng, initialLat], zoom: initialZoom });
+        });
+    }
+
+    // Listener for coordinates from Thunkable
+    window.addEventListener('message', function (event) {
+        console.log("Message received from Thunkable!");
+
+        // Log the raw message data to ensure correct format
+        console.log("Raw message received:", event.data);
+
+        try {
+            const coordinates = JSON.parse(event.data); // Parse the incoming message directly as the array
+
+            // Check if the message is a valid array of coordinates
+            if (Array.isArray(coordinates) && coordinates.length > 0 && Array.isArray(coordinates[0])) {
+                console.log("Coordinates received:", coordinates);
+                updateElevationChart(coordinates);
+            } else {
+                console.warn("No valid coordinates received.", coordinates);
+            }
+        } catch (error) {
+            console.error("Error parsing message from Thunkable:", error);
+        }
+    });
+</script>
+
+</body>
+</html>
