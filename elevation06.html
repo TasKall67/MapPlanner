@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="initial-scale=1.0">
     <title>Elevation Chart</title>
-    <link href="https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.css" rel="stylesheet" />
-    <script src="https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.js"></script>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css" rel="stylesheet" />
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { margin: 0; padding: 0; }
@@ -28,25 +28,41 @@
 </div>
 
 <script>
-    mapboxgl.accessToken = 'pk.eyJ1IjoidGFza2FsbCIsImEiOiJjbTI0amdhNGkwZGtkMm1xd3BudHJ0dmN0In0.yK-2hu2fVVC6NwmdAXaAwQ';
+    // Mapbox access token
+	
+    mapboxgl.accessToken = 'pk.eyJ1IjoidGFza2FsbCIsImEiOiJjbTI0amdhNGkwZGtkMm1xd3BudHJ0dmN0In0.yK-2hu2fVVC6NwmdAXaAwQ'; // Replace with your actual access token
 
+    // Initialize Mapbox GL JS map
     const map = new mapboxgl.Map({
-        container: 'map',
+        container: 'map', // ID of the element where map is placed (hidden)
         style: 'mapbox://styles/mapbox/outdoors-v12',
-        center: [23.797629, 38.047217],
+        center: [23.88502168818337, 38.00955972668331], // Some initial location
         zoom: 14
     });
 
+    // Add the DEM terrain source when the map is loaded
+    map.on('load', () => {
+        console.log("Map is loaded. Adding DEM source.");
+        map.addSource('mapbox-dem', {
+            'type': 'raster-dem',
+            'url': 'mapbox://mapbox.terrain-rgb',
+            'tileSize': 512,
+            'maxzoom': 14
+        });
+        map.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1 });
+    });
+
+    // Initialize Chart.js for the elevation profile
     const ctx = document.getElementById('elevationChart').getContext('2d');
     const elevationChart = new Chart(ctx, {
         type: 'line',
         data: {
             labels: [],
             datasets: [{
-                label: 'Elevation (m)',
+                label: 'Route Elevation (m)',
                 data: [],
                 fill: false,
-                borderColor: 'red',
+                borderColor: 'black',
                 tension: 0.1
             }]
         },
@@ -68,43 +84,56 @@
         }
     });
 
-    async function fetchElevation(coord) {
-        const tilequeryAPI = `https://api.mapbox.com/v4/mapbox.mapbox-terrain-v2/tilequery/${coord[0]},${coord[1]}.json?layers=contour&limit=1&access_token=${mapboxgl.accessToken}`;
-        try {
-            const response = await fetch(tilequeryAPI);
-            const data = await response.json();
-            if (data.features && data.features.length > 0) {
-                return data.features[0].properties.ele || 0;
-            } else {
-                console.warn(`No elevation data available for ${coord}`);
-                return 0;
-            }
-        } catch (error) {
-            console.error(`Error fetching elevation for ${coord}:`, error);
-            return 0;
-        }
-    }
-
-    async function updateElevationChart(coordinates) {
+    // Function to update the chart with new coordinates and fetch elevations
+    function updateElevationChart(coordinates) {
         console.log("Fetching elevation data for coordinates:", coordinates);
 
-        // Fetch elevations asynchronously
-        const elevations = await Promise.all(coordinates.map(coord => fetchElevation(coord)));
+        // Create a bounding box to fit the map view to all coordinates
+        const bounds = coordinates.reduce((bounds, coord) => bounds.extend(coord), new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
 
-        console.log("Elevations fetched:", elevations);
+        // Fit the map to these bounds to load terrain tiles for the full area
+        map.fitBounds(bounds, { padding: 50 });
+        
+        // Wait until map is idle and tiles are loaded, then query elevations
+        map.once('idle', () => {
+            const elevations = coordinates.map((coord, index) => {
+                console.log(`Querying elevation for coordinate [${index}]: ${coord}`);
+                const elevation = map.queryTerrainElevation([coord[0], coord[1]]);  // Longitude, Latitude order
+                console.log(`Elevation for [${coord}]: ${elevation}`);
+                return elevation !== null ? elevation : 0;  // Handle null elevation by setting 0
+            });
 
-        // Update the chart with fetched elevation data
-        elevationChart.data.labels = coordinates.map((_, index) => `Point ${index + 1}`);
-        elevationChart.data.datasets[0].data = elevations;
-        elevationChart.update();
+            console.log("Elevations fetched:", elevations);
+
+            // Clear previous chart data
+            elevationChart.data.labels = [];
+            elevationChart.data.datasets[0].data = [];
+
+            // Populate the chart with the fetched elevations
+            coordinates.forEach((coord, index) => {
+                elevationChart.data.labels.push(`Point ${index + 1}`);
+                elevationChart.data.datasets[0].data.push(elevations[index]);
+            });
+
+            // Update the chart with new data
+            elevationChart.update();
+
+            // Optionally, return to initial view after fetching elevation data
+            // map.easeTo({ center: [initialLng, initialLat], zoom: initialZoom });
+        });
     }
 
+    // Listener for coordinates from Thunkable
     window.addEventListener('message', function (event) {
         console.log("Message received from Thunkable!");
+
+        // Log the raw message data to ensure correct format
         console.log("Raw message received:", event.data);
 
         try {
-            const coordinates = JSON.parse(event.data);
+            const coordinates = JSON.parse(event.data); // Parse the incoming message directly as the array
+
+            // Check if the message is a valid array of coordinates
             if (Array.isArray(coordinates) && coordinates.length > 0 && Array.isArray(coordinates[0])) {
                 console.log("Coordinates received:", coordinates);
                 updateElevationChart(coordinates);
