@@ -58,7 +58,7 @@
         data: {
             labels: [],  // Will be updated to show cumulative distances
             datasets: [{
-                label: 'My Route Elevation (m)',
+                label: 'Route Elevation (m)',
                 data: [],
                 fill: false,
                 borderColor: 'red',
@@ -71,6 +71,13 @@
                     title: {
                         display: true,
                         text: 'Distance (m)'  // Change X-axis title to 'Distance (m)'
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            // Format labels to show every 100m
+                            return Math.floor(value / 100) * 100; // Round down to nearest hundred
+                        },
+                        stepSize: 100 // Set interval for ticks
                     }
                 },
                 y: {
