@@ -61,7 +61,7 @@
                 label: 'Route Elevation (m)',
                 data: [],
                 fill: false,
-                borderColor: 'red',
+                borderColor: 'green',
                 tension: 0.1
             }]
         },
@@ -127,8 +127,10 @@
                 console.log(`Querying elevation for coordinate [${index}]: ${coord}`);
                 const elevation = map.queryTerrainElevation([coord[0], coord[1]]);  // Longitude, Latitude order
                 console.log(`Elevation for [${coord}]: ${elevation}`);
-                elevations.push(elevation !== null ? elevation : 0);  // Handle null elevation by setting 0
-                
+
+                // Handle null elevation by setting to 0
+                elevations.push(elevation !== null ? elevation : 0);  
+
                 // Calculate cumulative distance
                 if (index > 0) {
                     const prevCoord = coordinates[index - 1];
@@ -153,9 +155,6 @@
 
             // Update the chart with new data
             elevationChart.update();
-
-            // Optionally, return to initial view after fetching elevation data
-            // map.easeTo({ center: [initialLng, initialLat], zoom: initialZoom });
         });
     }
 
