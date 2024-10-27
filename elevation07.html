@@ -61,7 +61,7 @@
                 label: 'Elevation (m)',
                 data: [], // To hold elevations
                 fill: false,
-                borderColor: 'red',
+                borderColor: 'blue',
                 tension: 0.1
             }]
         },
@@ -131,26 +131,18 @@
             console.log("Elevations:", elevations);
             console.log("Cumulative distances:", cumulativeDistances);
 
-            // Update the chart data with real cumulative distances and elevations
+            // Update chart with cumulative distances and elevations
+            elevationChart.data.labels = cumulativeDistances;
             elevationChart.data.datasets[0].data = elevations;
 
-            // Define fixed labels for the X-axis
-            const xLabels = [];
-            const maxDistance = 1000; // Set your max display distance
-            const interval = 100;
-
-            for (let i = 0; i <= maxDistance; i += interval) {
-                xLabels.push(i); // Label the X-axis every 100 meters
-            }
-
-            elevationChart.data.labels = xLabels; // Set fixed labels for X-axis
-
-            // Update X-axis to use fixed labels
+            // Set up dynamic scaling for X-axis with fixed intervals
             elevationChart.options.scales.x = {
                 title: { display: true, text: 'Distance (m)' },
+                beginAtZero: true,
                 ticks: {
+                    stepSize: 100, // Set interval display on X-axis every 100 meters
                     callback: function(value) {
-                        return xLabels[value] || ""; // Display only specified labels
+                        return value; // Show cumulative distance values at specified intervals
                     }
                 }
             };
@@ -158,8 +150,6 @@
             elevationChart.update();
         });
     }
-
-
 
 
     // Listener for coordinates from Thunkable
