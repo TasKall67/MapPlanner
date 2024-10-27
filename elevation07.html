@@ -61,7 +61,7 @@
                 label: 'Elevation (m)',
                 data: [], // To hold elevations
                 fill: false,
-                borderColor: 'green',
+                borderColor: 'red',
                 tension: 0.1
             }]
         },
@@ -107,11 +107,12 @@
 
     
     // Updated function for cumulative distance chart rendering
+    <script>
     function updateElevationChart(coordinates) {
         console.log("Fetching elevation data for coordinates:", coordinates);
 
         const elevations = [];
-        const cumulativeDistances = [0]; // Initialize cumulative distance with 0 for the starting point
+        const cumulativeDistances = [0]; // Initialize with 0 for starting point
         let totalDistance = 0;
 
         // Fit map bounds and calculate distances/elevations
@@ -134,21 +135,25 @@
             console.log("Elevations:", elevations);
             console.log("Cumulative distances:", cumulativeDistances);
 
-            // Update chart data and labels
+            // Set the chart data
             elevationChart.data.labels = cumulativeDistances;
             elevationChart.data.datasets[0].data = elevations;
 
-            // Adjust the X-axis for better display of distances
+            // Calculate dynamic range for the X-axis and set tick intervals
+            const maxDistance = Math.ceil(totalDistance / 100) * 100; // Round up to the nearest 100 for max range
+
             elevationChart.options.scales.x = {
                 title: { display: true, text: 'Distance (m)' },
+                min: 0,
+                max: maxDistance,
                 ticks: {
-                    stepSize: 100, // Display a tick at roughly every 100 meters
-                    callback: function(value, index) {
-                        // Show every 100 meters or closest approximate value
-                        if (cumulativeDistances[index] % 100 === 0 || index === cumulativeDistances.length - 1) {
-                            return cumulativeDistances[index];
+                    stepSize: 100,
+                    callback: function(value) {
+                        // Only show labels at 100-meter intervals or the last cumulative distance point
+                        if (value % 100 === 0 || value === cumulativeDistances[cumulativeDistances.length - 1]) {
+                            return value;
                         }
-                        return ''; // Skip labels not meeting the condition
+                        return '';
                     }
                 }
             };
@@ -156,6 +161,8 @@
             elevationChart.update(); // Update and render the chart
         });
     }
+</script>
+
 
 
 
