@@ -61,7 +61,7 @@
                 label: 'Elevation (m)',
                 data: [], // To hold elevations
                 fill: false,
-                borderColor: 'blue',
+                borderColor: 'red',
                 tension: 0.1
             }]
         },
@@ -135,14 +135,16 @@
             elevationChart.data.labels = cumulativeDistances;
             elevationChart.data.datasets[0].data = elevations;
 
-            // Set up dynamic scaling for X-axis with fixed intervals
+            // Set up dynamic scaling for X-axis with fixed intervals and correct labeling
             elevationChart.options.scales.x = {
                 title: { display: true, text: 'Distance (m)' },
                 beginAtZero: true,
+                min: 0,
+                max: Math.ceil(totalDistance / 100) * 100, // Round up max to nearest 100
                 ticks: {
                     stepSize: 100, // Set interval display on X-axis every 100 meters
                     callback: function(value) {
-                        return value; // Show cumulative distance values at specified intervals
+                        return value.toString(); // Display cumulative distance values
                     }
                 }
             };
@@ -150,7 +152,6 @@
             elevationChart.update();
         });
     }
-
 
     // Listener for coordinates from Thunkable
     window.addEventListener('message', function (event) {
