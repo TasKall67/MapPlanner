@@ -61,7 +61,7 @@
                 label: 'Elevation (m)',
                 data: [], // To hold elevations
                 fill: false,
-                borderColor: 'blue',
+                borderColor: 'green',
                 tension: 0.1
             }]
         },
@@ -91,29 +91,16 @@
     });
 
 
-     // Function to calculate distance between coordinates
-    function getDistance(coord1, coord2) {
-        const R = 6371000; // Radius of Earth in meters
-        const lat1 = coord1[1] * Math.PI / 180;
-        const lat2 = coord2[1] * Math.PI / 180;
-        const deltaLat = (coord2[1] - coord1[1]) * Math.PI / 180;
-        const deltaLon = (coord2[0] - coord1[0]) * Math.PI / 180;
-
-        const a = Math.sin(deltaLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(deltaLon / 2) ** 2;
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-        return R * c;
-    }
-
-    // Function to update the chart with new coordinates and fetch elevations
+     <script>
+    // Updated function for cumulative distance chart rendering
     function updateElevationChart(coordinates) {
         console.log("Fetching elevation data for coordinates:", coordinates);
 
         const elevations = [];
-        const cumulativeDistances = [0]; // Start with the first point at 0 distance
+        const cumulativeDistances = [0]; // Initialize cumulative distance with 0 for the starting point
         let totalDistance = 0;
 
-        // Fit the map to load tiles for full area and calculate elevations
+        // Fit map bounds and calculate distances/elevations
         const bounds = coordinates.reduce((bounds, coord) => bounds.extend(coord), new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
         map.fitBounds(bounds, { padding: 50 });
 
@@ -126,32 +113,37 @@
                     const prevCoord = coordinates[index - 1];
                     const distance = getDistance(prevCoord, coord);
                     totalDistance += distance;
-                    cumulativeDistances.push(Math.round(totalDistance)); // Round to nearest meter for display
+                    cumulativeDistances.push(Math.round(totalDistance));
                 }
             });
 
             console.log("Elevations:", elevations);
             console.log("Cumulative distances:", cumulativeDistances);
 
-            // Update chart labels and data
-            elevationChart.data.labels = cumulativeDistances; // Cumulative distances as X-axis labels
+            // Update chart data and labels
+            elevationChart.data.labels = cumulativeDistances;
             elevationChart.data.datasets[0].data = elevations;
 
-            // Update chart options for X-axis
+            // Adjust the X-axis for better display of distances
             elevationChart.options.scales.x = {
                 title: { display: true, text: 'Distance (m)' },
                 ticks: {
-                    autoSkip: false, // Disable autoSkip for testing
-                    callback: function(value, index, values) {
-                        // Only display if the value is a multiple of 100 for readability
-                        return value % 100 === 0 ? value : '';
+                    stepSize: 100, // Display a tick at roughly every 100 meters
+                    callback: function(value, index) {
+                        // Show every 100 meters or closest approximate value
+                        if (cumulativeDistances[index] % 100 === 0 || index === cumulativeDistances.length - 1) {
+                            return cumulativeDistances[index];
+                        }
+                        return ''; // Skip labels not meeting the condition
                     }
                 }
             };
 
-            elevationChart.update(); // Redraw the chart
+            elevationChart.update(); // Update and render the chart
         });
     }
+</script>
+
 
 
     // Listener for coordinates from Thunkable
