@@ -58,10 +58,10 @@
         data: {
             labels: [],  // To hold cumulative distances
             datasets: [{
-                label: 'My Elevation (m)',
+                label: 'Elevation (m)',
                 data: [], // To hold elevations
                 fill: false,
-                borderColor: 'red',
+                borderColor: 'green',
                 tension: 0.1
             }]
         },
@@ -107,22 +107,21 @@
         return R * c; // Distance in meters
     }
 
-    // Function to update the chart with new coordinates and fetch elevations (revised)
+   // Function to update the chart with new coordinates and fetch elevations
     function updateElevationChart(coordinates) {
         console.log("Fetching elevation data for coordinates:", coordinates);
 
         const elevations = [];
-        const distances = [];
+        const cumulativeDistances = [];
         let totalDistance = 0;
 
         // Fit the map to load tiles for full area and calculate elevations
         const bounds = coordinates.reduce((bounds, coord) => bounds.extend(coord), new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
         map.fitBounds(bounds, { padding: 50 });
         
-        // Wait until map is idle
         map.once('idle', () => {
             coordinates.forEach((coord, index) => {
-                const elevation = map.queryTerrainElevation([coord[0], coord[1]]);  // Longitude, Latitude order
+                const elevation = map.queryTerrainElevation([coord[0], coord[1]]);
                 elevations.push(elevation !== null ? elevation : 0);
 
                 if (index > 0) {
@@ -130,26 +129,29 @@
                     const distance = getDistance(prevCoord, coord);
                     totalDistance += distance;
                 }
-                distances.push(totalDistance);
+                cumulativeDistances.push(Math.round(totalDistance)); // Store rounded cumulative distances
             });
 
             console.log("Elevations:", elevations);
-            console.log("Cumulative distances:", distances);
+            console.log("Cumulative distances:", cumulativeDistances);
 
-            // Clear previous data and populate chart
-            elevationChart.data.labels = distances.map(d => Math.round(d));  // Set X-axis with cumulative distances
-            elevationChart.data.datasets[0].data = elevations;               // Set Y-axis with elevations
+            // Set cumulative distances as X-axis labels and update chart
+            elevationChart.data.labels = cumulativeDistances;
+            elevationChart.data.datasets[0].data = elevations;
 
-            // Update chart with new configuration
-            elevationChart.options.scales.x.ticks = {
-                stepSize: 100,           // Show every 100m on the X-axis
-                autoSkip: true,          // Enable auto-skip for large datasets
-                callback: function(value, index) {
-                    return value;       // Display each value as-is without rounding again
+            // Update chart options to display cumulative distances every 100m
+            elevationChart.options.scales.x = {
+                title: { display: true, text: 'Distance (m)' },
+                ticks: {
+                    stepSize: 100,
+                    autoSkip: true,
+                    callback: function(value) {
+                        return value; // Show each tick as-is
+                    }
                 }
             };
-            
-            elevationChart.update();    // Redraw chart
+
+            elevationChart.update(); // Redraw the chart
         });
     }
 
