@@ -61,7 +61,7 @@
                 label: 'Elevation (m)',
                 data: [], // To hold elevations
                 fill: false,
-                borderColor: 'red',
+                borderColor: 'green',
                 tension: 0.1
             }]
         },
@@ -105,8 +105,6 @@
     }
 
 
-    
-    // Updated function for cumulative distance chart rendering
     function updateElevationChart(coordinates) {
         console.log("Fetching elevation data for coordinates:", coordinates);
 
@@ -138,21 +136,15 @@
             elevationChart.data.labels = cumulativeDistances;
             elevationChart.data.datasets[0].data = elevations;
 
-            // Calculate dynamic range for the X-axis and set tick intervals
-            const maxDistance = Math.ceil(totalDistance / 100) * 100; // Round up to the nearest 100 for max range
-
+            // Set static X-axis range and tick interval
             elevationChart.options.scales.x = {
                 title: { display: true, text: 'Distance (m)' },
                 min: 0,
-                max: maxDistance,
+                max: 1000,  // Set max to a chosen value, e.g., 1000 meters
                 ticks: {
                     stepSize: 100,
                     callback: function(value) {
-                        // Only show labels at 100-meter intervals or the last cumulative distance point
-                        if (value % 100 === 0 || value === cumulativeDistances[cumulativeDistances.length - 1]) {
-                            return value;
-                        }
-                        return '';
+                        return value; // Display every 100-meter interval up to 1000
                     }
                 }
             };
@@ -160,6 +152,7 @@
             elevationChart.update(); // Update and render the chart
         });
     }
+
 
 
 
