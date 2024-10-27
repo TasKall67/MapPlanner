@@ -61,7 +61,7 @@
                 label: 'Elevation (m)',
                 data: [], // To hold elevations
                 fill: false,
-                borderColor: 'green',
+                borderColor: 'red',
                 tension: 0.1
             }]
         },
@@ -109,10 +109,9 @@
         console.log("Fetching elevation data for coordinates:", coordinates);
 
         const elevations = [];
-        const cumulativeDistances = [0]; // Initialize with 0 for starting point
+        const cumulativeDistances = [0];
         let totalDistance = 0;
 
-        // Fit map bounds and calculate distances/elevations
         const bounds = coordinates.reduce((bounds, coord) => bounds.extend(coord), new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
         map.fitBounds(bounds, { padding: 50 });
 
@@ -132,27 +131,33 @@
             console.log("Elevations:", elevations);
             console.log("Cumulative distances:", cumulativeDistances);
 
-            // Set the chart data
-            elevationChart.data.labels = cumulativeDistances;
+            // Update the chart data with real cumulative distances and elevations
             elevationChart.data.datasets[0].data = elevations;
 
-            // Set static X-axis range and tick interval
+            // Define fixed labels for the X-axis
+            const xLabels = [];
+            const maxDistance = 1000; // Set your max display distance
+            const interval = 100;
+
+            for (let i = 0; i <= maxDistance; i += interval) {
+                xLabels.push(i); // Label the X-axis every 100 meters
+            }
+
+            elevationChart.data.labels = xLabels; // Set fixed labels for X-axis
+
+            // Update X-axis to use fixed labels
             elevationChart.options.scales.x = {
                 title: { display: true, text: 'Distance (m)' },
-                min: 0,
-                max: 1000,  // Set max to a chosen value, e.g., 1000 meters
                 ticks: {
-                    stepSize: 100,
                     callback: function(value) {
-                        return value; // Display every 100-meter interval up to 1000
+                        return xLabels[value] || ""; // Display only specified labels
                     }
                 }
             };
 
-            elevationChart.update(); // Update and render the chart
+            elevationChart.update();
         });
     }
-
 
 
 
