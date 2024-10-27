@@ -58,10 +58,10 @@
         data: {
             labels: [],  // To hold cumulative distances
             datasets: [{
-                label: 'Route Elevation (m)',
+                label: 'My Elevation (m)',
                 data: [], // To hold elevations
                 fill: false,
-                borderColor: 'yellow',
+                borderColor: 'red',
                 tension: 0.1
             }]
         },
@@ -90,7 +90,8 @@
         }
     });
 
-    // Helper function to calculate distance between two coordinates
+
+    // Helper function to calculate distance between two coordinates (no changes)
     function getDistance(coord1, coord2) {
         const R = 6371000; // Radius of the Earth in meters
         const lat1 = coord1[1] * Math.PI / 180; // Convert degrees to radians
@@ -106,57 +107,52 @@
         return R * c; // Distance in meters
     }
 
-    // Function to update the chart with new coordinates and fetch elevations
+    // Function to update the chart with new coordinates and fetch elevations (revised)
     function updateElevationChart(coordinates) {
         console.log("Fetching elevation data for coordinates:", coordinates);
-		
-        // Calculate elevations and cumulative distances
+
         const elevations = [];
         const distances = [];
         let totalDistance = 0;
 
-        // Create a bounding box to fit the map view to all coordinates
+        // Fit the map to load tiles for full area and calculate elevations
         const bounds = coordinates.reduce((bounds, coord) => bounds.extend(coord), new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
-
-        // Fit the map to these bounds to load terrain tiles for the full area
         map.fitBounds(bounds, { padding: 50 });
         
-        // Wait until map is idle and tiles are loaded, then query elevations
+        // Wait until map is idle
         map.once('idle', () => {
             coordinates.forEach((coord, index) => {
-                console.log(`Querying elevation for coordinate [${index}]: ${coord}`);
                 const elevation = map.queryTerrainElevation([coord[0], coord[1]]);  // Longitude, Latitude order
-                console.log(`Elevation for [${coord}]: ${elevation}`);
+                elevations.push(elevation !== null ? elevation : 0);
 
-                // Handle null elevation by setting to 0
-                elevations.push(elevation !== null ? elevation : 0);  
-
-                // Calculate cumulative distance
                 if (index > 0) {
                     const prevCoord = coordinates[index - 1];
                     const distance = getDistance(prevCoord, coord);
-                    totalDistance += distance; // Update total distance
+                    totalDistance += distance;
                 }
-                distances.push(totalDistance); // Store cumulative distance
+                distances.push(totalDistance);
             });
 
-            console.log("Elevations fetched:", elevations);
+            console.log("Elevations:", elevations);
             console.log("Cumulative distances:", distances);
 
-            // Clear previous chart data
-            elevationChart.data.labels = []; // Clear existing labels
-            elevationChart.data.datasets[0].data = []; // Clear existing data
+            // Clear previous data and populate chart
+            elevationChart.data.labels = distances.map(d => Math.round(d));  // Set X-axis with cumulative distances
+            elevationChart.data.datasets[0].data = elevations;               // Set Y-axis with elevations
 
-            // Populate the chart with the fetched elevations and distances
-            distances.forEach((distance, index) => {
-                elevationChart.data.labels.push(Math.round(distance)); // Use cumulative distance for X-axis
-                elevationChart.data.datasets[0].data.push(elevations[index]); // Use elevation data for Y-axis
-            });
-
-            // Update the chart with new data
-            elevationChart.update();
+            // Update chart with new configuration
+            elevationChart.options.scales.x.ticks = {
+                stepSize: 100,           // Show every 100m on the X-axis
+                autoSkip: true,          // Enable auto-skip for large datasets
+                callback: function(value, index) {
+                    return value;       // Display each value as-is without rounding again
+                }
+            };
+            
+            elevationChart.update();    // Redraw chart
         });
     }
+
 
     // Listener for coordinates from Thunkable
     window.addEventListener('message', function (event) {
