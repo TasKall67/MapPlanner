@@ -168,7 +168,7 @@ function interpolateCoordinates(coords, numPoints) {
        'line-cap': 'round'
      },
      'paint': {
-       'line-color': 'blue',
+       'line-color': 'green',
        'line-width': 5
      }
    });
@@ -182,27 +182,45 @@ function interpolateCoordinates(coords, numPoints) {
 }
 
 
-  // Listen for messages from Thunkable (Web Viewer)
-  window.addEventListener('message', function(event) {
-    const message = event.data;
-    console.log("Raw message from Thunkable:", message);
-	alert("Raw message from Thunkable: " + JSON.stringify(message)); // For debugging
+  /// Listen for messages from Thunkable (Web Viewer)
+window.addEventListener('message', function(event) {
+  const message = event.data;
+  
+  // Alert for debugging
+  alert("Received raw message: " + message);
 
-    try {
-      const parsedCoordinates = JSON.parse(message);  // Parse the coordinates
+  // Handle the message based on the environment
+  try {
+    // If the message is coming from a mobile WebView
+    if (window.ReactNativeWebView) {
+      const parsedMessage = JSON.parse(message);
+      console.log("Parsed message from mobile:", parsedMessage);
+      
+      // Process the parsed message here, for example:
+      if (parsedMessage.route) {
+        drawRoute(parsedMessage.route);  // Call the function to draw the route
+      } else {
+        console.error("No route data found in mobile message.");
+        alert("No route data found in mobile message.");
+      }
+    } else {
+      // Handle web version
+      const parsedCoordinates = JSON.parse(message);
+      console.log("Parsed Coordinates from web:", parsedCoordinates);
+
       if (Array.isArray(parsedCoordinates) && parsedCoordinates.length > 0) {
-        console.log("Parsed Coordinates:", parsedCoordinates);
-	      alert("My Parsed Coordinates:", +JSON.stringify(parsedCoordinates));
         drawRoute(parsedCoordinates);  // Call the function to draw the route
       } else {
         console.error("No valid coordinates found in the message.");
-	      alert("No valid coordinates found in the message.");
+        alert("No valid coordinates found in the message.");
       }
-    } catch (e) {
-      console.error("Failed to parse the message:", e);
-	  alert("Failed to parse the message: " + e);
     }
-  });
+  } catch (e) {
+    console.error("Failed to parse the message:", e);
+    alert("Failed to parse the message: " + e);
+  }
+});
+
   
 </script>
 </body>
