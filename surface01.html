@@ -18,7 +18,7 @@
             const coordinatesString = coordinatesArray.map(coord => coord.join(',')).join(';');
 
             // Construct the URL for the API request
-            const url = `https://api.mapbox.com/directions/v5/mapbox/cycling/${coordinatesString}?geometries=geojson&annotations=surface&tidy=true&access_token=YOUR_ACCESS_TOKEN`;
+            const url = `https://api.mapbox.com/directions/v5/mapbox/cycling/${coordinatesString}?geometries=geojson&annotations=surface&tidy=true&access_token=pk.eyJ1IjoidGFza2FsbCIsImEiOiJjbTI0amdhNGkwZGtkMm1xd3BudHJ0dmN0In0.yK-2hu2fVVC6NwmdAXaAwQ`;
 
             // Fetch surface data
             fetch(url)
