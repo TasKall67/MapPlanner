@@ -16,7 +16,7 @@
             background-color: #f5f5f5;
         }
         #surfaceData {
-            background: blue;
+            background: green;
             border-radius: 8px;
             padding: 15px;
             box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
@@ -45,7 +45,7 @@
         // Format coordinates for API request
         const coordPairs = coordinates.map(coord => `${coord[0]},${coord[1]}`).join(';');
         
-        const directionsUrl = `https://api.mapbox.com/directions/v5/mapbox/cycling/{coordinates}?geometries=geojson&annotations=surface&tidy=true&access_token=pk.eyJ1IjoidGFza2FsbCIsImEiOiJjbTI0amdhNGkwZGtkMm1xd3BudHJ0dmN0In0.yK-2hu2fVVC6NwmdAXaAwQ`;
+        const directionsUrl = `https://api.mapbox.com/directions/v5/mapbox/cycling/23.785895,38.050466;23.785785,38.050530333333334;23.785674999999998,38.05059466666667?geometries=geojson&annotations=surface&tidy=true&access_token=pk.eyJ1IjoidGFza2FsbCIsImEiOiJjbTI0amdhNGkwZGtkMm1xd3BudHJ0dmN0In0.yK-2hu2fVVC6NwmdAXaAwQ`;
                                
 
 
