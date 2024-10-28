@@ -3,64 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="initial-scale=1.0">
-    <title>Surface Type Checker</title>
-    <script src="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js"></script>
-    <link href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css" rel="stylesheet" />
+    <title>Surface Type Viewer byt Tassos Kallianiotis</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f5f5f5;
+        }
+        #surfaceData {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+        }
+        h2 {
+            color: #333;
+        }
+    </style>
 </head>
 <body>
 
+<div id="surfaceData">
+    <h2>Surface Types</h2>
+    <div id="surfaceTypeOutput">Loading...</div>
+</div>
+
 <script>
     // Mapbox access token
-    mapboxgl.accessToken = 'pk.eyJ1IjoidGFza2FsbCIsImEiOiJjbTI0amdhNGkwZGtkMm1xd3BudHJ0dmN0In0.yK-2hu2fVVC6NwmdAXaAwQ'; // Replace with your access token
+    const mapboxToken = 'pk.eyJ1IjoidGFza2FsbCIsImEiOiJjbTI0amdhNGkwZGtkMm1xd3BudHJ0dmN0In0.yK-2hu2fVVC6NwmdAXaAwQ';
 
-    // Listener to receive coordinates from Thunkable WebViewer
-    window.addEventListener('message', function (event) {
-        console.log("Message received from Thunkable:", event.data);
+    // Function to fetch surface types
+    function fetchSurfaceTypes(coordinates) {
+        // Format coordinates for API request
+        const coordPairs = coordinates.map(coord => `${coord[0]},${coord[1]}`).join(';');
+        
+        const directionsUrl = `https://api.mapbox.com/directions/v5/mapbox/cycling/${coordPairs}?geometries=geojson&annotations=surface&tidy=true&access_token=${mapboxToken}`;
 
-        try {
-            const coordinates = JSON.parse(event.data); // Parse coordinates array from the message
-
-            // Check that the received message contains valid coordinates
-            if (Array.isArray(coordinates) && coordinates.length > 1) {
-                console.log("Coordinates for surface check:", coordinates);
-
-                // Pass coordinates to get surface types
-                getSurfaceTypes(coordinates);
-            } else {
-                console.warn("No valid coordinates received for surface type check.");
-            }
-        } catch (error) {
-            console.error("Error parsing coordinates from Thunkable:", error);
-        }
-    });
-
-    // Function to get surface types using Map Matching API
-    function getSurfaceTypes(coordinates) {
-        // Convert coordinates array to required format for Map Matching API
-        const coordString = coordinates.map(coord => coord.join(',')).join(';');
-
-        // Map Matching API URL with surface annotation
-        const mapMatchingAPI = `https://api.mapbox.com/matching/v5/mapbox/cycling/${coordString}?geometries=geojson&annotations=surface&tidy=true&access_token=${mapboxgl.accessToken}`;
-
-        fetch(mapMatchingAPI)
+        fetch(directionsUrl)
             .then(response => response.json())
             .then(data => {
-                // Check if surface data is available
-                if (data.matchings && data.matchings[0].legs[0].annotation.surface) {
-                    const surfaceTypes = data.matchings[0].legs[0].annotation.surface;
+                if (data.routes && data.routes[0]) {
+                    const surfaces = data.routes[0].legs[0].annotation.surface;
+
+                    // Format surface data for display
+                    const surfaceInfo = surfaces.map((surface, index) => `Segment ${index + 1}: ${surface || 'Unknown'}`).join('<br>');
                     
-                    // Display surface types in an alert for now
-                    alert("Surface types for each segment: " + surfaceTypes.join(', '));
-                    console.log("Surface types for each segment:", surfaceTypes);
+                    // Display surface types in the output div
+                    document.getElementById('surfaceTypeOutput').innerHTML = surfaceInfo;
                 } else {
-                    console.warn("Surface data not available in the response.");
+                    document.getElementById('surfaceTypeOutput').innerHTML = "No surface data available.";
                 }
             })
             .catch(error => {
-                console.error('Error fetching surface types:', error);
+                console.error("Error fetching surface types:", error);
+                document.getElementById('surfaceTypeOutput').innerHTML = "Error fetching surface data.";
             });
     }
 
+    // Listen for messages from Thunkable with coordinates
+    window.addEventListener('message', function (event) {
+        try {
+            const coordinates = JSON.parse(event.data);
+            if (Array.isArray(coordinates) && coordinates.length > 1) {
+                fetchSurfaceTypes(coordinates);
+            } else {
+                document.getElementById('surfaceTypeOutput').innerHTML = "Invalid coordinates received.";
+            }
+        } catch (error) {
+            console.error("Error parsing message:", error);
+            document.getElementById('surfaceTypeOutput').innerHTML = "Error processing data.";
+        }
+    });
 </script>
 
 </body>
