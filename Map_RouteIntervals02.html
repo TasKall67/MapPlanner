@@ -171,7 +171,7 @@ function interpolateCoordinates(coords, numPoints) {
                     'line-cap': 'round'
                 },
                 'paint': {
-                    'line-color': 'blue',
+                    'line-color': 'yellow',
                     'line-width': 5
                 }
             });
@@ -185,7 +185,7 @@ function interpolateCoordinates(coords, numPoints) {
         }
 
         // Handle messages from Thunkable
-        window.addEventListener('message', function(event) {
+        document.addEventListener('message', function(event) {
             console.log("Received message from Thunkable:", event.data); // Log the raw message
 
             try {
