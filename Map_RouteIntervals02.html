@@ -142,6 +142,12 @@ function interpolateCoordinates(coords, numPoints) {
         function drawRoute(routeCoordinates) {
             console.log("Coordinates received: ", routeCoordinates);
 
+            // Ensure the route has valid coordinates
+            if (!Array.isArray(routeCoordinates) || routeCoordinates.length === 0) {
+                console.error("Invalid route coordinates.");
+                return;
+            }
+
             // Add the route to the map as a GeoJSON line
             map.addSource('route', {
                 'type': 'geojson',
@@ -155,6 +161,7 @@ function interpolateCoordinates(coords, numPoints) {
                 }
             });
 
+            // Add a layer to display the route
             map.addLayer({
                 'id': 'route',
                 'type': 'line',
@@ -177,28 +184,27 @@ function interpolateCoordinates(coords, numPoints) {
             map.fitBounds(bounds, { padding: 50 });
         }
 
-        // Listen for messages from Thunkable (Web Viewer)
+        // Handle messages from Thunkable
         window.addEventListener('message', function(event) {
-            console.log("Raw message from Thunkable:", event.data);
+            console.log("Received message from Thunkable:", event.data); // Log the raw message
 
             try {
-                const parsedCoordinates = JSON.parse(event.data);  // Parse the coordinates
-                console.log("Parsed Coordinates:", parsedCoordinates);
+                const parsedCoordinates = JSON.parse(event.data); // Parse coordinates
+                console.log("Parsed Coordinates:", parsedCoordinates); // Log parsed coordinates
+
                 if (Array.isArray(parsedCoordinates) && parsedCoordinates.length > 0) {
-                    alert("Parsed Coordinates: " + JSON.stringify(parsedCoordinates));
-                    drawRoute(parsedCoordinates);  // Call the function to draw the route
+                    drawRoute(parsedCoordinates); // Draw the route
                 } else {
-                    console.error("No valid coordinates found in the message.");
-                    alert("No valid coordinates found in the message.");
+                    console.error("No valid coordinates found.");
                 }
             } catch (e) {
-                console.error("Failed to parse the message:", e);
+                console.error("Error parsing message:", e);
             }
         });
 
+        // Ensure the map is loaded before adding layers or sources
         map.on('load', function() {
-            console.log('Map loaded');
-            // Optionally trigger a default route draw here
+            console.log('Map loaded successfully.');
         });
   
 </script>
