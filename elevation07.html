@@ -93,100 +93,112 @@ const elevationChart = new Chart(ctx, {
 });
 
 
-    // Function to calculate distance between coordinates
-    function getDistance(coord1, coord2) {
-        const R = 6371000; // Radius of Earth in meters
-        const lat1 = coord1[1] * Math.PI / 180;
-        const lat2 = coord2[1] * Math.PI / 180;
-        const deltaLat = (coord2[1] - coord1[1]) * Math.PI / 180;
-        const deltaLon = (coord2[0] - coord1[0]) * Math.PI / 180;
+   // Function to calculate distance between coordinates
+function getDistance(coord1, coord2) {
+    const R = 6371000; // Radius of Earth in meters
+    const lat1 = coord1[1] * Math.PI / 180;
+    const lat2 = coord2[1] * Math.PI / 180;
+    const deltaLat = (coord2[1] - coord1[1]) * Math.PI / 180;
+    const deltaLon = (coord2[0] - coord1[0]) * Math.PI / 180;
 
-        const a = Math.sin(deltaLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(deltaLon / 2) ** 2;
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const a = Math.sin(deltaLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(deltaLon / 2) ** 2;
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
-        return R * c;
-    }
+    return R * c;
+}
 
+function updateElevationChart(coordinates) {
+    const elevations = [];
+    const cumulativeDistances = [0];
+    let totalDistance = 0;
 
-  
-    function updateElevationChart(coordinates) {
-        console.log("Fetching elevation data for coordinates:", coordinates);
+    const bounds = coordinates.reduce((bounds, coord) => bounds.extend(coord), new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
+    map.fitBounds(bounds, { padding: 50 });
 
-        const elevations = [];
-        const cumulativeDistances = [0];
-        let totalDistance = 0;
+    map.once('idle', () => {
+        coordinates.forEach((coord, index) => {
+            const elevation = map.queryTerrainElevation([coord[0], coord[1]]);
+            elevations.push(elevation !== null ? elevation : 0);
 
-        const bounds = coordinates.reduce((bounds, coord) => bounds.extend(coord), new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
-        map.fitBounds(bounds, { padding: 50 });
+            if (index > 0) {
+                const prevCoord = coordinates[index - 1];
+                const distance = getDistance(prevCoord, coord);
+                totalDistance += distance;
+                cumulativeDistances.push(Math.round(totalDistance));
+            }
+        });
 
-        map.once('idle', () => {
-            coordinates.forEach((coord, index) => {
-                const elevation = map.queryTerrainElevation([coord[0], coord[1]]);
-                elevations.push(elevation !== null ? elevation : 0);
+        const interval = 100;
+        const resampledDistances = [];
+        const resampledElevations = [];
+        let currentIndex = 0;
 
-                if (index > 0) {
-                    const prevCoord = coordinates[index - 1];
-                    const distance = getDistance(prevCoord, coord);
-                    totalDistance += distance;
-                    cumulativeDistances.push(Math.round(totalDistance));
-                }
-            });
-
-            console.log("Original Elevations:", elevations);
-            console.log("Original Cumulative Distances:", cumulativeDistances);
-
-            // Define resampling interval (e.g., 100 meters)
-            const interval = 100;
-            const resampledDistances = [];
-            const resampledElevations = [];
-            let currentIndex = 0;
-
-            // Resample elevations at each 100m interval
-            for (let d = 0; d <= totalDistance; d += interval) {
-                // Find closest original cumulative distance >= current interval distance
-                while (currentIndex < cumulativeDistances.length - 1 && cumulativeDistances[currentIndex] < d) {
-                    currentIndex++;
-                }
-
-                // Interpolate elevation for the exact distance
-                if (currentIndex < cumulativeDistances.length && cumulativeDistances[currentIndex] === d) {
-                    resampledDistances.push(d);
-                    resampledElevations.push(elevations[currentIndex]);
-                } else if (currentIndex > 0) {
-                    const dist1 = cumulativeDistances[currentIndex - 1];
-                    const dist2 = cumulativeDistances[currentIndex];
-                    const elev1 = elevations[currentIndex - 1];
-                    const elev2 = elevations[currentIndex];
-                    const interpolatedElevation = elev1 + ((d - dist1) / (dist2 - dist1)) * (elev2 - elev1);
-                    resampledDistances.push(d);
-                    resampledElevations.push(interpolatedElevation);
-                }
+        for (let d = 0; d <= totalDistance; d += interval) {
+            while (currentIndex < cumulativeDistances.length - 1 && cumulativeDistances[currentIndex] < d) {
+                currentIndex++;
             }
 
-            console.log("Resampled Distances:", resampledDistances);
-            console.log("Resampled Elevations:", resampledElevations);
+            if (currentIndex < cumulativeDistances.length && cumulativeDistances[currentIndex] === d) {
+                resampledDistances.push(d);
+                resampledElevations.push(elevations[currentIndex]);
+            } else if (currentIndex > 0) {
+                const dist1 = cumulativeDistances[currentIndex - 1];
+                const dist2 = cumulativeDistances[currentIndex];
+                const elev1 = elevations[currentIndex - 1];
+                const elev2 = elevations[currentIndex];
+                const interpolatedElevation = elev1 + ((d - dist1) / (dist2 - dist1)) * (elev2 - elev1);
+                resampledDistances.push(d);
+                resampledElevations.push(interpolatedElevation);
+            }
+        }
 
-            // Update chart with resampled data
-            elevationChart.data.labels = resampledDistances;
-            elevationChart.data.datasets[0].data = resampledElevations;
+        // Update chart with resampled data
+        elevationChart.data.labels = resampledDistances;
+        elevationChart.data.datasets[0].data = resampledElevations;
 
-            // Set up dynamic scaling for X-axis with resampled intervals
-            elevationChart.options.scales.x = {
-                title: { display: true, text: 'Distance (m)' },
-                beginAtZero: true,
-                min: 0,
-                max: Math.ceil(totalDistance / interval) * interval,
-                ticks: {
-                    stepSize: interval, // Set interval display on X-axis every 100 meters
-                    callback: function(value) {
-                        return value.toString(); // Display distance values
-                    }
+        // Set up dynamic scaling for X-axis with resampled intervals
+        elevationChart.options.scales.x = {
+            title: { display: true, text: 'Distance (m)' },
+            min: 0,
+            max: Math.ceil(totalDistance / interval) * interval,
+            ticks: {
+                stepSize: interval,
+                callback: function(value) {
+                    return value.toString(); // Display distance values directly as numbers
                 }
-            };
+            }
+        };
 
-            elevationChart.update();
-        });
+        elevationChart.update();
+    });
+}
+
+// Initialize Chart.js for the elevation profile
+const ctx = document.getElementById('elevationChart').getContext('2d');
+const elevationChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: [], // Cumulative distances to be filled by updateElevationChart
+        datasets: [{
+            label: 'Elevation (m)',
+            data: [], // Elevation data to be filled by updateElevationChart
+            fill: false,
+            borderColor: 'black',
+            tension: 0.1
+        }]
+    },
+    options: {
+        scales: {
+            x: {
+                title: { display: true, text: 'Distance (m)' }
+            },
+            y: {
+                title: { display: true, text: 'Elevation (m)' }
+            }
+        }
     }
+});
+
 
 
 
