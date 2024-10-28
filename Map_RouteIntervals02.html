@@ -117,7 +117,7 @@ function interpolateCoordinates(coords, numPoints) {
     // When the user clicks on the map, select start and end points
     map.on('click', function (e) {
       if (!startMarker) {
-        startMarker = new mapboxgl.Marker({ color: 'blue' })
+        startMarker = new mapboxgl.Marker({ color: 'red' })
           .setLngLat(e.lngLat)
           .addTo(map);
         startCoords = e.lngLat;
@@ -171,7 +171,7 @@ function interpolateCoordinates(coords, numPoints) {
                     'line-cap': 'round'
                 },
                 'paint': {
-                    'line-color': 'yellow',
+                    'line-color': 'blue',
                     'line-width': 5
                 }
             });
@@ -184,23 +184,32 @@ function interpolateCoordinates(coords, numPoints) {
             map.fitBounds(bounds, { padding: 50 });
         }
 
-        // Handle messages from Thunkable
-        document.addEventListener('message', function(event) {
-            console.log("Received message from Thunkable:", event.data); // Log the raw message
+      // Unified function to handle messages
+    function handleMessage(event) {
+        const message = event.data;
+        console.log("Raw message:", message);
 
-            try {
-                const parsedCoordinates = JSON.parse(event.data); // Parse coordinates
-                console.log("Parsed Coordinates:", parsedCoordinates); // Log parsed coordinates
-
-                if (Array.isArray(parsedCoordinates) && parsedCoordinates.length > 0) {
-                    drawRoute(parsedCoordinates); // Draw the route
-                } else {
-                    console.error("No valid coordinates found.");
-                }
-            } catch (e) {
-                console.error("Error parsing message:", e);
+        try {
+            const parsedCoordinates = JSON.parse(message);
+            if (Array.isArray(parsedCoordinates) && parsedCoordinates.length > 0) {
+                console.log("Parsed Coordinates:", parsedCoordinates);
+                drawRoute(parsedCoordinates);
+            } else {
+                console.error("No valid coordinates found in the message.");
             }
-        });
+        } catch (e) {
+            console.error("Failed to parse the message:", e);
+        }
+    }
+
+    // Listen for messages from Thunkable (Web Viewer) or other sources
+    document.addEventListener('message', handleMessage);
+    window.addEventListener('message', handleMessage);
+
+    // Also, you can listen for the load event on the window
+    window.addEventListener('load', () => {
+        console.log("Window loaded, ready for messages.");
+    });
 
         // Ensure the map is loaded before adding layers or sources
         map.on('load', function() {
