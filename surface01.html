@@ -3,88 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="initial-scale=1.0">
-    <title>Surface Type Viewer by Tassos Kallianiotis</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #f5f5f5;
+    <title>Mapbox Surface Type Debug new</title>
+    <script>
+        // Function to fetch surface types from Mapbox
+        function fetchSurfaceTypes() {
+            // Define the coordinates for the route
+            const coordinatesArray = [
+                [23.785895, 38.050466],
+                [23.785785, 38.050530],
+                [23.785675, 38.050595]
+            ];
+
+            // Convert coordinates array to Mapbox's expected format: "lon,lat;lon,lat;..."
+            const coordinatesString = coordinatesArray.map(coord => coord.join(',')).join(';');
+
+            // Construct the URL for the API request
+            const url = `https://api.mapbox.com/directions/v5/mapbox/cycling/${coordinatesString}?geometries=geojson&annotations=surface&tidy=true&access_token=YOUR_ACCESS_TOKEN`;
+
+            // Fetch surface data
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok ' + response.statusText);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Check if the route and surface data is present
+                    if (data.routes && data.routes.length > 0) {
+                        const surfaceTypes = data.routes[0].legs[0].annotation.surface;
+                        console.log('Surface Types:', surfaceTypes);
+
+                        // Display surface types in the alert
+                        alert('Surface Types:\n' + surfaceTypes.join('\n'));
+                    } else {
+                        console.warn('No routes found in response');
+                        alert('No routes found in response');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching surface data:', error);
+                    alert('Error fetching surface data: ' + error.message);
+                });
         }
-        #surfaceData {
-            background: white;
-            border-radius: 8px;
-            padding: 15px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-            width: 90%;
-            max-width: 400px;
-            text-align: center;
-        }
-        h2 {
-            color: #333;
-        }
-    </style>
+
+        // Execute the function when the page loads
+        window.onload = fetchSurfaceTypes;
+    </script>
 </head>
 <body>
-
-<div id="surfaceData">
-    <h2>Surface Types by TK</h2>
-    <div id="surfaceTypeOutput">Loading...</div>
-</div>
-
-<script>
-    // Mapbox access token
-    const mapboxToken = 'pk.eyJ1IjoidGFza2FsbCIsImEiOiJjbTI0amdhNGkwZGtkMm1xd3BudHJ0dmN0In0.yK-2hu2fVVC6NwmdAXaAwQ';
-
-    // Function to fetch surface types
-    function fetchSurfaceTypes(coordinates) {
-        // Format coordinates for API request
-        const coordPairs = coordinates.map(coord => `${coord[0]},${coord[1]}`).join(';');
-        
-        const directionsUrl = `https://api.mapbox.com/directions/v5/mapbox/cycling/23.785895,38.050466;23.785785,38.050530333333334;23.785674999999998,38.05059466666667?geometries=geojson&annotations=stype&tidy=true&access_token=pk.eyJ1IjoidGFza2FsbCIsImEiOiJjbTI0amdhNGkwZGtkMm1xd3BudHJ0dmN0In0.yK-2hu2fVVC6NwmdAXaAwQ`;
-                               
-
-
-        fetch(directionsUrl)
-            .then(response => response.json())
-            .then(data => {
-                if (data.routes && data.routes[0]) {
-                    const surfaces = data.routes[0].legs[0].annotation.surface;
-
-                    // Format surface data for display
-                    const surfaceInfo = surfaces.map((surface, index) => `Segment ${index + 1}: ${surface || 'Unknown'}`).join('<br>');
-                    
-                    // Display surface types in the output div
-                    document.getElementById('surfaceTypeOutput').innerHTML = surfaceInfo;
-                } else {
-                    document.getElementById('surfaceTypeOutput').innerHTML = "No surface data available.";
-                }
-            })
-            .catch(error => {
-                console.error("Error fetching surface types:", error);
-                document.getElementById('surfaceTypeOutput').innerHTML = "Error fetching surface data.";
-            });
-    }
-
-    // Listen for messages from Thunkable with coordinates
-    window.addEventListener('message', function (event) {
-        try {
-            const coordinates = JSON.parse(event.data);
-            if (Array.isArray(coordinates) && coordinates.length > 1) {
-                fetchSurfaceTypes(coordinates);
-            } else {
-                document.getElementById('surfaceTypeOutput').innerHTML = "Invalid coordinates received.";
-            }
-        } catch (error) {
-            console.error("Error parsing message:", error);
-            document.getElementById('surfaceTypeOutput').innerHTML = "Error processing data.";
-        }
-    });
-</script>
-
+    <h1>Mapbox Surface Type Debug</h1>
+    <p>Open the console to view surface type data.</p>
 </body>
 </html>
