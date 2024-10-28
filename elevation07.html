@@ -79,6 +79,7 @@ function updateElevationChart(coordinates) {
         coordinates.forEach((coord, index) => {
             const elevation = map.queryTerrainElevation([coord[0], coord[1]]);
             elevations.push(elevation !== null ? elevation : 0);
+            console.log(`Elevation at point ${index}:`, elevation);  // Log each elevation
 
             if (index > 0) {
                 const prevCoord = coordinates[index - 1];
@@ -87,6 +88,9 @@ function updateElevationChart(coordinates) {
                 cumulativeDistances.push(Math.round(totalDistance));
             }
         });
+
+        console.log("Original Elevations:", elevations);
+        console.log("Original Cumulative Distances:", cumulativeDistances);
 
         const interval = 100;
         const resampledDistances = [];
@@ -111,6 +115,9 @@ function updateElevationChart(coordinates) {
                 resampledElevations.push(interpolatedElevation);
             }
         }
+
+        console.log("Resampled Distances:", resampledDistances);
+        console.log("Resampled Elevations:", resampledElevations);
 
         // Update chart with resampled data
         elevationChart.data.labels = resampledDistances;
@@ -143,7 +150,7 @@ const elevationChart = new Chart(ctx, {
             label: 'Elevation (m)',
             data: [], // Elevation data to be filled by updateElevationChart
             fill: false,
-            borderColor: 'black',
+            borderColor: 'red',
             tension: 0.1
         }]
     },
@@ -158,8 +165,6 @@ const elevationChart = new Chart(ctx, {
         }
     }
 });
-
-
 
 
     // Listener for coordinates from Thunkable
