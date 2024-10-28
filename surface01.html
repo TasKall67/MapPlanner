@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="initial-scale=1.0">
-    <title>Mapbox Surface Type Debug new</title>
+    <title>Mapbox Surface Type Debug</title>
     <script>
         // Function to fetch surface types from Mapbox
         function fetchSurfaceTypes() {
@@ -20,11 +20,16 @@
             // Construct the URL for the API request
             const url = `https://api.mapbox.com/directions/v5/mapbox/cycling/${coordinatesString}?geometries=geojson&annotations=surface&tidy=true&access_token=pk.eyJ1IjoidGFza2FsbCIsImEiOiJjbTI0amdhNGkwZGtkMm1xd3BudHJ0dmN0In0.yK-2hu2fVVC6NwmdAXaAwQ`;
 
+            console.log("Request URL:", url); // Log the URL for debugging
+
             // Fetch surface data
             fetch(url)
                 .then(response => {
+                    console.log("Response Status:", response.status); // Log the status code
                     if (!response.ok) {
-                        throw new Error('Network response was not ok ' + response.statusText);
+                        return response.text().then(text => { // Read the response as text
+                            throw new Error(`Network response was not ok: ${response.status} - ${text}`);
+                        });
                     }
                     return response.json();
                 })
@@ -52,7 +57,7 @@
     </script>
 </head>
 <body>
-    <h1>Mapbox Surface Type Debug</h1>
+    <h1>Mapbox Surface Type Debug By TK</h1>
     <p>Open the console to view surface type data.</p>
 </body>
 </html>
