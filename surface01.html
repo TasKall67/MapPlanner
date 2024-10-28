@@ -46,6 +46,8 @@
         const coordPairs = coordinates.map(coord => `${coord[0]},${coord[1]}`).join(';');
         
         const directionsUrl = `https://api.mapbox.com/directions/v5/mapbox/cycling/${coordPairs}?geometries=geojson&annotations=surface&tidy=true&access_token=${mapboxToken}`;
+                               https://api.mapbox.com/directions/v5/mapbox/cycling/{coordinates}?geometries=geojson&annotations=surface&tidy=true&access_token=pk.eyJ1IjoidGFza2FsbCIsImEiOiJjbTI0amdhNGkwZGtkMm1xd3BudHJ0dmN0In0.yK-2hu2fVVC6NwmdAXaAwQ
+
 
         fetch(directionsUrl)
             .then(response => response.json())
