@@ -123,15 +123,17 @@ function updateElevationChart(coordinates) {
         elevationChart.data.labels = resampledDistances;
         elevationChart.data.datasets[0].data = resampledElevations;
 
-        // Set up dynamic scaling for X-axis with resampled intervals
+        const totalLabels = resampledDistances.length;
+        const displayStep = Math.ceil(totalLabels / 10); // Adjust based on total points, aiming for 10 labels
         elevationChart.options.scales.x = {
             title: { display: true, text: 'Distance (m)' },
             min: 0,
             max: Math.ceil(totalDistance / interval) * interval,
             ticks: {
                 stepSize: interval,
-                callback: function(value) {
-                    return value.toString(); // Display distance values directly as numbers
+                callback: function(value, index) {
+                    // Show only every displayStep-th label for readability
+                    return index % displayStep === 0 ? value : '';
                 }
             }
         };
@@ -150,7 +152,7 @@ const elevationChart = new Chart(ctx, {
             label: 'Elevation (m)',
             data: [], // Elevation data to be filled by updateElevationChart
             fill: false,
-            borderColor: 'red',
+            borderColor: 'green',
             tension: 0.1
         }]
     },
