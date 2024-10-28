@@ -117,7 +117,7 @@ function interpolateCoordinates(coords, numPoints) {
     // When the user clicks on the map, select start and end points
     map.on('click', function (e) {
       if (!startMarker) {
-        startMarker = new mapboxgl.Marker({ color: 'green' })
+        startMarker = new mapboxgl.Marker({ color: 'red' })
           .setLngLat(e.lngLat)
           .addTo(map);
         startCoords = e.lngLat;
@@ -182,44 +182,38 @@ function interpolateCoordinates(coords, numPoints) {
 }
 
 
-  /// Listen for messages from Thunkable (Web Viewer)
+// Listen for messages from Thunkable (Web Viewer)
 window.addEventListener('message', function(event) {
+  // Remove origin check for debugging purposes
+  const messageOrigin = event.origin; // can log for debugging
   const message = event.data;
-  
-  // Alert for debugging
-  alert("Received raw message: " + message);
 
-  // Handle the message based on the environment
+  // DEBUG: Show an alert to check if the function is being triggered
+  alert("Received raw message: " + JSON.stringify(message));
+
   try {
-    // If the message is coming from a mobile WebView
-    if (window.ReactNativeWebView) {
-      const parsedMessage = JSON.parse(message);
-      console.log("Parsed message from mobile:", parsedMessage);
-      
-      // Process the parsed message here, for example:
-      if (parsedMessage.route) {
-        drawRoute(parsedMessage.route);  // Call the function to draw the route
-      } else {
-        console.error("No route data found in mobile message.");
-        alert("No route data found in mobile message.");
-      }
+    // Check if the message is coming from a mobile WebView
+    let parsedMessage;
+    
+    // Try to parse the message as JSON
+    parsedMessage = JSON.parse(message);
+    
+    // If successful, log and handle the parsed message
+    console.log("Parsed Message:", parsedMessage);
+    
+    if (Array.isArray(parsedMessage.route) && parsedMessage.route.length > 0) {
+      drawRoute(parsedMessage.route);  // Call the function to draw the route
     } else {
-      // Handle web version
-      const parsedCoordinates = JSON.parse(message);
-      console.log("Parsed Coordinates from web:", parsedCoordinates);
-
-      if (Array.isArray(parsedCoordinates) && parsedCoordinates.length > 0) {
-        drawRoute(parsedCoordinates);  // Call the function to draw the route
-      } else {
-        console.error("No valid coordinates found in the message.");
-        alert("No valid coordinates found in the message.");
-      }
+      console.error("No valid route data found in message.");
+      alert("No valid route data found in message.");
     }
+
   } catch (e) {
     console.error("Failed to parse the message:", e);
     alert("Failed to parse the message: " + e);
   }
 });
+
 
   
 </script>
