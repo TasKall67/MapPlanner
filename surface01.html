@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="initial-scale=1.0">
+    <title>Surface Type Checker</title>
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js"></script>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css" rel="stylesheet" />
+</head>
+<body>
+
+<script>
+    // Mapbox access token
+    mapboxgl.accessToken = 'pk.eyJ1IjoidGFza2FsbCIsImEiOiJjbTI0amdhNGkwZGtkMm1xd3BudHJ0dmN0In0.yK-2hu2fVVC6NwmdAXaAwQ'; // Replace with your access token
+
+    // Listener to receive coordinates from Thunkable WebViewer
+    window.addEventListener('message', function (event) {
+        console.log("Message received from Thunkable:", event.data);
+
+        try {
+            const coordinates = JSON.parse(event.data); // Parse coordinates array from the message
+
+            // Check that the received message contains valid coordinates
+            if (Array.isArray(coordinates) && coordinates.length > 1) {
+                console.log("Coordinates for surface check:", coordinates);
+
+                // Pass coordinates to get surface types
+                getSurfaceTypes(coordinates);
+            } else {
+                console.warn("No valid coordinates received for surface type check.");
+            }
+        } catch (error) {
+            console.error("Error parsing coordinates from Thunkable:", error);
+        }
+    });
+
+    // Function to get surface types using Map Matching API
+    function getSurfaceTypes(coordinates) {
+        // Convert coordinates array to required format for Map Matching API
+        const coordString = coordinates.map(coord => coord.join(',')).join(';');
+
+        // Map Matching API URL with surface annotation
+        const mapMatchingAPI = `https://api.mapbox.com/matching/v5/mapbox/cycling/${coordString}?geometries=geojson&annotations=surface&tidy=true&access_token=${mapboxgl.accessToken}`;
+
+        fetch(mapMatchingAPI)
+            .then(response => response.json())
+            .then(data => {
+                // Check if surface data is available
+                if (data.matchings && data.matchings[0].legs[0].annotation.surface) {
+                    const surfaceTypes = data.matchings[0].legs[0].annotation.surface;
+                    
+                    // Display surface types in an alert for now
+                    alert("Surface types for each segment: " + surfaceTypes.join(', '));
+                    console.log("Surface types for each segment:", surfaceTypes);
+                } else {
+                    console.warn("Surface data not available in the response.");
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching surface types:', error);
+            });
+    }
+
+</script>
+
+</body>
+</html>
