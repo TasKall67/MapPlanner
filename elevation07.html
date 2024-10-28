@@ -51,44 +51,47 @@
         map.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1 });
     });
 
-    // Initialize Chart.js for the elevation profile
-    const ctx = document.getElementById('elevationChart').getContext('2d');
-    const elevationChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: [],  // To hold cumulative distances
-            datasets: [{
-                label: 'Elevation (m)',
-                data: [], // To hold elevations
-                fill: false,
-                borderColor: 'blue',
-                tension: 0.1
-            }]
-        },
-        options: {
-            scales: {
-                x: {
-                    title: {
-                        display: true,
-                        text: 'Distance (m)'  // X-axis title
-                    },
-                    ticks: {
-                        callback: function(value) {
-                            // Format labels to show every 100m
-                            return Math.round(value / 100) * 100; 
-                        },
-                        stepSize: 100 // Set interval for ticks
-                    }
+   // Initialize Chart.js for the elevation profile
+const ctx = document.getElementById('elevationChart').getContext('2d');
+const elevationChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: cumulativeDistances,  // Use cumulative distances directly
+        datasets: [{
+            label: 'Elevation (m)',
+            data: elevations, // Use the elevation data
+            fill: false,
+            borderColor: 'blue',
+            tension: 0.1
+        }]
+    },
+    options: {
+        scales: {
+            x: {
+                title: {
+                    display: true,
+                    text: 'Distance (m)'  // X-axis title
                 },
-                y: {
-                    title: {
-                        display: true,
-                        text: 'Elevation (m)'
-                    }
+                ticks: {
+                    callback: function(value, index) {
+                        // Display cumulative distance directly for each tick
+                        return cumulativeDistances[index] || '';
+                    },
+                    stepSize: 100, // Optional: interval for tick display if desired
+                    autoSkip: true, // Skip labels to avoid overlap on long routes
+                    maxTicksLimit: 10, // Max number of labels shown to keep the X-axis readable
+                }
+            },
+            y: {
+                title: {
+                    display: true,
+                    text: 'Elevation (m)'
                 }
             }
         }
-    });
+    }
+});
+
 
     // Function to calculate distance between coordinates
     function getDistance(coord1, coord2) {
