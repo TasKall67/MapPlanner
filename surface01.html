@@ -18,7 +18,7 @@
             const coordinatesString = coordinatesArray.map(coord => coord.join(',')).join(';');
 
             // Construct the URL for the API request using the Matching API
-            const url = `https://api.mapbox.com/matching/v5/mapbox/cycling/${coordinatesString}?annotations=surface&access_token=pk.eyJ1IjoidGFza2FsbCIsImEiOiJjbTI0amdhNGkwZGtkMm1xd3BudHJ0dmN0In0.yK-2hu2fVVC6NwmdAXaAwQ`;
+            const url = `https://api.mapbox.com/matching/v5/mapbox/cycling/${coordinatesString}?annotations=type&access_token=pk.eyJ1IjoidGFza2FsbCIsImEiOiJjbTI0amdhNGkwZGtkMm1xd3BudHJ0dmN0In0.yK-2hu2fVVC6NwmdAXaAwQ`;
 
             console.log("Request URL:", url); // Log the URL for debugging
 
