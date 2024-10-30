@@ -149,10 +149,10 @@ const elevationChart = new Chart(ctx, {
     data: {
         labels: [], // Cumulative distances to be filled by updateElevationChart
         datasets: [{
-            label: 'Elevation (m)',
+            label: 'Route Elevation (m)',
             data: [], // Elevation data to be filled by updateElevationChart
             fill: false,
-            borderColor: 'green',
+            borderColor: rgba(250, 120, 65, 1),
             tension: 0.1
         }]
     },
@@ -162,7 +162,7 @@ const elevationChart = new Chart(ctx, {
                 title: { display: true, text: 'Route Distance (m)' }
             },
             y: {
-                title: { display: true, text: 'Route Elevation (m)' }
+                title: { display: true, text: 'Elevation (m)' }
             }
         }
     }
