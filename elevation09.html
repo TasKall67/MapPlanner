@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="initial-scale=1.0">
+    <title>Elevation Chart</title>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css" rel="stylesheet" />
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        #map { position: absolute; top: 0; bottom: 0; width: 100%; display: none; }
+        #chart-container {
+            position: absolute;
+            bottom: 0;
+            width: 90%;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="map"></div>
+<div id="chart-container">
+    <canvas id="elevationChart"></canvas>
+</div>
+
+<script>
+    // Mapbox access token
+    mapboxgl.accessToken = 'pk.eyJ1IjoidGFza2FsbCIsImEiOiJjbTI0amdhNGkwZGtkMm1xd3BudHJ0dmN0In0.yK-2hu2fVVC6NwmdAXaAwQ'; // Replace with your actual access token
+
+    // Initialize Mapbox GL JS map
+    const map = new mapboxgl.Map({
+        container: 'map', // ID of the element where map is placed (hidden)
+        style: 'mapbox://styles/mapbox/outdoors-v12',
+        center: [23.801794, 38.043984], // Some initial location
+        zoom: 14
+    });
+
+// Function to set map center to user's location
+function setMapToUserLocation() {
+    if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const userCoordinates = [position.coords.longitude, position.coords.latitude];
+                map.setCenter(userCoordinates);  // Set the map center to user's location
+                map.setZoom(14); // Set an appropriate zoom level
+            },
+            (error) => {
+                console.error("Error fetching user location:", error);
+            },
+            { enableHighAccuracy: true, timeout: 10000 }
+        );
+    } else {
+        console.error("Geolocation is not supported by this browser.");
+    }
+}
+	
+
+    // Add the DEM terrain source when the map is loaded
+    map.on('load', () => {
+        console.log("Map is loaded. Adding DEM source.");
+        map.addSource('mapbox-dem', {
+            'type': 'raster-dem',
+            'url': 'mapbox://mapbox.terrain-rgb',
+            'tileSize': 512,
+            'maxzoom': 14
+        });
+        map.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1 });
+
+	    // Center map on user location
+    setMapToUserLocation();
+    });
+
+  
+
+   // Function to calculate distance between coordinates
+function getDistance(coord1, coord2) {
+    const R = 6371000; // Radius of Earth in meters
+    const lat1 = coord1[1] * Math.PI / 180;
+    const lat2 = coord2[1] * Math.PI / 180;
+    const deltaLat = (coord2[1] - coord1[1]) * Math.PI / 180;
+    const deltaLon = (coord2[0] - coord1[0]) * Math.PI / 180;
+
+    const a = Math.sin(deltaLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(deltaLon / 2) ** 2;
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return R * c;
+}
+
+function updateElevationChart(coordinates) {
+    const elevations = [];
+    const cumulativeDistances = [0];
+    let totalDistance = 0;
+
+    const bounds = coordinates.reduce((bounds, coord) => bounds.extend(coord), new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
+    map.fitBounds(bounds, { padding: 50 });
+
+    map.once('idle', () => {
+        coordinates.forEach((coord, index) => {
+            const elevation = map.queryTerrainElevation([coord[0], coord[1]]);
+            elevations.push(elevation !== null ? elevation : 0);
+            console.log(`Elevation at point ${index}:`, elevation);  // Log each elevation
+
+            if (index > 0) {
+                const prevCoord = coordinates[index - 1];
+                const distance = getDistance(prevCoord, coord);
+                totalDistance += distance;
+                cumulativeDistances.push(Math.round(totalDistance));
+            }
+        });
+
+        console.log("Original Elevations:", elevations);
+        console.log("Original Cumulative Distances:", cumulativeDistances);
+
+        const interval = 100;
+        const resampledDistances = [];
+        const resampledElevations = [];
+        let currentIndex = 0;
+
+        for (let d = 0; d <= totalDistance; d += interval) {
+            while (currentIndex < cumulativeDistances.length - 1 && cumulativeDistances[currentIndex] < d) {
+                currentIndex++;
+            }
+
+            if (currentIndex < cumulativeDistances.length && cumulativeDistances[currentIndex] === d) {
+                resampledDistances.push(d);
+                resampledElevations.push(elevations[currentIndex]);
+            } else if (currentIndex > 0) {
+                const dist1 = cumulativeDistances[currentIndex - 1];
+                const dist2 = cumulativeDistances[currentIndex];
+                const elev1 = elevations[currentIndex - 1];
+                const elev2 = elevations[currentIndex];
+                const interpolatedElevation = elev1 + ((d - dist1) / (dist2 - dist1)) * (elev2 - elev1);
+                resampledDistances.push(d);
+                resampledElevations.push(interpolatedElevation);
+            }
+        }
+
+        console.log("Resampled Distances:", resampledDistances);
+        console.log("Resampled Elevations:", resampledElevations);
+
+        // Update chart with resampled data
+        elevationChart.data.labels = resampledDistances;
+        elevationChart.data.datasets[0].data = resampledElevations;
+
+        const totalLabels = resampledDistances.length;
+        const displayStep = Math.ceil(totalLabels / 10); // Adjust based on total points, aiming for 10 labels
+        elevationChart.options.scales.x = {
+            title: { display: true, text: 'Distance (m)' },
+            min: 0,
+            max: Math.ceil(totalDistance / interval) * interval,
+            ticks: {
+                stepSize: interval,
+                callback: function(value, index) {
+                    // Show only every displayStep-th label for readability
+                    return index % displayStep === 0 ? value : '';
+                }
+            }
+        };
+
+        elevationChart.update();
+    });
+}
+
+// Initialize Chart.js for the elevation profile
+const ctx = document.getElementById('elevationChart').getContext('2d');
+const elevationChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: [], // Cumulative distances to be filled by updateElevationChart
+        datasets: [{
+            label: 'Route Elevation (m)',
+            data: [], // Elevation data to be filled by updateElevationChart
+            fill: false,
+            borderColor: rgba(250, 120, 65, 1),
+            tension: 0.1
+        }]
+    },
+    options: {
+        scales: {
+            x: {
+                title: { display: true, text: 'Route Distance (m)' }
+            },
+            y: {
+                title: { display: true, text: 'Elevation (m)' }
+            }
+        }
+    }
+});
+
+
+    function handleMessage(event) {
+        const message = event.data;
+        console.log("Raw message:", message);
+
+        try {
+            const coordinates = JSON.parse(event.data); // Parse the incoming message directly as the array
+
+            // Check if the message is a valid array of coordinates
+            if (Array.isArray(coordinates) && coordinates.length > 0 && Array.isArray(coordinates[0])) {
+                console.log("Coordinates received:", coordinates);
+                updateElevationChart(coordinates);
+            } else {
+                console.warn("No valid coordinates received.", coordinates);
+            }
+        } catch (error) {
+            console.error("Error parsing message from Thunkable:", error);
+        }
+    }
+	// Listen for messages from Thunkable (Web Viewer) or other sources
+    document.addEventListener('message', handleMessage);
+    window.addEventListener('message', handleMessage);
+
+    // Also, you can listen for the load event on the window
+    window.addEventListener('load', () => {
+        console.log("Window loaded, ready for messages.");
+    });
+	;
+</script>
+
+</body>
+</html>
