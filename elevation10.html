@@ -162,9 +162,7 @@ function updateElevationChart(coordinates) {
         };
 
         elevationChart.update();
-    });
-	
-	// Grade Calculation and Sent	
+    // Grade Calculation and Sent	
 	function calculateGradeForSegments(distances, elevations) {
         let grades = [];
         
@@ -191,6 +189,8 @@ function updateElevationChart(coordinates) {
     
     // Send the calculated grades back to Thunkable
     window.ReactNativeWebView.postMessage(JSON.stringify(grades));
+    
+    });
 }
 
 
@@ -205,7 +205,7 @@ const elevationChart = new Chart(ctx, {
             label: 'Route Elevation (m)',
             data: [], // Elevation data to be filled by updateElevationChart
             fill: false,
-            borderColor: 'red',
+            borderColor: 'green',
             tension: 0.1
         }]
     },
