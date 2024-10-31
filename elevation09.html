@@ -13,8 +13,8 @@
         #chart-container {
             position: absolute;
             bottom: 0;
-            width: 90%;
-            height: 200px;
+            width: 100%;
+            height: 100px;
             background: rgba(255, 255, 255, 0.9);
             padding: 10px;
         }
@@ -115,7 +115,7 @@ function updateElevationChart(coordinates) {
         console.log("Original Elevations:", elevations);
         console.log("Original Cumulative Distances:", cumulativeDistances);
 
-        const interval = 100;
+        const interval = 50;
         const resampledDistances = [];
         const resampledElevations = [];
         let currentIndex = 0;
@@ -175,7 +175,7 @@ const elevationChart = new Chart(ctx, {
             label: 'Route Elevation (m)',
             data: [], // Elevation data to be filled by updateElevationChart
             fill: false,
-            borderColor: 'red',
+            borderColor: 'black',
             tension: 0.1
         }]
     },
