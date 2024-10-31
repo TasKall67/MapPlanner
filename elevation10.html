@@ -163,8 +163,38 @@ function updateElevationChart(coordinates) {
 
         elevationChart.update();
     });
+	
+	// Grade Calculation and Sent	
+	function calculateGradeForSegments(distances, elevations) {
+        let grades = [];
+        
+        for (let i = 1; i < distances.length; i++) {
+            // Horizontal distance for the segment (difference between cumulative distances)
+            const distance = distances[i] - distances[i - 1];
+            // Elevation difference for the segment
+            const elevationChange = elevations[i] - elevations[i - 1];
+            
+            // Calculate grade as a decimal (elevationChange / distance)
+            const grade = (distance > 0) ? elevationChange / distance : 0;
+            grades.push(grade);
+            
+            // Debug output
+            console.log(`Segment ${i}: Elevation Change = ${elevationChange}m, Distance = ${distance}m, Grade = ${grade}`);
+            alert(`Segment ${i}: Elevation Change = ${elevationChange}m, Distance = ${distance}m, Grade = ${grade}`);
+        }
+        
+        return grades;
+    }
+
+    // Call the function to calculate grades
+    const grades = calculateGradeForSegments(resampledDistances, resampledElevations);
+    
+    // Send the calculated grades back to Thunkable
+    window.ReactNativeWebView.postMessage(JSON.stringify(grades));
 }
 
+
+	
 // Initialize Chart.js for the elevation profile
 const ctx = document.getElementById('elevationChart').getContext('2d');
 const elevationChart = new Chart(ctx, {
@@ -175,7 +205,7 @@ const elevationChart = new Chart(ctx, {
             label: 'Route Elevation (m)',
             data: [], // Elevation data to be filled by updateElevationChart
             fill: false,
-            borderColor: 'yellow',
+            borderColor: 'red',
             tension: 0.1
         }]
     },
@@ -220,36 +250,7 @@ const elevationChart = new Chart(ctx, {
     });
 	;
 	
-	//------------------Grade Calculation and Sent-----------------------------------------------
 	
-	
-	
-	function calculateGradeForSegments(distances, elevations) {
-        let grades = [];
-        
-        for (let i = 1; i < distances.length; i++) {
-            // Horizontal distance for the segment (difference between cumulative distances)
-            const distance = distances[i] - distances[i - 1];
-            // Elevation difference for the segment
-            const elevationChange = elevations[i] - elevations[i - 1];
-            
-            // Calculate grade as a decimal (elevationChange / distance)
-            const grade = (distance > 0) ? elevationChange / distance : 0;
-            grades.push(grade);
-            
-            // Debug output
-            console.log(`Segment ${i}: Elevation Change = ${elevationChange}m, Distance = ${distance}m, Grade = ${grade}`);
-            alert(`Segment ${i}: Elevation Change = ${elevationChange}m, Distance = ${distance}m, Grade = ${grade}`);
-        }
-        
-        return grades;
-    }
-
-    // Call the function to calculate grades
-    const grades = calculateGradeForSegments(resampledDistances, resampledElevations);
-    
-    // Send the calculated grades back to Thunkable
-    window.ReactNativeWebView.postMessage(JSON.stringify(grades));
 
 	
 </script>
