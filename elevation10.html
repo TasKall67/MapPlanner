@@ -144,6 +144,22 @@ function updateElevationChart(coordinates) {
         console.log("Resampled Distances:", resampledDistances);
         console.log("Resampled Elevations:", resampledElevations);
 
+	// Call the function to calculate grades
+    if (resampledDistances.length > 0 && resampledElevations.length > 0) {
+        const grades = calculateGradeForSegments(resampledDistances, resampledElevations);
+     
+    // Send the calculated grades back to Thunkable
+   // Check if ReactNativeWebView is available
+if (window.ReactNativeWebView) {
+        window.ReactNativeWebView.postMessage(JSON.stringify(grades));
+      } else {
+        window.parent.postMessage(JSON.stringify(grades), "*");
+      }
+    } else {
+        console.log("No data available to calculate grades.");
+    }
+
+	    
         // Update chart with resampled data
         elevationChart.data.labels = resampledDistances;
         elevationChart.data.datasets[0].data = resampledElevations;
@@ -165,22 +181,6 @@ function updateElevationChart(coordinates) {
 
         elevationChart.update();
     });
-
-	
-	// Call the function to calculate grades
-    if (resampledDistances.length > 0 && resampledElevations.length > 0) {
-        const grades = calculateGradeForSegments(resampledDistances, resampledElevations);
-     
-    // Send the calculated grades back to Thunkable
-   // Check if ReactNativeWebView is available
-if (window.ReactNativeWebView) {
-        window.ReactNativeWebView.postMessage(JSON.stringify(grades));
-      } else {
-        window.parent.postMessage(JSON.stringify(grades), "*");
-      }
-    } else {
-        console.log("No data available to calculate grades.");
-    }
 }
 
 
