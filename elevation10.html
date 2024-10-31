@@ -186,7 +186,7 @@ const elevationChart = new Chart(ctx, {
     options: {
         scales: {
             x: {
-                title: { display: true, text: 'Route Distance (m)' }
+                title: { display: true, text: 'My Distance (m)' }
             },
             y: {
                 title: { display: true, text: 'Elevation (m)' }
@@ -249,8 +249,9 @@ const elevationChart = new Chart(ctx, {
     }
 
     // Call the function to calculate grades
-    const grades = calculateGradeForSegments(resampledDistances, resampledElevations);
-    
+    if (resampledDistances.length > 0 && resampledElevations.length > 0) {
+        const grades = calculateGradeForSegments(resampledDistances, resampledElevations);
+     
     // Send the calculated grades back to Thunkable
    // Check if ReactNativeWebView is available
 if (window.ReactNativeWebView) {
@@ -258,8 +259,9 @@ if (window.ReactNativeWebView) {
       } else {
         window.parent.postMessage(JSON.stringify(grades), "*");
       }
-    
-	
+    } else {
+        console.log("No data available to calculate grades.");
+    }
 		
 </script>
 
