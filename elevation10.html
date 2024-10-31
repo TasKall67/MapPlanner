@@ -227,6 +227,7 @@ const elevationChart = new Chart(ctx, {
 //---------------------------- Grade Calculation and Sent-------------------------------------------
 	
 	function calculateGradeForSegments(distances, elevations) {
+		alert("Grading is starting... ")
         let grades = [];
         
         for (let i = 1; i < distances.length; i++) {
