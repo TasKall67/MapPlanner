@@ -179,7 +179,7 @@ const elevationChart = new Chart(ctx, {
             label: 'Route Elevation (m)',
             data: [], // Elevation data to be filled by updateElevationChart
             fill: false,
-            borderColor: 'rgba(140, 60, 166, 1)',
+            borderColor: 'rgba(250, 120, 65, 1)',
             tension: 0.1
         }]
     },
@@ -247,6 +247,7 @@ const elevationChart = new Chart(ctx, {
         
         return grades;
     }
+	calculateGradeForSegments(distances, elevations)
 
     // Call the function to calculate grades
     const grades = calculateGradeForSegments(resampledDistances, resampledElevations);
