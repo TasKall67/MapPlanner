@@ -22,13 +22,9 @@
       container: 'map', // container ID
       style: 'mapbox://styles/mapbox/streets-v11', // map style
       center: [23.788887346655684, 38.04990560950526], // starting position [lng, lat]
-      zoom: 14, // starting zoom
-	    	interactive: true // Enables interactivity with gestures
-	    });
-		// Additional gesture settings
-		map.touchZoomRotate.enable({ around: 'center' }); // Enables touch zoom
-		map.dragPan.enable(); // Enables dragging the map
-		map.scrollZoom.disable(); // Disables scroll zoom to prevent accidental scrolling
+      zoom: 14 // starting zoom
+	    	});
+		
 
     let startMarker = null;
     let endMarker = null;
