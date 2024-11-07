@@ -22,12 +22,16 @@
       container: 'map', // container ID
       style: 'mapbox://styles/mapbox/streets-v11', // map style
       center: [23.788887346655684, 38.04990560950526], // starting position [lng, lat]
-      zoom: 8, // starting zoom
- });
-	//Prevent Scroll Propagation on Touch
-	document.getElementById('map').addEventListener('touchmove', function (event) {
-    event.preventDefault();
-}, { passive: false });
+      zoom: 18, // starting zoom
+	    interactive: true,
+            gestureHandling: true // Enables gesture handling
+});
+	// Add gesture control for touch screens
+map.addControl(new mapboxgl.NavigationControl());
+
+// Ensure two-finger zoom and one-finger pan are recognized
+map.touchZoomRotate.enable({ around: 'center' });
+map.dragPan.enable();
 
     let startMarker = null;
     let endMarker = null;
@@ -121,7 +125,7 @@ function interpolateCoordinates(coords, numPoints) {
     // When the user clicks on the map, select start and end points
     map.on('click', function (e) {
       if (!startMarker) {
-        startMarker = new mapboxgl.Marker({ color: 'green' })
+        startMarker = new mapboxgl.Marker({ color: 'black' })
           .setLngLat(e.lngLat)
           .addTo(map);
         startCoords = e.lngLat;
