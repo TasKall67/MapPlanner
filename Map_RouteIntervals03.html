@@ -17,6 +17,7 @@
             width: 100%;
             height: 100vh;
             overflow: hidden;
+			touch-action: none;
         }
 		
     #map { position: absolute;
@@ -25,6 +26,7 @@
 		   width: 100%;
 		   height: 100%;
 		   pointer-events: auto; /* Ensures map captures clicks/taps */
+		   touch-action: manipulation;
 		   }
 		   
   </style>
@@ -42,9 +44,16 @@
       container: 'map', // container ID
       style: 'mapbox://styles/mapbox/streets-v11', // map style
       center: [23.7888, 38.0499], // starting position [lng, lat]
-      zoom: 18 // starting zoom
+      zoom: 14 // starting zoom
 	    	});
 		
+		map.scrollZoom.disable();
+map.on('touchstart', function() {
+    map.scrollZoom.enable();
+});
+map.on('touchend', function() {
+    map.scrollZoom.disable();
+});
 
     let startMarker = null;
     let endMarker = null;
@@ -138,13 +147,13 @@ function interpolateCoordinates(coords, numPoints) {
     // When the user clicks on the map, select start and end points
     map.on('click', function (e) {
       if (!startMarker) {
-        startMarker = new mapboxgl.Marker({ color: 'blue' })
+        startMarker = new mapboxgl.Marker({ color: 'black' })
           .setLngLat(e.lngLat)
           .addTo(map);
         startCoords = e.lngLat;
 
       } else if (!endMarker) {
-        endMarker = new mapboxgl.Marker({ color: 'red' })
+        endMarker = new mapboxgl.Marker({ color: 'black' })
           .setLngLat(e.lngLat)
           .addTo(map);
         endCoords = e.lngLat;
@@ -153,8 +162,7 @@ function interpolateCoordinates(coords, numPoints) {
         sendCoordinatesToThunkable(startCoords.lat, startCoords.lng, endCoords.lat, endCoords.lng);
       }
     });
-	// Isolates gesture handling to prevent parent container from scrolling
-    map.getCanvas().style.touchAction = 'none';
+	
 
 	
 	
