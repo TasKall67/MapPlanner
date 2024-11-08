@@ -33,7 +33,10 @@
       center: [23.7888, 38.0499], // starting position [lng, lat]
       zoom: 18 // starting zoom
 	    	});
-		
+	
+	// Enable touch zoom and pan
+map.touchZoomRotate.enable();
+map.scrollZoom.disable(); // Optional: Prevent scrolling to zoom map with one finger	
 
     let startMarker = null;
     let endMarker = null;
@@ -127,7 +130,7 @@ function interpolateCoordinates(coords, numPoints) {
     // When the user clicks on the map, select start and end points
     map.on('click', function (e) {
       if (!startMarker) {
-        startMarker = new mapboxgl.Marker({ color: 'green' })
+        startMarker = new mapboxgl.Marker({ color: 'yellow' })
           .setLngLat(e.lngLat)
           .addTo(map);
         startCoords = e.lngLat;
@@ -225,6 +228,21 @@ function interpolateCoordinates(coords, numPoints) {
         map.on('load', function() {
             console.log('Map loaded successfully.');
         });
+
+
+	// Stop touch events on the map from propagating to the entire page
+    const mapElement = document.getElementById('map');
+    mapElement.addEventListener('touchstart', function(event) {
+        event.stopPropagation();
+    }, { passive: true });
+
+    mapElement.addEventListener('touchmove', function(event) {
+        event.stopPropagation();
+    }, { passive: true });
+
+    mapElement.addEventListener('touchend', function(event) {
+        event.stopPropagation();
+    }, { passive: true });
   
 </script>
 </body>
