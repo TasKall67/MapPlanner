@@ -7,28 +7,24 @@
   <script src='https://api.mapbox.com/mapbox-gl-js/v2.11.0/mapbox-gl.js'></script>
   <link href='https://api.mapbox.com/mapbox-gl-js/v2.11.0/mapbox-gl.css' rel='stylesheet' />
   <style>
-    body { margin: 0; 
-		   padding: 0;
-		   overflow-y: auto;
-		   }
-		   
+    body,html {
+				margin: 0;
+				padding: 0;
+				overflow: hidden; /* Prevent page from scrolling */
+				height: 100%;
+				}
 	#mapContainer {
-            position: relative;
-            width: 100%;
-            height: 100vh;
-            overflow: hidden;
-			touch-action: none;
-        }
-		
-    #map { position: absolute;
-		   top: 0; 
-		   bottom: 0; 
-		   width: 100%;
-		   height: 100%;
-		   pointer-events: auto; /* Ensures map captures clicks/taps */
-		   touch-action: manipulation;
-		   }
-		   
+        position: relative;
+        width: 100%;
+        height: 100%;
+    }			
+    #map {
+			position: absolute;
+			top: 0;
+			bottom: 0;
+			width: 100%;
+			height: 100%;
+			}
   </style>
 </head>
 <body>
@@ -44,17 +40,29 @@
       container: 'map', // container ID
       style: 'mapbox://styles/mapbox/streets-v11', // map style
       center: [23.7888, 38.0499], // starting position [lng, lat]
-      zoom: 14 // starting zoom
+      zoom: 12 // starting zoom
 	    	});
-		
-		map.scrollZoom.disable();
-map.on('touchstart', function() {
-    map.scrollZoom.enable();
-});
-map.on('touchend', function() {
-    map.scrollZoom.disable();
-});
+			
+		// Disable scroll on the whole app when interacting with the map
+    const disablePageScroll = (event) => {
+        event.preventDefault();
+    };
+	// Enable page scroll only when the user is not interacting with the map
+    map.on('touchstart', () => {
+        document.addEventListener('touchmove', disablePageScroll, { passive: false });
+    });
 
+    map.on('touchend', () => {
+        document.removeEventListener('touchmove', disablePageScroll);
+    });
+
+    // Optional: Also handle scrollZoom if desired
+    map.scrollZoom.disable();
+    map.on('touchstart', () => map.scrollZoom.enable());
+    map.on('touchend', () => map.scrollZoom.disable());
+	
+	
+	
     let startMarker = null;
     let endMarker = null;
     let startCoords = null;
@@ -147,13 +155,13 @@ function interpolateCoordinates(coords, numPoints) {
     // When the user clicks on the map, select start and end points
     map.on('click', function (e) {
       if (!startMarker) {
-        startMarker = new mapboxgl.Marker({ color: 'black' })
+        startMarker = new mapboxgl.Marker({ color: 'yellow' })
           .setLngLat(e.lngLat)
           .addTo(map);
         startCoords = e.lngLat;
 
       } else if (!endMarker) {
-        endMarker = new mapboxgl.Marker({ color: 'black' })
+        endMarker = new mapboxgl.Marker({ color: 'yellow' })
           .setLngLat(e.lngLat)
           .addTo(map);
         endCoords = e.lngLat;
@@ -162,7 +170,6 @@ function interpolateCoordinates(coords, numPoints) {
         sendCoordinatesToThunkable(startCoords.lat, startCoords.lng, endCoords.lat, endCoords.lng);
       }
     });
-	
 
 	
 	
