@@ -43,17 +43,7 @@
       zoom: 18 // starting zoom
 	    	});
 	
-	// Enable touch zoom and pan
-const mapElement = document.getElementById('map');
-    mapElement.addEventListener('gesturestart', function(event) {
-        event.stopPropagation();
-        event.preventDefault();
-    });
-    
-    mapElement.addEventListener('touchmove', function(event) {
-        event.stopPropagation();
-    }, { passive: true });	
-
+	
     let startMarker = null;
     let endMarker = null;
     let startCoords = null;
@@ -250,15 +240,13 @@ function interpolateCoordinates(coords, numPoints) {
     const mapElement = document.getElementById('map');
     mapElement.addEventListener('touchstart', function(event) {
         event.stopPropagation();
-    }, { passive: true });
+        event.preventDefault();
+    });
 
     mapElement.addEventListener('touchmove', function(event) {
         event.stopPropagation();
     }, { passive: true });
 
-    mapElement.addEventListener('touchend', function(event) {
-        event.stopPropagation();
-    }, { passive: true });
   
 </script>
 </body>
