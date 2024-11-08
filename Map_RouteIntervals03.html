@@ -6,10 +6,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script src='https://api.mapbox.com/mapbox-gl-js/v2.11.0/mapbox-gl.js'></script>
   <link href='https://api.mapbox.com/mapbox-gl-js/v2.11.0/mapbox-gl.css' rel='stylesheet' />
-  <style>
+  <div id="mapContainer">
+    <div id="map"></div>
+</div>
+	<style>
     body { margin: 0; 
 		   padding: 0;
-		   overflow-x: hidden; /* Ensures no horizontal scroll */}
+		   overflow-x: hidden; /* Ensures no horizontal scroll */
+	           overflow-y: auto;
+	 }
     #map { position: absolute;
 		   top: 0; 
 		   bottom: 0; 
@@ -130,7 +135,7 @@ function interpolateCoordinates(coords, numPoints) {
     // When the user clicks on the map, select start and end points
     map.on('click', function (e) {
       if (!startMarker) {
-        startMarker = new mapboxgl.Marker({ color: 'yellow' })
+        startMarker = new mapboxgl.Marker({ color: 'black' })
           .setLngLat(e.lngLat)
           .addTo(map);
         startCoords = e.lngLat;
