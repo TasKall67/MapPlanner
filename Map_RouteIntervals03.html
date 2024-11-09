@@ -18,7 +18,7 @@
 <script>
     mapboxgl.accessToken = 'pk.eyJ1IjoidGFza2FsbCIsImEiOiJjbTI0amdhNGkwZGtkMm1xd3BudHJ0dmN0In0.yK-2hu2fVVC6NwmdAXaAwQ'; // Replace with your token
 
-    const defaultCenter = [23.7888, 38.0499]; // Default center coordinates
+    const defaultCenter = [21.7901, 38.2892]; // Default center coordinates
     
     // Create the Mapbox map instance but don't set the center yet
     const map = new mapboxgl.Map({
@@ -42,9 +42,6 @@
     { enableHighAccuracy: true } // Optional: Request high accuracy if available
 );
 
-// Set the initial center to the default location until geolocation resolves
-map.setCenter(defaultCenter);
-		
 
     let startMarker = null;
     let endMarker = null;
