@@ -7,70 +7,44 @@
   <script src='https://api.mapbox.com/mapbox-gl-js/v2.11.0/mapbox-gl.js'></script>
   <link href='https://api.mapbox.com/mapbox-gl-js/v2.11.0/mapbox-gl.css' rel='stylesheet' />
   <style>
-    body { margin: 0; 
-			padding: 0;
-			overflow-y: auto;  /* Allow page to scroll */
-			}
-	#mapContainer {
-        position: relative;
-        width: 100%;
-        height: 100vh;
-        overflow: hidden;
-        touch-action: none;  /* Prevent default scroll gestures on the map */
-    }
-    #map { position: absolute;
-			top: 0;
-			bottom: 0;
-			width: 100%;
-			height: 100%;
-			pointer-events: auto;  /* Ensure map captures clicks/taps */
-			touch-action: manipulation; /* Allow map gestures (zoom, pan) */
-			}
+    body { margin: 0; padding: 0; }
+    #map { position: absolute; top: 0; bottom: 0; width: 100%; }
   </style>
 </head>
 <body>
 
-  <div id="mapContainer">
-        <div id="map"></div>
-    </div>
+  <div id="map"></div>
 
 <script>
     mapboxgl.accessToken = 'pk.eyJ1IjoidGFza2FsbCIsImEiOiJjbTI0amdhNGkwZGtkMm1xd3BudHJ0dmN0In0.yK-2hu2fVVC6NwmdAXaAwQ'; // Replace with your token
 
+    const defaultCenter = [23.7888, 38.0499]; // Default center coordinates
+    
+    // Create the Mapbox map instance but don't set the center yet
     const map = new mapboxgl.Map({
       container: 'map', // container ID
       style: 'mapbox://styles/mapbox/streets-v11', // map style
-      center: [23.7888, 38.0499], // starting position [lng, lat]
       zoom: 14 // starting zoom
 	    	});
+	
+	// Attempt to get the user's location
+       navigator.geolocation.getCurrentPosition(
+         (position) => {
+        // If location is successfully retrieved, set map center to user's location
+        const userLocation = [position.coords.longitude, position.coords.latitude];
+        map.setCenter(userLocation);
+    },
+    (error) => {
+        // If there's an error (e.g., permission denied), set center to the default coordinates
+        console.warn("Could not retrieve user location:", error.message);
+        map.setCenter(defaultCenter); // Use default center coordinates
+    },
+    { enableHighAccuracy: true } // Optional: Request high accuracy if available
+);
+
+// Set the initial center to the default location until geolocation resolves
+map.setCenter(defaultCenter);
 		
-		// Allow map zoom using two fingers and panning
-        map.scrollZoom.enable();
-        map.on('touchstart', function() {
-            map.scrollZoom.enable();  // Enable zoom when touch starts
-        });
-        map.on('touchend', function() {
-            map.scrollZoom.disable();  // Disable zoom when touch ends
-        });
-
-        // Prevent touchmove from affecting page scrolling
-        const mapContainer = document.getElementById('mapContainer');
-
-        mapContainer.addEventListener('touchstart', function(event) {
-            // Prevent the default behavior (scrolling) when interacting with the map
-            event.preventDefault();
-        }, { passive: false });
-
-        mapContainer.addEventListener('touchmove', function(event) {
-            // Prevent scrolling behavior during touch move
-            event.preventDefault();
-        }, { passive: false });
-
-        mapContainer.addEventListener('touchend', function(event) {
-            // Allow the page to scroll again after touch ends
-            event.stopPropagation();
-        });
-
 
     let startMarker = null;
     let endMarker = null;
@@ -164,13 +138,13 @@ function interpolateCoordinates(coords, numPoints) {
     // When the user clicks on the map, select start and end points
     map.on('click', function (e) {
       if (!startMarker) {
-        startMarker = new mapboxgl.Marker({ color: 'black' })
+        startMarker = new mapboxgl.Marker({ color: 'green' })
           .setLngLat(e.lngLat)
           .addTo(map);
         startCoords = e.lngLat;
 
       } else if (!endMarker) {
-        endMarker = new mapboxgl.Marker({ color: 'black' })
+        endMarker = new mapboxgl.Marker({ color: 'green' })
           .setLngLat(e.lngLat)
           .addTo(map);
         endCoords = e.lngLat;
