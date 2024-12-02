@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Surface Type Fetcher</title>
+    <script>
+        // Function to query Overpass API for surface types
+        async function getSurfaceTypeForRoute(routeCoordinates) {
+            // Convert coordinates into Overpass bounding boxes
+            const promises = routeCoordinates.map(async ([lng, lat], index) => {
+                if (index === routeCoordinates.length - 1) return null; // Skip last point
+                
+                const nextCoord = routeCoordinates[index + 1];
+                const bbox = createBoundingBox(lng, lat, nextCoord[0], nextCoord[1]);
+
+                // Overpass query
+                const query = `
+                [out:json];
+                way[highway][surface](${bbox.south},${bbox.west},${bbox.north},${bbox.east});
+                out body;`;
+
+                const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
+                const response = await fetch(url);
+                const data = await response.json();
+
+                // Process the surface type
+                return processSurfaceData(data, [lng, lat], nextCoord);
+            });
+
+            const results = await Promise.all(promises);
+            return results.filter(result => result !== null); // Filter out nulls
+        }
+
+        // Helper: Create bounding box for segment
+        function createBoundingBox(lng1, lat1, lng2, lat2) {
+            const padding = 0.0005; // Small padding for bounding box
+            const south = Math.min(lat1, lat2) - padding;
+            const west = Math.min(lng1, lng2) - padding;
+            const north = Math.max(lat1, lat2) + padding;
+            const east = Math.max(lng1, lng2) + padding;
+            return { south, west, north, east };
+        }
+
+        // Helper: Process Overpass response
+        function processSurfaceData(data, start, end) {
+            if (!data || !data.elements || data.elements.length === 0) {
+                return { start, end, surface: 'unknown' };
+            }
+
+            // Find the most common surface type (fallback to 'unknown')
+            const surfaces = data.elements.map(el => el.tags && el.tags.surface).filter(Boolean);
+            const surface = surfaces.length > 0 ? surfaces[0] : 'unknown';
+
+            return { start, end, surface };
+        }
+
+        // Main handler for message from Thunkable
+        window.addEventListener('message', async (event) => {
+            const routeCoordinates = event.data;
+            if (!Array.isArray(routeCoordinates)) {
+                window.postMessage('Invalid coordinates data');
+                return;
+            }
+
+            const surfaceData = await getSurfaceTypeForRoute(routeCoordinates);
+            window.ReactNativeWebView.postMessage(JSON.stringify(surfaceData));
+        });
+    </script>
+</head>
+<body>
+    <h1>Surface Type Fetcher</h1>
+    <p>Waiting for route coordinates...</p>
+</body>
+</html>
