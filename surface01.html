@@ -97,7 +97,12 @@
 
             const surfaceData = await getSurfaceTypeForRoute(routeCoordinates);
             alert("Sending surface data back to Thunkable.");
-            window.ReactNativeWebView.postMessage(JSON.stringify(surfaceData));
+            //window.ReactNativeWebView.postMessage(JSON.stringify(surfaceData));
+            if (window.ReactNativeWebView) {
+        window.ReactNativeWebView.postMessage(JSON.stringify(surfaceData));
+      } else {
+        window.parent.postMessage(JSON.stringify(surfaceData), "*");
+      }
         });
     </script>
 </head>
