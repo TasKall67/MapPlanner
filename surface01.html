@@ -4,45 +4,52 @@
     <title>Surface Type Fetcher</title>
     <script>
         // Function to query Overpass API for surface types
-        async function getSurfaceTypeForRoute(routeCoordinates) {
-            console.log("Received route coordinates:", routeCoordinates);
-            alert("Processing route coordinates. Total segments: " + (routeCoordinates.length - 1));
+       async function getSurfaceTypeForRoute(routeCoordinates) {
+    console.log("Route coordinates received:", routeCoordinates);
 
-            // Convert coordinates into Overpass bounding boxes
-            const promises = routeCoordinates.map(async ([lng, lat], index) => {
-                if (index === routeCoordinates.length - 1) return null; // Skip last point
-                
-                const nextCoord = routeCoordinates[index + 1];
-                const bbox = createBoundingBox(lng, lat, nextCoord[0], nextCoord[1]);
+    // Validate input
+    if (!Array.isArray(routeCoordinates) || routeCoordinates.length < 2) {
+        console.error("Invalid route data:", routeCoordinates);
+        alert("Invalid route data received. Please check your input.");
+        return [];
+    }
 
-                console.log(`Fetching surface data for bbox: ${JSON.stringify(bbox)}`);
-                alert(`Fetching surface data for segment ${index + 1}: (${lng}, ${lat}) to (${nextCoord[0]}, ${nextCoord[1]})`);
+    alert("Processing route coordinates. Total segments: " + (routeCoordinates.length - 1));
 
-                // Overpass query
-                const query = `
-                [out:json];
-                way[highway][surface](${bbox.south},${bbox.west},${bbox.north},${bbox.east});
-                out body;`;
+    const promises = routeCoordinates.map(async ([lng, lat], index) => {
+        if (index === routeCoordinates.length - 1) return null; // Skip last point
+        
+        const nextCoord = routeCoordinates[index + 1];
+        const bbox = createBoundingBox(lng, lat, nextCoord[0], nextCoord[1]);
 
-                const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
-                try {
-                    const response = await fetch(url);
-                    const data = await response.json();
+        console.log(`Fetching surface data for bbox: ${JSON.stringify(bbox)}`);
+        alert(`Fetching surface data for segment ${index + 1}: (${lng}, ${lat}) to (${nextCoord[0]}, ${nextCoord[1]})`);
 
-                    console.log("Fetched data for segment:", data);
-                    return processSurfaceData(data, [lng, lat], nextCoord);
-                } catch (error) {
-                    console.error("Error fetching surface data:", error);
-                    alert("Error fetching surface data for segment " + (index + 1));
-                    return { start: [lng, lat], end: nextCoord, surface: 'error' };
-                }
-            });
+        const query = `
+        [out:json];
+        way[highway][surface](${bbox.south},${bbox.west},${bbox.north},${bbox.east});
+        out body;`;
 
-            const results = await Promise.all(promises);
-            console.log("Final surface type results:", results);
-            alert("Finished processing route.");
-            return results.filter(result => result !== null); // Filter out nulls
+        const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+
+            console.log("Fetched data for segment:", data);
+            return processSurfaceData(data, [lng, lat], nextCoord);
+        } catch (error) {
+            console.error("Error fetching surface data:", error);
+            alert("Error fetching surface data for segment " + (index + 1));
+            return { start: [lng, lat], end: nextCoord, surface: 'error' };
         }
+    });
+
+    const results = await Promise.all(promises);
+    console.log("Final surface type results:", results);
+    alert("Finished processing route.");
+    return results.filter(result => result !== null); // Filter out nulls
+}
+
 
         // Helper: Create bounding box for segment
         function createBoundingBox(lng1, lat1, lng2, lat2) {
