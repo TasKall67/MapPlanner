@@ -81,12 +81,12 @@
         window.addEventListener('message', async (event) => {
             console.log("Received message from Thunkable:", event.data);
             alert("Received route data. Processing...");
-           // const routeCoordinates = event.data;
-            const routeCoordinates = [
-                [21.736871, 38.253114],
-                [21.736429, 38.251568],
-                [21.736158, 38.250592]
-            ]; // Replace with your test coordinates
+           const routeCoordinates = event.data;
+           // const routeCoordinates = [
+             //   [21.736871, 38.253114],
+             //   [21.736429, 38.251568],
+            //    [21.736158, 38.250592]
+           // ]; // Replace with your test coordinates
 
             if (!Array.isArray(routeCoordinates)) {
                 console.error("Invalid route data:", routeCoordinates);
