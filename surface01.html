@@ -5,12 +5,18 @@
     <script>
         // Function to query Overpass API for surface types
         async function getSurfaceTypeForRoute(routeCoordinates) {
+            console.log("Received route coordinates:", routeCoordinates);
+            alert("Processing route coordinates. Total segments: " + (routeCoordinates.length - 1));
+
             // Convert coordinates into Overpass bounding boxes
             const promises = routeCoordinates.map(async ([lng, lat], index) => {
                 if (index === routeCoordinates.length - 1) return null; // Skip last point
                 
                 const nextCoord = routeCoordinates[index + 1];
                 const bbox = createBoundingBox(lng, lat, nextCoord[0], nextCoord[1]);
+
+                console.log(`Fetching surface data for bbox: ${JSON.stringify(bbox)}`);
+                alert(`Fetching surface data for segment ${index + 1}: (${lng}, ${lat}) to (${nextCoord[0]}, ${nextCoord[1]})`);
 
                 // Overpass query
                 const query = `
@@ -19,14 +25,22 @@
                 out body;`;
 
                 const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
-                const response = await fetch(url);
-                const data = await response.json();
+                try {
+                    const response = await fetch(url);
+                    const data = await response.json();
 
-                // Process the surface type
-                return processSurfaceData(data, [lng, lat], nextCoord);
+                    console.log("Fetched data for segment:", data);
+                    return processSurfaceData(data, [lng, lat], nextCoord);
+                } catch (error) {
+                    console.error("Error fetching surface data:", error);
+                    alert("Error fetching surface data for segment " + (index + 1));
+                    return { start: [lng, lat], end: nextCoord, surface: 'error' };
+                }
             });
 
             const results = await Promise.all(promises);
+            console.log("Final surface type results:", results);
+            alert("Finished processing route.");
             return results.filter(result => result !== null); // Filter out nulls
         }
 
@@ -37,12 +51,14 @@
             const west = Math.min(lng1, lng2) - padding;
             const north = Math.max(lat1, lat2) + padding;
             const east = Math.max(lng1, lng2) + padding;
+            console.log(`Created bounding box: south=${south}, west=${west}, north=${north}, east=${east}`);
             return { south, west, north, east };
         }
 
         // Helper: Process Overpass response
         function processSurfaceData(data, start, end) {
             if (!data || !data.elements || data.elements.length === 0) {
+                console.log("No surface data found for segment:", { start, end });
                 return { start, end, surface: 'unknown' };
             }
 
@@ -50,24 +66,31 @@
             const surfaces = data.elements.map(el => el.tags && el.tags.surface).filter(Boolean);
             const surface = surfaces.length > 0 ? surfaces[0] : 'unknown';
 
+            console.log("Processed surface data:", { start, end, surface });
             return { start, end, surface };
         }
 
         // Main handler for message from Thunkable
         window.addEventListener('message', async (event) => {
+            console.log("Received message from Thunkable:", event.data);
+            alert("Received route data. Processing...");
             const routeCoordinates = event.data;
+
             if (!Array.isArray(routeCoordinates)) {
-                window.postMessage('Invalid coordinates data');
+                console.error("Invalid route data:", routeCoordinates);
+                alert("Invalid route data received!");
+                window.ReactNativeWebView.postMessage(JSON.stringify({ error: "Invalid route data" }));
                 return;
             }
 
             const surfaceData = await getSurfaceTypeForRoute(routeCoordinates);
+            alert("Sending surface data back to Thunkable.");
             window.ReactNativeWebView.postMessage(JSON.stringify(surfaceData));
         });
     </script>
 </head>
 <body>
-    <h1>Surface Type Fetcher by TK</h1>
+    <h1>Surface Type Fetcher</h1>
     <p>Waiting for route coordinates...</p>
 </body>
 </html>
