@@ -113,7 +113,7 @@ function calculateDistance(coord1, coord2) {
                 labels: {
                     font: {
                         size: 16, // Set label font size
-                        family: 'SegoeUI', // Set label font family
+                        family: 'Calibri', // Set label font family
                         style: 'normal', // Font style: normal, italic, oblique
                         weight: 'normal' // Font weight: normal, bold, etc.
                     },
@@ -130,7 +130,7 @@ function calculateDistance(coord1, coord2) {
                     label: function(context) {
                         let label = context.label || '';
                         let value = context.raw || 0;
-                        return `${label}: ${value}%`; // Customize tooltip format
+                        return `${label}: ${value.toFixed(1)}%`; // Customize tooltip format
                     }
                 }
             }
