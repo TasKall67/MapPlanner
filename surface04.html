@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f4;
+        }
+        #chartContainer {
+            width: 50%; /* Set the chart size to 50% of the page width */
+            max-width: 500px; /* Optional: Limit the maximum width */
+            aspect-ratio: 1; /* Maintain a square aspect ratio */
+        }
+        canvas {
+            width: 100%; /* Make the canvas fill the container */
+            height: 100%; /* Ensure the canvas retains proportions */
+        }
+    </style>
+</head>
+<body>
+    <div id="chartContainer">
+        <canvas id="surfaceChart"></canvas>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="your_script.js"></script>
+
+
+
+    <script>
+        const routeCoordinates = [
+     [4.901083666666667,52.369609],[4.901235333333333,52.369522],[4.901387,52.369435],[4.902161666666666,52.36910133333333],[4.902936333333334,52.36876766666667],[4.903711,52.368434],[4.903581333333333,52.36831033333333],[4.903451666666667,52.368186666666666],[4.903322,52.368063],[4.903350666666666,52.36798233333333],[4.9033793333333335,52.36790166666667],[4.903408,52.367821],[4.9035926666666665,52.367708],[4.903777333333333,52.367595],[4.903962,52.367482],[4.904060666666666,52.367361333333335],[4.904159333333333,52.36724066666667],[4.904258,52.36712],[4.905015,52.365853333333334],[4.905772,52.36458666666667],[4.906529,52.36332],[4.906639333333334,52.36334166666667],[4.906749666666666,52.36336333333333],[4.90686,52.363385],[4.9066806666666665,52.363618333333335],[4.906501333333334,52.36385166666667],[4.906322,52.364085] // Example coordinates
+];
+
+// Utility function to calculate segment length (Haversine formula)
+function calculateDistance(coord1, coord2) {
+    const toRad = (val) => (val * Math.PI) / 180;
+    const R = 6371e3; // Earth's radius in meters
+    const lat1 = toRad(coord1[1]), lon1 = toRad(coord1[0]);
+    const lat2 = toRad(coord2[1]), lon2 = toRad(coord2[0]);
+    const dLat = lat2 - lat1, dLon = lon2 - lon1;
+
+    const a = Math.sin(dLat / 2) ** 2 +
+              Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return R * c; // Distance in meters
+}
+
+(async function() {
+    let totalDistance = 0;
+    let surfaceCounts = { bicycle: 0, pedestrian: 0, road: 0 };
+
+    for (let i = 0; i < routeCoordinates.length - 1; i++) {
+        const segmentStart = routeCoordinates[i];
+        const segmentEnd = routeCoordinates[i + 1];
+
+        const segmentDistance = calculateDistance(segmentStart, segmentEnd);
+        totalDistance += segmentDistance;
+
+        // Fetch OSM surface data
+        const response = await fetch(`https://overpass-api.de/api/interpreter?data=[out:json];way[highway](around:50,${segmentStart[1]},${segmentStart[0]});out;`);
+        const data = await response.json();
+
+        let surfaceType = "road"; // Default to road
+        for (const element of data.elements) {
+            if (element.tags.highway === "cycleway" || (element.tags.access === "no" && element.tags.bicycle === "yes")) {
+                surfaceType = "bicycle";
+                break;
+            }
+            if (element.tags.highway === "footway" || element.tags.highway === "pedestrian" || element.tags.surface === "paving_stones") {
+                surfaceType = "pedestrian";
+                break;
+            }
+        }
+
+        // Accumulate segment distances
+        surfaceCounts[surfaceType] += segmentDistance;
+    }
+
+    // Calculate percentages
+    const percentages = {
+        bicycle: (surfaceCounts.bicycle / totalDistance) * 100,
+        pedestrian: (surfaceCounts.pedestrian / totalDistance) * 100,
+        road: (surfaceCounts.road / totalDistance) * 100,
+    };
+
+    console.log("Surface Percentages:", percentages);
+
+    // Generate Pie Chart (using Chart.js)
+    const ctx = document.getElementById("surfaceChart").getContext("2d");
+    new Chart(ctx, {
+        type: "pie",
+        data: {
+            labels: ["Bicycle", "Pedestrian", "Road"],
+            datasets: [{
+                data: [percentages.bicycle, percentages.pedestrian, percentages.road],
+                backgroundColor: ["#ff6384", "#ffce56", "#36a2eb"]
+            }]
+        },
+        options: {
+            responsive: true
+        }
+    });
+})();
+
+    </script>
+</body>
+</html>
