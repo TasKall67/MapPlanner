@@ -13,12 +13,12 @@
         }
         #chartContainer {
             width: 100%; /* Set the chart size to 50% of the page width */
-            max-width: 500px; /* Optional: Limit the maximum width */
+            max-width: 400px; /* Optional: Limit the maximum width */
             aspect-ratio: 1; /* Maintain a square aspect ratio */
         }
         canvas {
-            width: 100%; /* Make the canvas fill the container */
-            height: 100%; /* Ensure the canvas retains proportions */
+            width: 50%; /* Make the canvas fill the container */
+            height: 50%; /* Ensure the canvas retains proportions */
         }
     </style>
 </head>
@@ -28,13 +28,13 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="your_script.js"></script>
+     
 
 
 
     <script>
         const routeCoordinates = [
-     [4.903777333333333,52.367595],[4.903962,52.367482],[4.904060666666666,52.367361333333335],[4.904159333333333,52.36724066666667],[4.904258,52.36712],[4.905015,52.365853333333334],[4.905772,52.36458666666667],[4.906529,52.36332],[4.906639333333334,52.36334166666667],[4.906749666666666,52.36336333333333],[4.90686,52.363385],[4.9066806666666665,52.363618333333335],[4.906501333333334,52.36385166666667],[4.906322,52.364085] // Example coordinates
+     [4.904159333333333,52.36724066666667],[4.904258,52.36712],[4.905015,52.365853333333334],[4.905772,52.36458666666667],[4.906529,52.36332],[4.906639333333334,52.36334166666667],[4.906749666666666,52.36336333333333],[4.90686,52.363385],[4.9066806666666665,52.363618333333335] // Example coordinates
 ];
 
 // Utility function to calculate segment length (Haversine formula)
@@ -97,15 +97,45 @@ function calculateDistance(coord1, coord2) {
     new Chart(ctx, {
         type: "pie",
         data: {
-            labels: ["Bicycle", "Paved", "Road"],
+            labels: ["Bicycle", "Pedestrian", "Road"],
             datasets: [{
                 data: [percentages.bicycle, percentages.pedestrian, percentages.road],
-                backgroundColor: ["#ff6384", "#ffce56", "#36a2eb"]
+                backgroundColor: ["#ff6384", "#ffce56", "#36a2eb"],
+				borderColor: ['#fff', '#fff', '#fff'],
+                borderWidth: 1
+				
             }]
         },
         options: {
-            responsive: true
+            responsive: true,
+			plugins: {
+            legend: {
+                labels: {
+                    font: {
+                        size: 16, // Set label font size
+                        family: 'SegoeUI', // Set label font family
+                        style: 'normal', // Font style: normal, italic, oblique
+                        weight: 'normal' // Font weight: normal, bold, etc.
+                    },
+                    color: '#000' // Label text color
+                },
+                position: 'top' // Legend position: top, bottom, left, right
+            },
+            tooltip: {
+                bodyFont: {
+                    size: 14, // Tooltip text size
+                    family: 'Courier New' // Tooltip text font family
+                },
+                callbacks: {
+                    label: function(context) {
+                        let label = context.label || '';
+                        let value = context.raw || 0;
+                        return `${label}: ${value}%`; // Customize tooltip format
+                    }
+                }
+            }
         }
+    }
     });
 })();
 
