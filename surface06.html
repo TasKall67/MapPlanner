@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Surface Type and Bicycle Road</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h1>Route Surface Analysis</h1>
+    <canvas id="surfaceChart" style="max-width: 500px; max-height: 500px;"></canvas>
+    <div id="textResults" style="margin: 20px; font-size: 14px; line-height: 1.5;"></div>
+
+    <script>
+        let routeCoordinates = []; // To hold coordinates from Thunkable
+        const results = []; // To hold segment surface results
+        const surfaceCount = {
+            road: 0,
+            pedestrian: 0,
+            bicycle: 0
+        };
+
+        // Function to process route coordinates
+        async function fetchSurfaceData() {
+            for (let i = 0; i < routeCoordinates.length - 1; i++) {
+                const start = routeCoordinates[i];
+                const end = routeCoordinates[i + 1];
+
+                const bbox = `${Math.min(start[1], end[1])},${Math.min(start[0], end[0])},${Math.max(start[1], end[1])},${Math.max(start[0], end[0])}`;
+                const query = `
+                    [out:json];
+                    way(${bbox});
+                    (._;>;);
+                    out body;
+                `;
+                const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
+
+                try {
+                    const response = await fetch(url);
+                    const data = await response.json();
+
+                    let surfaceType = "unknown";
+                    let isBicycleRoad = false;
+
+                    for (let element of data.elements) {
+                        if (element.type === "way" && element.tags) {
+                            if (element.tags.surface) {
+                                surfaceType = element.tags.surface;
+                            }
+                            if (element.tags.highway === "cycleway" || element.tags.bicycle === "yes") {
+                                isBicycleRoad = true;
+                            }
+                        }
+                    }
+
+                    if (isBicycleRoad) {
+                        surfaceCount.bicycle++;
+                    } else if (["paving_stones", "cobblestone", "sidewalk"].includes(surfaceType)) {
+                        surfaceCount.pedestrian++;
+                    } else {
+                        surfaceCount.road++;
+                    }
+
+                    results.push(`Segment ${i + 1}: Surface = ${surfaceType}, Bicycle Road = ${isBicycleRoad}`);
+                } catch (error) {
+                    console.error("Error fetching data:", error);
+                    results.push(`Segment ${i + 1}: Surface = unknown, Bicycle Road = unknown`);
+                }
+            }
+
+            displayResults();
+            drawChart();
+        }
+
+        function displayResults() {
+            const textResultsDiv = document.getElementById("textResults");
+            textResultsDiv.innerHTML = results.join("<br>");
+        }
+
+        function drawChart() {
+            const ctx = document.getElementById("surfaceChart").getContext("2d");
+            const totalSegments = surfaceCount.road + surfaceCount.pedestrian + surfaceCount.bicycle;
+
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Road', 'Pedestrian', 'Bicycle'],
+                    datasets: [{
+                        label: 'Surface Type Distribution',
+                        data: [
+                            ((surfaceCount.road / totalSegments) * 100).toFixed(2),
+                            ((surfaceCount.pedestrian / totalSegments) * 100).toFixed(2),
+                            ((surfaceCount.bicycle / totalSegments) * 100).toFixed(2)
+                        ],
+                        backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function (tooltipItem) {
+                                    return `${tooltipItem.label}: ${tooltipItem.raw}%`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Listen for JSON input from Thunkable
+        window.addEventListener('message', (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                if (data.coordinates && Array.isArray(data.coordinates)) {
+                    routeCoordinates = data.coordinates;
+                    results.length = 0; // Clear previous results
+                    Object.keys(surfaceCount).forEach(key => surfaceCount[key] = 0); // Reset counters
+                    fetchSurfaceData();
+                } else {
+                    console.error("Invalid data received:", data);
+                }
+            } catch (error) {
+                console.error("Error parsing incoming data:", error);
+            }
+        });
+    </script>
+</body>
+</html>
