@@ -7,7 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <h1>RS Analysis</h1>
+    <h1>RSA</h1>
     <canvas id="surfaceChart" style="max-width: 500px; max-height: 500px;"></canvas>
     <div id="textResults" style="margin: 20px; font-size: 14px; line-height: 1.5;"></div>
 
@@ -31,12 +31,12 @@
                 // Try to parse the incoming message as JSON
                 const data = JSON.parse(message);
 
-                // Check if the data contains coordinates and is a valid array
-                if (Array.isArray(data.coordinates) && data.coordinates.length > 0) {
+                // Check if the data contains coordinates and if it's a valid array of arrays
+                if (Array.isArray(data.coordinates) && data.coordinates.length > 0 && Array.isArray(data.coordinates[0])) {
                     routeCoordinates = data.coordinates; // Update route coordinates
 
                     console.log("Coordinates received:", routeCoordinates);
-                    
+
                     // Call fetchSurfaceData to process the new coordinates
                     fetchSurfaceData();
                 } else {
