@@ -142,6 +142,7 @@
     }
 
     // Listen for messages from Thunkable (or other sources)
+    document.addEventListener('message', handleMessage);
     window.addEventListener('message', handleMessage);
 
     // Also, listen for the load event on the window
