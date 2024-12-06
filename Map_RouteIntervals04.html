@@ -253,56 +253,6 @@
       });
     });
 
-
-
-    // Function to send message to Thunkable or show alert in browser
-    function sendCoordinatesToThunkable(startLat, startLng, endLat, endLng) {
-      const message = {
-        start: { lat: startLat, lng: startLng },
-        end: { lat: endLat, lng: endLng }
-      };
-
-      if (window.ReactNativeWebView) {
-        window.ReactNativeWebView.postMessage(JSON.stringify(message));
-      } else {
-        window.parent.postMessage(JSON.stringify(message), "*");
-      }
-
-      // Call getRoute to fetch distance, duration, and route data
-      getRoute(startLat, startLng, endLat, endLng);
-    }
-
-       // Function to get route from Mapbox Directions API
-    function getRoute(startLat, startLng, endLat, endLng) {
-      const directionsAPI = `https://api.mapbox.com/directions/v5/mapbox/cycling/${startLng},${startLat};${endLng},${endLat}?geometries=geojson&access_token=${mapboxgl.accessToken}`;
-
-      fetch(directionsAPI)
-        .then(response => response.json())
-        .then(data => {
-          const distance = data.routes[0].distance; // Distance in meters
-          const duration = data.routes[0].duration; // Duration in seconds
-          const routeCoordinates = data.routes[0].geometry.coordinates;
-
-          // Interpolate coordinates
-      const interpolatedCoordinates = interpolateCoordinates(routeCoordinates, 2); // Use 10 or desired interval
-      
-      // Send distance, duration, and interpolated route to Thunkable
-      sendRouteDetailsToThunkable(distance, duration, interpolatedCoordinates);
-    })
-        .catch(error => {
-          console.error('Error fetching route:', error);
-        });
-    }
-// If both markers are set, send the coordinates to Thunkable
-                if (startCoords && endCoords) {
-                    sendCoordinatesToThunkable(
-                        startCoords.lat,
-                        startCoords.lng,
-                        endCoords.lat,
-                        endCoords.lng
-                    );
-                }
-    
 //-----------------------------------------------------DRAWING LINE------------------------------------TASSOS-------------
 
 
