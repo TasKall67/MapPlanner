@@ -63,13 +63,7 @@
       zoom: 14
     });
 
-    // Once the map is loaded, update the text labels to show Latin alphabet text
-map.on('load', function() {
-  // This overrides the text labels to always show in English (if available)
-  map.setLayoutProperty('place-name', 'text-field', ['get', 'name_en']); // Use English name if available
-  map.setLayoutProperty('road', 'text-field', ['get', 'name_en']); // Use English road names if available
-});
-
+    
     let startMarker = null;
     let endMarker = null;
 
