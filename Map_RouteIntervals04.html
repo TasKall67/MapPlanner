@@ -50,9 +50,9 @@
 
   <div id="map"></div>
   <div id="autocomplete-container">
-    <input type="text" id="autocomplete-input" placeholder="Start Address..." />
+    <input type="text" id="autocomplete-input" placeholder="Give Start Address..." />
     <ul id="suggestions"></ul>
-    <input type="text" id="autocomplete-end-input" placeholder="End Address..." />
+    <input type="text" id="autocomplete-end-input" placeholder="Give End Address..." />
     <ul id="end-suggestions"></ul>
   </div>
 
@@ -252,6 +252,29 @@
         endSuggestionsContainer.appendChild(li);
       });
     });
+
+
+       // Function to get route from Mapbox Directions API
+    function getRoute(startLat, startLng, endLat, endLng) {
+      const directionsAPI = `https://api.mapbox.com/directions/v5/mapbox/cycling/${startLng},${startLat};${endLng},${endLat}?geometries=geojson&access_token=${mapboxgl.accessToken}`;
+
+      fetch(directionsAPI)
+        .then(response => response.json())
+        .then(data => {
+          const distance = data.routes[0].distance; // Distance in meters
+          const duration = data.routes[0].duration; // Duration in seconds
+          const routeCoordinates = data.routes[0].geometry.coordinates;
+
+          // Interpolate coordinates
+      const interpolatedCoordinates = interpolateCoordinates(routeCoordinates, 2); // Use 10 or desired interval
+      
+      // Send distance, duration, and interpolated route to Thunkable
+      sendRouteDetailsToThunkable(distance, duration, interpolatedCoordinates);
+    })
+        .catch(error => {
+          console.error('Error fetching route:', error);
+        });
+    }
 
 //-----------------------------------------------------DRAWING LINE------------------------------------TASSOS-------------
 
