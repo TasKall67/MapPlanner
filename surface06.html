@@ -7,7 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <h1>Surface %</h1>
+    <h1>Surface perc</h1>
     <canvas id="surfaceChart" style="width: 100%; aspect-ratio: 1;; max-width: 500px; max-height: 500px;"></canvas>
     <div id="textResults" style="margin: 20px; font-size: 14px; line-height: 1.5;"></div>
 
@@ -90,9 +90,9 @@
 
                 // Add to text results
                // results.push(`Segment ${i + 1}: Surface = ${surfaceType}, Bicycle Road = ${isBicycleRoad}`);
-            //} catch (error) {
-               // console.error("Error fetching data:", error);
-               // results.push(`Segment ${i + 1}: Surface = unknown, Bicycle Road = unknown`);
+            } catch (error) {
+                console.error("Error fetching data:", error);
+                //results.push(`Segment ${i + 1}: Surface = unknown, Bicycle Road = unknown`);
             }
         }
 
