@@ -18,31 +18,13 @@
 <script>
     mapboxgl.accessToken = 'pk.eyJ1IjoidGFza2FsbCIsImEiOiJjbTI0amdhNGkwZGtkMm1xd3BudHJ0dmN0In0.yK-2hu2fVVC6NwmdAXaAwQ'; // Replace with your token
 
-    const defaultCenter = [21.7326, 38.2476]; // Default center coordinates
-    
-    // Create the Mapbox map instance but don't set the center yet
     const map = new mapboxgl.Map({
       container: 'map', // container ID
       style: 'mapbox://styles/mapbox/streets-v11', // map style
-      center: defaultCenter, // initial center set to default location
+      center: [23.788887346655684, 38.04990560950526], // starting position [lng, lat]
       zoom: 14 // starting zoom
 	    	});
-	
-	// Attempt to get the user's location
-       navigator.geolocation.getCurrentPosition(
-         (position) => {
-        // If location is successfully retrieved, set map center to user's location
-        const userLocation = [position.coords.longitude, position.coords.latitude];
-        map.setCenter(userLocation);
-    },
-    (error) => {
-        // If there's an error (e.g., permission denied), set center to the default coordinates
-        console.warn("Could not retrieve user location:", error.message);
-        map.setCenter(defaultCenter); // Use default center coordinates
-    },
-    { enableHighAccuracy: true } // Optional: Request high accuracy if available
-);
-
+		
 
     let startMarker = null;
     let endMarker = null;
@@ -87,6 +69,76 @@
           console.error('Error fetching route:', error);
         });
     }
+
+// Function to place a pin based on an address
+function addPinByAddress(address, isStart) {
+    const geocodingAPI = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(address)}.json?access_token=${mapboxgl.accessToken}`;
+
+    fetch(geocodingAPI)
+        .then(response => response.json())
+        .then(data => {
+            if (data.features && data.features.length > 0) {
+                const [lng, lat] = data.features[0].center;
+
+                if (isStart) {
+                    // Add or update the start marker
+                    if (startMarker) {
+                        startMarker.setLngLat([lng, lat]);
+                    } else {
+                        startMarker = new mapboxgl.Marker({ color: 'green' })
+                            .setLngLat([lng, lat])
+                            .addTo(map);
+                    }
+                    startCoords = { lat, lng };
+                } else {
+                    // Add or update the end marker
+                    if (endMarker) {
+                        endMarker.setLngLat([lng, lat]);
+                    } else {
+                        endMarker = new mapboxgl.Marker({ color: 'red' })
+                            .setLngLat([lng, lat])
+                            .addTo(map);
+                    }
+                    endCoords = { lat, lng };
+                }
+
+                // If both markers are set, send the coordinates to Thunkable
+                if (startCoords && endCoords) {
+                    sendCoordinatesToThunkable(
+                        startCoords.lat,
+                        startCoords.lng,
+                        endCoords.lat,
+                        endCoords.lng
+                    );
+                }
+            } else {
+                alert('Address not found!');
+            }
+        })
+        .catch(error => console.error('Error fetching geocoding data:', error));
+}
+
+// Listen for address-based pin placement from Thunkable
+function handleAddressMessage(event) {
+    const message = event.data;
+
+    try {
+        const parsedMessage = JSON.parse(message);
+        if (parsedMessage.address && typeof parsedMessage.isStart === 'boolean') {
+            addPinByAddress(parsedMessage.address, parsedMessage.isStart);
+        } else {
+            console.error('Invalid address message format:', parsedMessage);
+        }
+    } catch (e) {
+        console.error('Failed to parse address message:', e);
+    }
+}
+
+// Add listener for address messages
+document.addEventListener('message', handleAddressMessage);
+window.addEventListener('message', handleAddressMessage);
+
+	
 
     // Function to send distance, duration, and interpolated route to Thunkable
     function sendRouteDetailsToThunkable(distance, duration, routeCoordinates ) {
@@ -136,7 +188,7 @@ function interpolateCoordinates(coords, numPoints) {
     // When the user clicks on the map, select start and end points
     map.on('click', function (e) {
       if (!startMarker) {
-        startMarker = new mapboxgl.Marker({ color: 'red' })
+        startMarker = new mapboxgl.Marker({ color: 'green' })
           .setLngLat(e.lngLat)
           .addTo(map);
         startCoords = e.lngLat;
