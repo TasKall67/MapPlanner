@@ -94,7 +94,9 @@ map.on('load', function() {
     // Function to fetch address suggestions from Mapbox API
     async function fetchSuggestions(query) {
       if (!query) return [];
-      const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${mapboxgl.accessToken}&autocomplete=true&limit=5`;
+      //const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${mapboxgl.accessToken}&autocomplete=true&limit=5`;
+      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=5&lang=en`;
+      
       try {
         const response = await fetch(url);
         const data = await response.json();
