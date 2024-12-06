@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Autocomplete with Mapbox</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://api.mapbox.com/mapbox-gl-js/v2.11.0/mapbox-gl.js"></script>
+  <link href="https://api.mapbox.com/mapbox-gl-js/v2.11.0/mapbox-gl.css" rel="stylesheet" />
+  <style>
+    body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
+    #map { position: absolute; top: 0; bottom: 10px; width: 100%; }
+    #autocomplete-container {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      z-index: 1;
+      width: 80%;
+      max-width: 300px;
+    }
+    #autocomplete-input, #autocomplete-end-input {
+      width: 100%;
+      padding: 8px;
+      font-size: 16px;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      margin-bottom: 10px;
+    }
+    #suggestions, #end-suggestions {
+      margin-top: 4px;
+      padding: 0;
+      list-style-type: none;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      max-height: 200px;
+      overflow-y: auto;
+      box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.2);
+    }
+    #suggestions li, #end-suggestions li {
+      padding: 8px;
+      cursor: pointer;
+    }
+    #suggestions li:hover, #end-suggestions li:hover {
+      background: #FA7842;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="map"></div>
+  <div id="autocomplete-container">
+    <input type="text" id="autocomplete-input" placeholder="Start Address..." />
+    <ul id="suggestions"></ul>
+    <input type="text" id="autocomplete-end-input" placeholder="End Address..." />
+    <ul id="end-suggestions"></ul>
+  </div>
+
+
+<script>
+  mapboxgl.accessToken = 'pk.eyJ1IjoidGFza2FsbCIsImEiOiJjbTI0amdhNGkwZGtkMm1xd3BudHJ0dmN0In0.yK-2hu2fVVC6NwmdAXaAwQ'; // Replace with your token
+
+  const map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/mapbox/streets-v12',
+    center: [23.7888, 38.0499], // Default center
+    zoom: 14,
+  });
+
+  let startMarker = null;
+  let endMarker = null;
+  let startCoords = null;
+  let endCoords = null;
+
+  // Function to add a marker to the map
+  function addMarker(lng, lat, isStart) {
+    const color = isStart ? 'green' : 'red';
+    const marker = new mapboxgl.Marker({ color })
+      .setLngLat([lng, lat])
+      .addTo(map);
+
+    if (isStart) {
+      if (startMarker) startMarker.remove();
+      startMarker = marker;
+      startCoords = { lng, lat };
+    } else {
+      if (endMarker) endMarker.remove();
+      endMarker = marker;
+      endCoords = { lng, lat };
+    }
+
+    map.flyTo({ center: [lng, lat], zoom: 15 });
+
+    // If both markers are set, fetch and display the route
+    if (startCoords && endCoords) {
+      sendCoordinatesToThunkable(
+        startCoords.lat,
+        startCoords.lng,
+        endCoords.lat,
+        endCoords.lng
+      );
+    }
+  }
+
+  // Function to send start, end, and route data to Thunkable
+  function sendCoordinatesToThunkable(startLat, startLng, endLat, endLng) {
+    const message = {
+      start: { lat: startLat, lng: startLng },
+      end: { lat: endLat, lng: endLng },
+    };
+
+    if (window.ReactNativeWebView) {
+      window.ReactNativeWebView.postMessage(JSON.stringify(message));
+    } else {
+      window.parent.postMessage(JSON.stringify(message), '*');
+    }
+
+    // Fetch and draw the route
+    getRoute(startLat, startLng, endLat, endLng);
+  }
+
+  // Function to fetch and draw the route using Mapbox Directions API
+  function getRoute(startLat, startLng, endLat, endLng) {
+    const directionsAPI = `https://api.mapbox.com/directions/v5/mapbox/driving/${startLng},${startLat};${endLng},${endLat}?geometries=geojson&access_token=${mapboxgl.accessToken}`;
+
+    fetch(directionsAPI)
+      .then((response) => response.json())
+      .then((data) => {
+        const distance = data.routes[0].distance; // Distance in meters
+        const duration = data.routes[0].duration; // Duration in seconds
+        const routeCoordinates = data.routes[0].geometry.coordinates;
+
+        // Interpolate route coordinates
+        const interpolatedCoordinates = interpolateCoordinates(routeCoordinates, 5);
+
+        // Draw the route on the map
+        drawRoute(routeCoordinates);
+
+        // Send route details back to Thunkable
+        sendRouteDetailsToThunkable(distance, duration, interpolatedCoordinates);
+      })
+      .catch((error) => {
+        console.error('Error fetching route:', error);
+      });
+  }
+
+  // Function to draw the route on the map
+  function drawRoute(routeCoordinates) {
+    if (map.getSource('route')) {
+      map.removeLayer('route');
+      map.removeSource('route');
+    }
+
+    map.addSource('route', {
+      type: 'geojson',
+      data: {
+        type: 'Feature',
+        geometry: {
+          type: 'LineString',
+          coordinates: routeCoordinates,
+        },
+      },
+    });
+
+    map.addLayer({
+      id: 'route',
+      type: 'line',
+      source: 'route',
+      layout: {
+        'line-join': 'round',
+        'line-cap': 'round',
+      },
+      paint: {
+        'line-color': 'blue',
+        'line-width': 5,
+      },
+    });
+
+    // Adjust map to fit the route
+    const bounds = routeCoordinates.reduce(
+      (bounds, coord) => bounds.extend(coord),
+      new mapboxgl.LngLatBounds(routeCoordinates[0], routeCoordinates[0])
+    );
+
+    map.fitBounds(bounds, { padding: 50 });
+  }
+
+  // Function to send route details to Thunkable
+  function sendRouteDetailsToThunkable(distance, duration, routeCoordinates) {
+    const message = {
+      distance, // in meters
+      duration, // in seconds
+      route: routeCoordinates, // interpolated route coordinates
+    };
+
+    if (window.ReactNativeWebView) {
+      window.ReactNativeWebView.postMessage(JSON.stringify(message));
+    } else {
+      window.parent.postMessage(JSON.stringify(message), '*');
+    }
+  }
+
+  // Function to interpolate coordinates along the route
+  function interpolateCoordinates(coords, numPoints) {
+    const interpolated = [];
+
+    for (let i = 0; i < coords.length - 1; i++) {
+      const [x1, y1] = coords[i];
+      const [x2, y2] = coords[i + 1];
+
+      interpolated.push([x1, y1]);
+
+      for (let j = 1; j <= numPoints; j++) {
+        const t = j / (numPoints + 1);
+        const x = x1 + t * (x2 - x1);
+        const y = y1 + t * (y2 - y1);
+        interpolated.push([x, y]);
+      }
+    }
+
+    interpolated.push(coords[coords.length - 1]);
+
+    return interpolated;
+  }
+
+  // Event listeners for manual map click to set start and end points
+  map.on('click', (e) => {
+    const { lng, lat } = e.lngLat;
+
+    if (!startMarker) {
+      addMarker(lng, lat, true);
+    } else if (!endMarker) {
+      addMarker(lng, lat, false);
+    }
+  });
+</script>
