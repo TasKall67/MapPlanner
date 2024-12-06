@@ -17,13 +17,14 @@
       width: 90%;
       max-width: 400px;
     }
-    #autocomplete-input {
+    #autocomplete-input, #autocomplete-end-input {
       width: 100%;
       padding: 8px;
       font-size: 16px;
       box-sizing: border-box;
       border: 1px solid #ccc;
       border-radius: 4px;
+      margin-bottom: 10px;
     }
     #suggestions {
       margin-top: 4px;
@@ -49,8 +50,10 @@
 
   <div id="map"></div>
   <div id="autocomplete-container">
-    <input type="text" id="autocomplete-input" placeholder="Type an address..." />
+    <input type="text" id="autocomplete-input" placeholder="Start Address..." />
     <ul id="suggestions"></ul>
+    <input type="text" id="autocomplete-end-input" placeholder="End Address..." />
+    <ul id="end-suggestions"></ul>
   </div>
 
   <script>
@@ -63,7 +66,6 @@
       zoom: 14
     });
 
-    
     let startMarker = null;
     let endMarker = null;
 
@@ -89,8 +91,7 @@
     async function fetchSuggestions(query) {
       if (!query) return [];
       const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${mapboxgl.accessToken}&autocomplete=true&limit=5`;
-      //const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=5&lang=en`;
-      
+
       try {
         const response = await fetch(url);
         const data = await response.json();
@@ -104,28 +105,28 @@
       }
     }
 
-    // Function to handle autocomplete input changes
-    const input = document.getElementById("autocomplete-input");
-    const suggestionsContainer = document.getElementById("suggestions");
+    // Function to handle autocomplete input changes for start address
+    const startInput = document.getElementById("autocomplete-input");
+    const startSuggestionsContainer = document.getElementById("suggestions");
 
-    input.addEventListener("input", async () => {
-      const query = input.value;
+    startInput.addEventListener("input", async () => {
+      const query = startInput.value;
       const suggestions = await fetchSuggestions(query);
 
       // Clear previous suggestions
-      suggestionsContainer.innerHTML = "";
+      startSuggestionsContainer.innerHTML = "";
 
       // Add new suggestions
       suggestions.forEach(suggestion => {
         const li = document.createElement("li");
         li.textContent = suggestion.name;
         li.addEventListener("click", () => {
-          input.value = suggestion.name;
-          suggestionsContainer.innerHTML = "";
+          startInput.value = suggestion.name;
+          startSuggestionsContainer.innerHTML = "";
 
           // Add marker and send coordinates back to Thunkable
           const [lng, lat] = suggestion.coordinates;
-          const isStart = true; // You can add a toggle to determine this
+          const isStart = true; // Start point marker
           addMarker(lng, lat, isStart);
 
           // Send the selected address to Thunkable
@@ -141,7 +142,48 @@
             window.parent.postMessage(message, "*");
           }
         });
-        suggestionsContainer.appendChild(li);
+        startSuggestionsContainer.appendChild(li);
+      });
+    });
+
+    // Function to handle autocomplete input changes for end address
+    const endInput = document.getElementById("autocomplete-end-input");
+    const endSuggestionsContainer = document.getElementById("end-suggestions");
+
+    endInput.addEventListener("input", async () => {
+      const query = endInput.value;
+      const suggestions = await fetchSuggestions(query);
+
+      // Clear previous suggestions
+      endSuggestionsContainer.innerHTML = "";
+
+      // Add new suggestions
+      suggestions.forEach(suggestion => {
+        const li = document.createElement("li");
+        li.textContent = suggestion.name;
+        li.addEventListener("click", () => {
+          endInput.value = suggestion.name;
+          endSuggestionsContainer.innerHTML = "";
+
+          // Add marker and send coordinates back to Thunkable
+          const [lng, lat] = suggestion.coordinates;
+          const isStart = false; // End point marker
+          addMarker(lng, lat, isStart);
+
+          // Send the selected address to Thunkable
+          const message = JSON.stringify({
+            address: suggestion.name,
+            coordinates: { lng, lat },
+            isStart: isStart.toString()
+          });
+
+          if (window.ReactNativeWebView) {
+            window.ReactNativeWebView.postMessage(message);
+          } else {
+            window.parent.postMessage(message, "*");
+          }
+        });
+        endSuggestionsContainer.appendChild(li);
       });
     });
   </script>
