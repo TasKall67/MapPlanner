@@ -56,181 +56,285 @@
     <ul id="end-suggestions"></ul>
   </div>
 
+  <script>
+    mapboxgl.accessToken = 'pk.eyJ1IjoidGFza2FsbCIsImEiOiJjbTI0amdhNGkwZGtkMm1xd3BudHJ0dmN0In0.yK-2hu2fVVC6NwmdAXaAwQ'; // Replace with your token
 
-<script>
-  mapboxgl.accessToken = 'pk.eyJ1IjoidGFza2FsbCIsImEiOiJjbTI0amdhNGkwZGtkMm1xd3BudHJ0dmN0In0.yK-2hu2fVVC6NwmdAXaAwQ'; // Replace with your token
+    const map = new mapboxgl.Map({
+      container: 'map',
+      style: 'mapbox://styles/mapbox/streets-v12',
+      center: [23.7888, 38.0499], // Default center
+      zoom: 13
+    });
 
-  const map = new mapboxgl.Map({
-    container: 'map',
-    style: 'mapbox://styles/mapbox/streets-v12',
-    center: [23.7888, 38.0499], // Default center
-    zoom: 14,
+    let startMarker = null;
+    let endMarker = null;
+    let startCoords = null;
+    let endCoords = null;
+
+    // Function to add a marker to the map
+    function addMarker(lng, lat, isStart) {
+      const color = isStart ? 'green' : 'red';
+      const marker = new mapboxgl.Marker({ color })
+        .setLngLat([lng, lat])
+        .addTo(map);
+
+      if (isStart) {
+        if (startMarker) startMarker.remove();
+        startMarker = marker;
+      } else {
+        if (endMarker) endMarker.remove();
+        endMarker = marker;
+      }
+
+      map.flyTo({ center: [lng, lat], zoom: 15 });
+    }
+
+// Function to fetch reverse geocoded address
+  async function getReverseGeocodedAddress(lng, lat) {
+    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${mapboxgl.accessToken}`;
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+      return data.features[0]?.place_name || 'Unknown location';
+    } catch (error) {
+      console.error('Error fetching reverse geocoded address:', error);
+      return 'Error fetching address';
+    }
+  }
+
+  // Handle map clicks
+  let selectingStart = true; // Toggle for start/end point
+  map.on('click', async (e) => {
+    const { lng, lat } = e.lngLat;
+    const address = await getReverseGeocodedAddress(lng, lat);
+
+    if (selectingStart) {
+      addMarker(lng, lat, true);
+      document.getElementById('autocomplete-input').value = address;
+
+      // Send data of start back to Thunkable or parent
+      const message = JSON.stringify({
+        start: { lat: startLat, lng: startLng },
+        isStart: 'true',
+      });
+
+      if (window.ReactNativeWebView) {
+        window.ReactNativeWebView.postMessage(message);
+      } else {
+        window.parent.postMessage(message, '*');
+      }
+    } else {
+      addMarker(lng, lat, false);
+      document.getElementById('autocomplete-end-input').value = address;
+
+      // Send data of end back to Thunkable or parent
+      const message = JSON.stringify({
+        end: { lat: endLat, lng: endLng },
+        isStart: 'false',
+      });
+
+      if (window.ReactNativeWebView) {
+        window.ReactNativeWebView.postMessage(message);
+      } else {
+        window.parent.postMessage(message, '*');
+      }
+    }
   });
 
-  let startMarker = null;
-  let endMarker = null;
-  let startCoords = null;
-  let endCoords = null;
+  // Toggle between selecting start and end points
+  document.getElementById('autocomplete-input').addEventListener('focus', () => {
+    selectingStart = true;
+  });
 
-  // Function to add a marker to the map
-  function addMarker(lng, lat, isStart) {
-    const color = isStart ? 'green' : 'red';
-    const marker = new mapboxgl.Marker({ color })
-      .setLngLat([lng, lat])
-      .addTo(map);
+  document.getElementById('autocomplete-end-input').addEventListener('focus', () => {
+    selectingStart = false;
+  });
 
-    if (isStart) {
-      if (startMarker) startMarker.remove();
-      startMarker = marker;
-      startCoords = { lng, lat };
-    } else {
-      if (endMarker) endMarker.remove();
-      endMarker = marker;
-      endCoords = { lng, lat };
-    }
 
-    map.flyTo({ center: [lng, lat], zoom: 15 });
 
-    // If both markers are set, fetch and display the route
-    if (startCoords && endCoords) {
-      sendCoordinatesToThunkable(
-        startCoords.lat,
-        startCoords.lng,
-        endCoords.lat,
-        endCoords.lng
-      );
-    }
-  }
 
-  // Function to send start, end, and route data to Thunkable
-  function sendCoordinatesToThunkable(startLat, startLng, endLat, endLng) {
-    const message = {
-      start: { lat: startLat, lng: startLng },
-      end: { lat: endLat, lng: endLng },
-    };
+    // Function to fetch address suggestions from Mapbox API
+    async function fetchSuggestions(query) {
+      if (!query) return [];
+      const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${mapboxgl.accessToken}&autocomplete=true&limit=5`;
 
-    if (window.ReactNativeWebView) {
-      window.ReactNativeWebView.postMessage(JSON.stringify(message));
-    } else {
-      window.parent.postMessage(JSON.stringify(message), '*');
-    }
-
-    // Fetch and draw the route
-    getRoute(startLat, startLng, endLat, endLng);
-  }
-
-  // Function to fetch and draw the route using Mapbox Directions API
-  function getRoute(startLat, startLng, endLat, endLng) {
-    const directionsAPI = `https://api.mapbox.com/directions/v5/mapbox/cycling/${startLng},${startLat};${endLng},${endLat}?geometries=geojson&access_token=${mapboxgl.accessToken}`;
-
-    fetch(directionsAPI)
-      .then((response) => response.json())
-      .then((data) => {
-        const distance = data.routes[0].distance; // Distance in meters
-        const duration = data.routes[0].duration; // Duration in seconds
-        const routeCoordinates = data.routes[0].geometry.coordinates;
-
-        // Interpolate route coordinates
-        const interpolatedCoordinates = interpolateCoordinates(routeCoordinates, 5);
-
-        // Draw the route on the map
-        drawRoute(routeCoordinates);
-
-        // Send route details back to Thunkable
-        sendRouteDetailsToThunkable(distance, duration, interpolatedCoordinates);
-      })
-      .catch((error) => {
-        console.error('Error fetching route:', error);
-      });
-  }
-
-  // Function to draw the route on the map
-  function drawRoute(routeCoordinates) {
-    if (map.getSource('route')) {
-      map.removeLayer('route');
-      map.removeSource('route');
-    }
-
-    map.addSource('route', {
-      type: 'geojson',
-      data: {
-        type: 'Feature',
-        geometry: {
-          type: 'LineString',
-          coordinates: routeCoordinates,
-        },
-      },
-    });
-
-    map.addLayer({
-      id: 'route',
-      type: 'line',
-      source: 'route',
-      layout: {
-        'line-join': 'round',
-        'line-cap': 'round',
-      },
-      paint: {
-        'line-color': 'blue',
-        'line-width': 5,
-      },
-    });
-
-    // Adjust map to fit the route
-    const bounds = routeCoordinates.reduce(
-      (bounds, coord) => bounds.extend(coord),
-      new mapboxgl.LngLatBounds(routeCoordinates[0], routeCoordinates[0])
-    );
-
-    map.fitBounds(bounds, { padding: 50 });
-  }
-
-  // Function to send route details to Thunkable
-  function sendRouteDetailsToThunkable(distance, duration, routeCoordinates) {
-    const message = {
-      distance, // in meters
-      duration, // in seconds
-      route: routeCoordinates, // interpolated route coordinates
-    };
-
-    if (window.ReactNativeWebView) {
-      window.ReactNativeWebView.postMessage(JSON.stringify(message));
-    } else {
-      window.parent.postMessage(JSON.stringify(message), '*');
-    }
-  }
-
-  // Function to interpolate coordinates along the route
-  function interpolateCoordinates(coords, numPoints) {
-    const interpolated = [];
-
-    for (let i = 0; i < coords.length - 1; i++) {
-      const [x1, y1] = coords[i];
-      const [x2, y2] = coords[i + 1];
-
-      interpolated.push([x1, y1]);
-
-      for (let j = 1; j <= numPoints; j++) {
-        const t = j / (numPoints + 1);
-        const x = x1 + t * (x2 - x1);
-        const y = y1 + t * (y2 - y1);
-        interpolated.push([x, y]);
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+        return data.features.map(feature => ({
+          name: feature.place_name,
+          coordinates: feature.geometry.coordinates
+        }));
+      } catch (error) {
+        console.error("Error fetching suggestions:", error);
+        return [];
       }
     }
 
-    interpolated.push(coords[coords.length - 1]);
+    // Function to handle autocomplete input changes for start address
+    const startInput = document.getElementById("autocomplete-input");
+    const startSuggestionsContainer = document.getElementById("suggestions");
 
-    return interpolated;
-  }
+    startInput.addEventListener("input", async () => {
+      const query = startInput.value;
+      const suggestions = await fetchSuggestions(query);
 
-  // Event listeners for manual map click to set start and end points
-  map.on('click', (e) => {
-    const { lng, lat } = e.lngLat;
+      // Clear previous suggestions
+      startSuggestionsContainer.innerHTML = "";
 
-    if (!startMarker) {
-      addMarker(lng, lat, true);
-    } else if (!endMarker) {
-      addMarker(lng, lat, false);
+      // Add new suggestions
+      suggestions.forEach(suggestion => {
+        const li = document.createElement("li");
+        li.textContent = suggestion.name;
+        li.addEventListener("click", () => {
+          startInput.value = suggestion.name;
+          startSuggestionsContainer.innerHTML = "";
+
+          // Add marker and send coordinates back to Thunkable
+          const [lng, lat] = suggestion.coordinates;
+          const isStart = true; // Start point marker
+          addMarker(lng, lat, isStart);
+
+          // Send the selected address to Thunkable
+          const message = JSON.stringify({
+            address: suggestion.name,
+            coordinates: { lng, lat },
+            isStart: isStart.toString()
+          });
+
+          if (window.ReactNativeWebView) {
+            window.ReactNativeWebView.postMessage(message);
+          } else {
+            window.parent.postMessage(message, "*");
+          }
+        });
+        startSuggestionsContainer.appendChild(li);
+      });
+    });
+
+    // Function to handle autocomplete input changes for end address
+    const endInput = document.getElementById("autocomplete-end-input");
+    const endSuggestionsContainer = document.getElementById("end-suggestions");
+
+    endInput.addEventListener("input", async () => {
+      const query = endInput.value;
+      const suggestions = await fetchSuggestions(query);
+
+      // Clear previous suggestions
+      endSuggestionsContainer.innerHTML = "";
+
+      // Add new suggestions
+      suggestions.forEach(suggestion => {
+        const li = document.createElement("li");
+        li.textContent = suggestion.name;
+        li.addEventListener("click", () => {
+          endInput.value = suggestion.name;
+          endSuggestionsContainer.innerHTML = "";
+
+          // Add marker and send coordinates back to Thunkable
+          const [lng, lat] = suggestion.coordinates;
+          const isStart = false; // End point marker
+          addMarker(lng, lat, isStart);
+
+          // Send the selected address to Thunkable
+          const message = JSON.stringify({
+            address: suggestion.name,
+            coordinates: { lng, lat },
+            isStart: isStart.toString()
+          });
+
+          if (window.ReactNativeWebView) {
+            window.ReactNativeWebView.postMessage(message);
+          } else {
+            window.parent.postMessage(message, "*");
+          }
+        });
+        endSuggestionsContainer.appendChild(li);
+      });
+    });
+
+//-----------------------------------------------------DRAWING LINE------------------------------------TASSOS-------------
+
+
+// Function to draw the route
+        function drawRoute(routeCoordinates) {
+            console.log("Coordinates received: ", routeCoordinates);
+
+            // Ensure the route has valid coordinates
+            if (!Array.isArray(routeCoordinates) || routeCoordinates.length === 0) {
+                console.error("Invalid route coordinates.");
+                return;
+            }
+
+            // Add the route to the map as a GeoJSON line
+            map.addSource('route', {
+                'type': 'geojson',
+                'data': {
+                    'type': 'Feature',
+                    'properties': {},
+                    'geometry': {
+                        'type': 'LineString',
+                        'coordinates': routeCoordinates
+                    }
+                }
+            });
+
+            // Add a layer to display the route
+            map.addLayer({
+                'id': 'route',
+                'type': 'line',
+                'source': 'route',
+                'layout': {
+                    'line-join': 'round',
+                    'line-cap': 'round'
+                },
+                'paint': {
+                    'line-color': 'blue',
+                    'line-width': 5
+                }
+            });
+
+            // Fit the map to the route
+            const bounds = routeCoordinates.reduce(function(bounds, coord) {
+                return bounds.extend(coord);
+            }, new mapboxgl.LngLatBounds(routeCoordinates[0], routeCoordinates[0]));
+
+            map.fitBounds(bounds, { padding: 50 });
+        }
+
+      // Unified function to handle messages
+    function handleMessage(event) {
+        const message = event.data;
+        console.log("Raw message:", message);
+
+        try {
+            const parsedCoordinates = JSON.parse(message);
+            if (Array.isArray(parsedCoordinates) && parsedCoordinates.length > 0) {
+                console.log("Parsed Coordinates:", parsedCoordinates);
+                drawRoute(parsedCoordinates);
+            } else {
+                console.error("No valid coordinates found in the message.");
+            }
+        } catch (e) {
+            console.error("Failed to parse the message:", e);
+        }
     }
-  });
-</script>
+
+    // Listen for messages from Thunkable (Web Viewer) or other sources
+    document.addEventListener('message', handleMessage);
+    window.addEventListener('message', handleMessage);
+
+    // Also, you can listen for the load event on the window
+    window.addEventListener('load', () => {
+        console.log("Window loaded, ready for messages.");
+    });
+
+        // Ensure the map is loaded before adding layers or sources
+        map.on('load', function() {
+            console.log('Map loaded successfully.');
+        });
+    
+  </script>
+
+</body>
+</html>
