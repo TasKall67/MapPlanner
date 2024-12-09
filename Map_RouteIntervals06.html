@@ -248,6 +248,24 @@ function interpolateCoordinates(coords, numPoints) {
           console.error('Error fetching route:', error);
         });
     }
+	
+	// Function to fetch address suggestions from Mapbox API
+    async function fetchSuggestions(query) {
+      if (!query) return [];
+      const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${mapboxgl.accessToken}&autocomplete=true&limit=5`;
+
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+        return data.features.map(feature => ({
+          name: feature.place_name,
+          coordinates: feature.geometry.coordinates
+        }));
+      } catch (error) {
+        console.error("Error fetching suggestions:", error);
+        return [];
+      }
+    }
 
     // Function to handle autocomplete input changes for start address
     const startInput = document.getElementById("autocomplete-input");
