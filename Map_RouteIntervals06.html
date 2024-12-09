@@ -286,23 +286,17 @@ function interpolateCoordinates(coords, numPoints) {
           startInput.value = suggestion.name;
           startSuggestionsContainer.innerHTML = "";
 
-          // Add marker and send coordinates back to Thunkable
+          // Add start marker and send coordinates back to Thunkable
           const [lng, lat] = suggestion.coordinates;
           const isStart = true; // Start point marker
           addMarker(lng, lat, isStart);
+		  startLat=lat;
+		  startLng=lng;
 
-          // Send the selected address to Thunkable
-          const message = JSON.stringify({
-            address: suggestion.name,
-            coordinates: { lng, lat },
-            isStart: isStart.toString()
-          });
+          // Once start are selected, send the coordinates
+        sendStartCoordinatesToThunkable(startLat, startLng);
 
-          if (window.ReactNativeWebView) {
-            window.ReactNativeWebView.postMessage(message);
-          } else {
-            window.parent.postMessage(message, "*");
-          }
+          
         });
         startSuggestionsContainer.appendChild(li);
       });
@@ -327,23 +321,15 @@ function interpolateCoordinates(coords, numPoints) {
           endInput.value = suggestion.name;
           endSuggestionsContainer.innerHTML = "";
 
-          // Add marker and send coordinates back to Thunkable
+          // Add end marker and send coordinates back to Thunkable
           const [lng, lat] = suggestion.coordinates;
           const isStart = false; // End point marker
           addMarker(lng, lat, isStart);
+		  endLat=lat;
+		  endLng=lng;
 
-          // Send the selected address to Thunkable
-          const message = JSON.stringify({
-            address: suggestion.name,
-            coordinates: { lng, lat },
-            isStart: isStart.toString()
-          });
-
-          if (window.ReactNativeWebView) {
-            window.ReactNativeWebView.postMessage(message);
-          } else {
-            window.parent.postMessage(message, "*");
-          }
+          // Once start are selected, send the coordinates
+        sendEndCoordinatesToThunkable(endLat, endLng);
         });
         endSuggestionsContainer.appendChild(li);
       });
