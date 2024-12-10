@@ -167,7 +167,7 @@ if (window.ReactNativeWebView) {
         const totalLabels = resampledDistances.length;
         const displayStep = Math.ceil(totalLabels / 10); // Adjust based on total points, aiming for 10 labels
         elevationChart.options.scales.x = {
-            title: { display: true, text: 'Distance (*50m)' },
+            title: { display: true, text: 'Distance (*10m)' },
             min: 0,
             max: Math.ceil(totalDistance / interval) * interval,
             ticks: {
