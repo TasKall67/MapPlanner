@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Surface Type and Bicycle Road</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h1>Surface percentage</h1>
+    <canvas id="surfaceChart" style="width: 100%; aspect-ratio: 1;; max-width: 500px; max-height: 500px;"></canvas>
+    <div id="textResults" style="margin: 20px; font-size: 14px; line-height: 1.5;"></div>
+	
+	<--Loading Animation-->
+	
+	<div id="loading" style="display: flex; justify-content: center; align-items: center; height: 100vh;">
+    <p>Loading...</p>
+</div>
+<div id="content" style="display: none;">
+    <h1>Route Surface Analysis</h1>
+    <canvas id="surfaceChart" style="max-width: 500px; max-height: 500px;"></canvas>
+    <div id="textResults" style="margin: 20px; font-size: 14px; line-height: 1.5;"></div>
+</div>
+
+<style>
+    #loading {
+        font-size: 24px;
+        color: #555;
+    }
+</style>
+
+<script>
+    let routeCoordinates = []; // Holds the route coordinates from Thunkable
+
+    const results = []; // To hold segment surface results
+    const surfaceCount = {
+        road: 0,
+        pedestrian: 0,
+        bicycle: 0
+    };
+
+    // Function to handle incoming messages
+    function handleMessage(event) {
+        const message = event.data;
+        console.log("Raw message received:", message);
+
+        try {
+            // Try to parse the incoming message as JSON
+            const data = JSON.parse(message);
+
+            // Check if the data is a valid array of arrays
+            if (Array.isArray(data) && data.length > 0 && Array.isArray(data[0])) {
+                routeCoordinates = data; // Update route coordinates
+                console.log("Coordinates received:", routeCoordinates);
+
+                // Fetch and process surface data for the coordinates
+                fetchSurfaceData();
+            } else {
+                console.warn("Invalid data received:", data);
+            }
+        } catch (error) {
+            console.error("Error parsing message:", error);
+        }
+    }
+
+    // Function to fetch surface data for each segment
+    async function fetchSurfaceData() {
+	// Show the loading spinner
+    document.getElementById("loading").style.display = "flex";
+    document.getElementById("content").style.display = "none";
+        for (let i = 0; i < routeCoordinates.length - 1; i++) {
+            const start = routeCoordinates[i];
+            const end = routeCoordinates[i + 1];
+
+            // Overpass API query to fetch relevant data
+            const bbox = `${Math.min(start[1], end[1])},${Math.min(start[0], end[0])},${Math.max(start[1], end[1])},${Math.max(start[0], end[0])}`;
+            const query = `
+                [out:json];
+                way(${bbox});
+                (._;>;);
+                out body;
+            `;
+            const url = `https://overpass.kumi.systems/api/interpreter?data=${encodeURIComponent(query)}`;
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+
+                let surfaceType = "unknown";
+                let isBicycleRoad = false;
+
+                for (let element of data.elements) {
+                    if (element.type === "way" && element.tags) {
+                        if (element.tags.surface) {
+                            surfaceType = element.tags.surface;
+                        }
+                        if (element.tags.highway === "cycleway" || element.tags.bicycle === "yes") {
+                            isBicycleRoad = true;
+                        }
+                    }
+                }
+
+                // Categorize and count the segment type
+                if (isBicycleRoad) {
+                    surfaceCount.bicycle++;
+                } else if (["paving_stones", "cobblestone", "sidewalk"].includes(surfaceType)) {
+                    surfaceCount.pedestrian++;
+                } else {
+                    surfaceCount.road++;
+                }
+
+                // Add to text results
+               // results.push(`Segment ${i + 1}: Surface = ${surfaceType}, Bicycle Road = ${isBicycleRoad}`);
+            } catch (error) {
+                console.error("Error fetching data:", error);
+                //results.push(`Segment ${i + 1}: Surface = unknown, Bicycle Road = unknown`);
+            }
+        }
+		
+		// Hide the loading spinner and show the content
+    document.getElementById("loading").style.display = "none";
+    document.getElementById("content").style.display = "block";
+
+        // Display the results and draw the chart
+        displayResults();
+        drawChart();
+    }
+
+    // Function to display results
+    function displayResults() {
+        const textResultsDiv = document.getElementById("textResults");
+        textResultsDiv.innerHTML = results.join("<br>");
+    }
+
+    // Function to draw a pie chart
+    function drawChart() {
+        const ctx = document.getElementById("surfaceChart").getContext("2d");
+        const totalSegments = surfaceCount.road + surfaceCount.pedestrian + surfaceCount.bicycle;
+
+        new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: ['Road', 'Pedestrian', 'Bicycle'],
+                datasets: [{
+                    label: 'Surface Type Distribution',
+                    data: [
+                        ((surfaceCount.road / totalSegments) * 100).toFixed(2),
+                        ((surfaceCount.pedestrian / totalSegments) * 100).toFixed(2),
+                        ((surfaceCount.bicycle / totalSegments) * 100).toFixed(2)
+                    ],
+                    backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56']
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function (tooltipItem) {
+                                return `${tooltipItem.label}: ${tooltipItem.raw}%`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Listen for messages from Thunkable (or other sources)
+    document.addEventListener('message', handleMessage);
+    window.addEventListener('message', handleMessage);
+
+    // Also, listen for the load event on the window
+    window.addEventListener('load', () => {
+        console.log("Window loaded, ready for messages.");
+    });
+</script>
+
+</body>
+</html>
