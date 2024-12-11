@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile Setup</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f4f4f4;
+    }
+    h1 {
+      font-size: 24px;
+      color: #333;
+	  text-align: center;
+    }
+	h2 {
+      font-size: 20px;
+      color: #333;
+	  text-align: left;
+    }
+    label {
+      font-size: 18px;
+      color: #555;
+      display: block;
+      margin: 10px 0 5px;
+    }
+    select, input[type="text"], input[type="range"] {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+    input[type="range"] {
+      -webkit-appearance: none;
+      background: #ddd;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      background: #007BFF;
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+    }
+    button {
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      font-size: 16px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .output {
+      font-size: 16px;
+      margin-top: 20px;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <h1>Profile Setup</h1>
+  <h2>User Characteristics</h2>
+  <form id="profileForm">
+    <!-- Profile Name -->
+    <label for="profileName">Profile Name</label>
+    <input type="text" id="profileName" placeholder="Enter profile name" required>
+
+    <!-- Gender -->
+    <label for="gender">Gender</label>
+    <select id="gender" required>
+      <option value="Not specified">Not specified</option>
+      <option value="Female">Female</option>
+      <option value="Male">Male</option>
+    </select>
+	
+	<!-- Weight -->
+    <label for="weight">Weight: <span id="weightValue">50</span></label>
+    <input type="range" id="weight" min="10" max="120" value="50" oninput="document.getElementById('weightValue').textContent = this.value">
+
+    <!-- Age -->
+    <label for="age">Age: <span id="ageValue">20</span></label>
+    <input type="range" id="age" min="10" max="100" value="20" oninput="document.getElementById('ageValue').textContent = this.value">
+
+    <!-- Experience -->
+    <label for="experience">Experience</label>
+    <select id="experience" required>
+      <option value="Minor">Minor</option>
+      <option value="Advance">Advance</option>
+    </select>
+
+  
+  
+  <!--<h2>Vehicle Specs</h2>-->
+  
+    <!-- Vehicle Name -->
+    <label for="vehicleName">Vehicle Name</label>
+    <input type="text" id="vehicleName" placeholder="Enter vehicle model or name" required>
+
+    <!-- Vehicle Type -->
+    <label for="VehicleType">Vehicle Type</label>
+    <select id="VehicleType" required>
+      <option value="Average">Average</option>
+      <option value="High Class">High Class</option>
+    </select>
+
+    <!-- Vehicle Birth -->
+    <label for="scooterage">Manufacture date: <span id="scooterageValue">2010</span></label>
+    <input type="range" id="scooterage" min="2010" max="" value="2020" oninput="document.getElementById('scooterageValue').textContent = this.value">
+
+    
+
+    <!-- Save Button -->
+    <button type="button" id="saveProfile">Save Profile</button>
+  </form>
+
+  <!-- Output -->
+  <div class="output" id="output"></div>
+
+  <script>
+    document.getElementById("saveProfile").addEventListener("click", function () {
+      // Get values
+      const profileName = document.getElementById("profileName").value.trim();
+      const gender = document.getElementById("gender").value;
+      const age = document.getElementById("age").value;
+	  const weight = document.getElementById("weight").value;
+      const experience = document.getElementById("experience").value;
+	  const vehicleName = document.getElementById("vehicleName").value.trim();
+	  const VehicleType = document.getElementById("VehicleType").value;
+
+      // Validation
+      if (profileName === "") {
+        alert("Please enter a profile name.");
+        return;
+      }
+	  if (vehicleName === "") {
+        alert("Please enter a Vehicle Name.");
+        return;
+      }
+	  
+
+      // Create the profile object
+      const profile = {
+        profileName,
+        gender,
+		weight,
+        age,
+        experience,
+		vehicleName,
+		VehicleType	
+		
+      };
+
+      // Display the result (for debugging or local preview)
+      document.getElementById("output").textContent = `Profile Saved stats: ${JSON.stringify(profile)}`;
+
+      // Send the data to Thunkable
+      if (window.ReactNativeWebView) {
+        window.ReactNativeWebView.postMessage(JSON.stringify(profile));
+      } else if (window.parent) {
+        window.parent.postMessage(JSON.stringify(profile), "*");
+      }
+    });
+	
+	// Set the max value to the current year
+  document.getElementById("scooterage").max = new Date().getFullYear();
+  
+  </script>
+</body>
+</html>
