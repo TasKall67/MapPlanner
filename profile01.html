@@ -8,32 +8,33 @@
     body {
       font-family: Arial, sans-serif;
       margin: 0;
-      padding: 20px;
+      padding: 14px;
       background-color: #f4f4f4;
     }
     h1 {
-      font-size: 24px;
+      font-size: 16px;
       color: #333;
 	  text-align: center;
     }
 	h2 {
-      font-size: 20px;
-      color: #333;
+      font-size: 12px;
+      color: #903CA6;
+	  font-weight: bold;
 	  text-align: left;
     }
     label {
-      font-size: 18px;
+      font-size: 10px;
       color: #555;
       display: block;
-      margin: 10px 0 5px;
+      margin: 5px 0 5px;
     }
     select, input[type="text"], input[type="range"] {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 15px;
+      width: 95%;
+      padding: 5px;
+      margin-bottom: 5px;
       border: 1px solid #ccc;
       border-radius: 5px;
-      font-size: 16px;
+      font-size: 10px;
     }
     input[type="range"] {
       -webkit-appearance: none;
@@ -47,7 +48,7 @@
       border-radius: 50%;
     }
     button {
-      background-color: #007BFF;
+      background-color: #FA7842;
       color: white;
       border: none;
       padding: 10px 15px;
@@ -82,11 +83,11 @@
     </select>
 	
 	<!-- Weight -->
-    <label for="weight">Weight: <span id="weightValue">50</span></label>
+    <label for="weight">Weight: <span id="weightValue">50</span> Kg</label>
     <input type="range" id="weight" min="10" max="120" value="50" oninput="document.getElementById('weightValue').textContent = this.value">
 
     <!-- Age -->
-    <label for="age">Age: <span id="ageValue">20</span></label>
+    <label for="age">Age: <span id="ageValue">20</span> years</label>
     <input type="range" id="age" min="10" max="100" value="20" oninput="document.getElementById('ageValue').textContent = this.value">
 
     <!-- Experience -->
@@ -98,7 +99,7 @@
 
   
   
-  <!--<h2>Vehicle Specs</h2>-->
+  <h2>Vehicle Specs</h2>
   
     <!-- Vehicle Name -->
     <label for="vehicleName">Vehicle Name</label>
@@ -112,19 +113,31 @@
     </select>
 
     <!-- Vehicle Birth -->
-    <label for="scooterage">Manufacture date: <span id="scooterageValue">2010</span></label>
+    <label for="scooterage">Manufacture year: <span id="scooterageValue">2010</span></label>
     <input type="range" id="scooterage" min="2010" max="" value="2020" oninput="document.getElementById('scooterageValue').textContent = this.value">
 
     
 
     <!-- Save Button -->
     <button type="button" id="saveProfile">Save Profile</button>
+	
+	<!-- Select Profile -->
+	<label for="selectProfile">Choose Profile</label>
+	<select id="selectProfile">
+	<option value="">Select a profile</option>
+	</select>
+
   </form>
 
   <!-- Output -->
   <div class="output" id="output"></div>
+  <!-- Display Profile Details -->
+  <div id="profileDetails"></div>
 
   <script>
+  
+	const keyPrefix = "LITTLE_"; // Prefix for all profile keys
+	// Save the profiles as a file
     document.getElementById("saveProfile").addEventListener("click", function () {
       // Get values
       const profileName = document.getElementById("profileName").value.trim();
@@ -136,7 +149,7 @@
 	  const VehicleType = document.getElementById("VehicleType").value;
 
       // Validation
-      if (profileName === "") {
+      if (!profileName) {
         alert("Please enter a profile name.");
         return;
       }
@@ -155,8 +168,12 @@
         experience,
 		vehicleName,
 		VehicleType	
+		};
 		
-      };
+		const key = `${keyPrefix}${profileName}`; // Prefix keys to avoid conflicts
+		localStorage.setItem(key, JSON.stringify(profile));
+		alert(`Profile "${profileName}" saved!`);
+		updateProfileDropdown(); // Refresh the dropdown list
 
       // Display the result (for debugging or local preview)
       document.getElementById("output").textContent = `Profile Saved stats: ${JSON.stringify(profile)}`;
@@ -168,6 +185,39 @@
         window.parent.postMessage(JSON.stringify(profile), "*");
       }
     });
+	
+	// Update dropdown with stored profiles
+  function updateProfileDropdown() {
+    const select = document.getElementById("selectProfile");
+    select.innerHTML = '<option value="">Select a profile</option>'; // Clear existing options
+
+    for (let i = 0; i < localStorage.length; i++) {
+	  const key = localStorage.key(i);
+      if (key.startsWith(keyPrefix)) { // Only include keys with the specific prefix
+      const profileName = key.replace(keyPrefix, ""); // Remove prefix for display
+      const option = document.createElement("option");
+      option.value = key; // Use the full key (with prefix) for retrieval
+      option.textContent = profileName; // Display name without prefix
+      select.appendChild(option);
+    }
+  }
+}
+
+  // Load profile details when a profile is selected
+  document.getElementById("selectProfile").addEventListener("change", function () {
+  const key = this.value; // Use the full key (with prefix)
+  const profileDetailsDiv = document.getElementById("profileDetails");
+
+  if (key) {
+    const profile = JSON.parse(localStorage.getItem(key));
+    profileDetailsDiv.textContent = `Profile: ${key.replace(keyPrefix, "")}\nGender: ${profile.gender}\nAge: ${profile.age}\nSkill Level: ${profile.skillLevel}\nExperience: ${profile.experience}`;
+  } else {
+    profileDetailsDiv.textContent = ""; // Clear if no profile is selected
+  }
+});
+
+  // Initialize the dropdown when the page loads
+  document.addEventListener("DOMContentLoaded", updateProfileDropdown);
 	
 	// Set the max value to the current year
   document.getElementById("scooterage").max = new Date().getFullYear();
