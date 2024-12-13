@@ -251,15 +251,24 @@
   // Set the max value of the vehicle year slider to the current year
   document.getElementById("scooterage").max = new Date().getFullYear();
   
+  
+  let heightTimer; // Variable to store the timer ID
+  
   // Function to send the height of the document to Thunkable
 function sendHeightToThunkable() {
-  const height = document.body.scrollHeight; // Get the current document height
-  if (window.ReactNativeWebView) {
-    window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'resize', height: height }));
-  } else {
+  clearTimeout(heightTimer); // Clear any existing timer
+
+  // Set a new timer to delay the message sending
+  heightTimer = setTimeout(() => {
+    const height = document.body.scrollHeight; // Get the current document height
+	console.log("height send:", height);
+    if (window.ReactNativeWebView) {
+      window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'resize', height: height }));
+    }else {
         window.parent.postMessage(JSON.stringify({ type: 'resize', height: height }), "*");
       }
-  console.log("height send:", height);
+  }, 100); // 100ms delay (you can adjust this value)
+  
 }
 
 // Call the function initially and when the content changes
