@@ -261,18 +261,18 @@ function sendHeightToThunkable() {
   // Set a new timer to delay the message sending
   heightTimer = setTimeout(() => {
     const height = document.body.scrollHeight; // Get the current document height
-	console.log("height send:", height);
+	console.log("height send:", { myheight: height });
     if (window.ReactNativeWebView) {
-      window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'resize', height: height }));
+      window.ReactNativeWebView.postMessage(JSON.stringify({ myheight: height }));
     }else {
-        window.parent.postMessage(JSON.stringify({ type: 'resize', height: height }), "*");
+        window.parent.postMessage(JSON.stringify({ myheight: height }), "*");
       }
   }, 100); // 100ms delay (you can adjust this value)
   
 }
 
 // Call the function initially and when the content changes
-document.addEventListener("DOMContentLoaded", sendHeightToThunkable);
+//document.addEventListener("DOMContentLoaded", sendHeightToThunkable);
 document.getElementById("selectProfile").addEventListener("change", sendHeightToThunkable);
 document.getElementById("profileForm").addEventListener("input", sendHeightToThunkable);
 
