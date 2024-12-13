@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile Setup</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 14px;
+      background-color: #f4f4f4;
+    }
+    h1 {
+      font-size: 16px;
+      color: #333;
+      text-align: center;
+    }
+    h2 {
+      font-size: 12px;
+      color: #903CA6;
+      font-weight: bold;
+      text-align: left;
+    }
+    label {
+      font-size: 10px;
+      color: #555;
+      display: block;
+      margin: 5px 0 5px;
+    }
+    select, input[type="text"], input[type="range"] {
+      width: 95%;
+      padding: 5px;
+      margin-bottom: 5px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 10px;
+    }
+    input[type="range"] {
+      -webkit-appearance: none;
+      background: #ddd;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      background: #007BFF;
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+    }
+    button {
+      background-color: #FA7842;
+      color: white;
+      border: none;
+      padding: 5px 15px;
+      font-size: 10px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .hidden {
+      display: none;
+    }
+    .output {
+      font-size: 16px;
+      margin-top: 20px;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <h1>Profile Setup</h1>
+  <form id="profileForm">
+    <!-- Select Profile -->
+    <label for="selectProfile">Choose Profile</label>
+    <select id="selectProfile">
+      <option value="">Select a profile</option>
+      <option value="new">New Profile</option>
+    </select>
+
+    <!-- Input Fields for New Profile -->
+    <div id="newProfileInputs" class="hidden">
+      <h2>User Characteristics</h2>
+
+      <!-- Profile Name -->
+      <label for="profileName">Profile Name</label>
+      <input type="text" id="profileName" placeholder="Enter profile name" required>
+
+      <!-- Gender -->
+      <label for="gender">Gender</label>
+      <select id="gender" required>
+        <option value="Not specified">Not specified</option>
+        <option value="Female">Female</option>
+        <option value="Male">Male</option>
+      </select>
+
+      <!-- Weight -->
+      <label for="weight">Weight: <span id="weightValue">50</span> Kg</label>
+      <input type="range" id="weight" min="10" max="120" value="50" oninput="document.getElementById('weightValue').textContent = this.value">
+
+      <!-- Age -->
+      <label for="age">Age: <span id="ageValue">20</span> years</label>
+      <input type="range" id="age" min="10" max="100" value="20" oninput="document.getElementById('ageValue').textContent = this.value">
+
+      <!-- Experience -->
+      <label for="experience">Experience</label>
+      <select id="experience" required>
+        <option value="Minor">Minor</option>
+        <option value="Advance">Advance</option>
+      </select>
+
+      <h2>Vehicle Specs</h2>
+
+      <!-- Vehicle Name -->
+      <label for="vehicleName">Vehicle Name</label>
+      <input type="text" id="vehicleName" placeholder="Enter vehicle model or name" required>
+
+      <!-- Vehicle Type -->
+      <label for="VehicleType">Vehicle Type</label>
+      <select id="VehicleType" required>
+        <option value="Average">Average</option>
+        <option value="High Class">High Class</option>
+      </select>
+
+      <!-- Vehicle Birth -->
+      <label for="scooterage">Manufacture year: <span id="scooterageValue">2010</span></label>
+      <input type="range" id="scooterage" min="2010" max="" value="2020" oninput="document.getElementById('scooterageValue').textContent = this.value">
+
+      <!-- Save Button -->
+      <button type="button" id="saveProfile">Save Profile</button>
+    </div>
+  </form>
+
+  <!-- Output -->
+  <div class="output" id="output"></div>
+  <!-- Display Profile Details -->
+  <div id="profileDetails"></div>
+
+<script>
+  const keyPrefix = "LITTLE_"; // Prefix for all profile keys
+
+  // Show/hide input fields based on selection
+  document.getElementById("selectProfile").addEventListener("change", function () {
+    const newProfileInputs = document.getElementById("newProfileInputs");
+    if (this.value === "new") {
+      newProfileInputs.classList.remove("hidden");
+    } else {
+      newProfileInputs.classList.add("hidden");
+    }
+  });
+
+  // Save profile to localStorage
+  document.getElementById("saveProfile").addEventListener("click", function () {
+    // Get input values
+    const profileName = document.getElementById("profileName").value.trim();
+    const gender = document.getElementById("gender").value;
+    const weight = document.getElementById("weight").value;
+    const age = document.getElementById("age").value;
+    const experience = document.getElementById("experience").value;
+    const vehicleName = document.getElementById("vehicleName").value.trim();
+    const VehicleType = document.getElementById("VehicleType").value;
+
+    // Validate input
+    if (!profileName) {
+      alert("Please enter a profile name.");
+      return;
+    }
+    if (!vehicleName) {
+      alert("Please enter a vehicle name.");
+      return;
+    }
+
+    // Create profile object
+    const profile = {
+      profileName,
+      gender,
+      weight,
+      age,
+      experience,
+      vehicleName,
+      VehicleType,
+    };
+
+    // Save profile to localStorage with a unique key
+    const key = `${keyPrefix}${profileName}`; // Prefix the name for consistency
+    localStorage.setItem(key, JSON.stringify(profile));
+    alert(`Profile "${profileName}" saved!`);
+
+    // Update the dropdown with the new profile
+    updateProfileDropdown();
+
+    // Optional: Notify external WebView (like Thunkable)
+    if (window.ReactNativeWebView) {
+      window.ReactNativeWebView.postMessage(JSON.stringify(profile));
+    }
+  });
+
+  // Function to update dropdown with stored profiles
+  function updateProfileDropdown() {
+    const select = document.getElementById("selectProfile");
+    select.innerHTML = '<option value="">Select a profile</option><option value="new">New Profile</option>'; // Clear existing options
+
+    let profileCount = 0; // Keep track of the number of profiles
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key.startsWith(keyPrefix)) { // Only include valid profile keys
+        profileCount++;
+        const profileName = key.replace(keyPrefix, ""); // Remove prefix for display
+        const option = document.createElement("option");
+        option.value = key; // Full key (with prefix) for retrieval
+        option.textContent = profileName; // Display name without prefix
+        select.appendChild(option);
+      }
+    }
+
+    // If no profiles are found
+    if (profileCount === 0) {
+      select.innerHTML += '<option value="">No profiles available</option>';
+    }
+  }
+
+  // Load profile details when a profile is selected
+  document.getElementById("selectProfile").addEventListener("change", function () {
+    const key = this.value; // Full key (with prefix)
+    const profileDetailsDiv = document.getElementById("profileDetails");
+
+    if (key && key !== "new") {
+      const profile = JSON.parse(localStorage.getItem(key)); // Retrieve the profile object
+      // Display profile details in a styled format
+      profileDetailsDiv.innerHTML = `
+        <h3>Profile Details</h3>
+        <p><strong>Name:</strong> ${profile.profileName}</p>
+        <p><strong>Gender:</strong> ${profile.gender}</p>
+        <p><strong>Weight:</strong> ${profile.weight} Kg</p>
+        <p><strong>Age:</strong> ${profile.age} years</p>
+        <p><strong>Experience:</strong> ${profile.experience}</p>
+        <p><strong>Vehicle Name:</strong> ${profile.vehicleName}</p>
+        <p><strong>Vehicle Type:</strong> ${profile.VehicleType}</p>
+      `;
+    } else {
+      profileDetailsDiv.textContent = ""; // Clear if no profile is selected
+    }
+  });
+
+  // Initialize the dropdown on page load
+  document.addEventListener("DOMContentLoaded", function () {
+    updateProfileDropdown();
+  });
+
+  // Set the max value of the vehicle year slider to the current year
+  document.getElementById("scooterage").max = new Date().getFullYear();
+  
+  // Function to send the height of the document to Thunkable
+function sendHeightToThunkable() {
+  const height = document.body.scrollHeight; // Get the current document height
+  if (window.ReactNativeWebView) {
+    window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'resize', height: height }));
+  }
+}
+
+// Call the function initially and when the content changes
+document.addEventListener("DOMContentLoaded", sendHeightToThunkable);
+document.getElementById("selectProfile").addEventListener("change", sendHeightToThunkable);
+document.getElementById("profileForm").addEventListener("input", sendHeightToThunkable);
+
+</script>
+</body>
+</html>
