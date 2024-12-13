@@ -28,6 +28,14 @@
       display: block;
       margin: 5px 0 5px;
     }
+	results {
+	  font-size: 12px;
+      color: black;
+      font-weight: bold;
+      text-align: left;
+	  padding: 5px;
+	  line-height: 2;
+	}
     select, input[type="text"], input[type="range"] {
       width: 95%;
       padding: 5px;
@@ -229,14 +237,14 @@
       const profile = JSON.parse(localStorage.getItem(key)); // Retrieve the profile object
       // Display profile details in a styled format
       profileDetailsDiv.innerHTML = `
-        <h3>Profile Details</h3>
-        <p><strong>Name:</strong> ${profile.profileName}</p>
-        <p><strong>Gender:</strong> ${profile.gender}</p>
-        <p><strong>Weight:</strong> ${profile.weight} Kg</p>
-        <p><strong>Age:</strong> ${profile.age} years</p>
-        <p><strong>Experience:</strong> ${profile.experience}</p>
-        <p><strong>Vehicle Name:</strong> ${profile.vehicleName}</p>
-        <p><strong>Vehicle Type:</strong> ${profile.VehicleType}</p>
+        <h2>Profile Details</h2>
+        <results><strong>Name:</strong> ${profile.profileName}</results></br>
+		<results><strong>Gender:</strong> ${profile.gender}</results></br>
+        <results><strong>Weight:</strong> ${profile.weight} Kg</results></br>
+        <results><strong>Age:</strong> ${profile.age} years</results></br>
+        <results><strong>Experience:</strong> ${profile.experience}</results></br>
+        <results><strong>Vehicle Name:</strong> ${profile.vehicleName}</results></br>
+        <results><strong>Vehicle Type:</strong> ${profile.VehicleType}</results></br>
       `;
     } else {
       profileDetailsDiv.textContent = ""; // Clear if no profile is selected
