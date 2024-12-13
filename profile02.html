@@ -256,7 +256,10 @@ function sendHeightToThunkable() {
   const height = document.body.scrollHeight; // Get the current document height
   if (window.ReactNativeWebView) {
     window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'resize', height: height }));
-  }
+  } else {
+        window.parent.postMessage(JSON.stringify({ type: 'resize', height: height }), "*");
+      }
+  console.log("height send:", height);
 }
 
 // Call the function initially and when the content changes
