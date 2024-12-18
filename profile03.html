@@ -246,7 +246,7 @@ profileSelector.addEventListener("change", async function () {
     populateFormWithProfileData(profile);
 	
 	// Prepare the profile data to send to Thunkable (or parent window)
-    const profileData = {
+    profileData = {
         name: profileData.profileName,
         gender: profileData.gender,
         weight: profileData.weight,
