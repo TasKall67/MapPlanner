@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <!-- Firebase App (Required) -->
+<script src="https://www.gstatic.com/firebasejs/10.3.0/firebase-app-compat.js"></script>
+<!-- Firebase Auth -->
+<script src="https://www.gstatic.com/firebasejs/10.3.0/firebase-auth-compat.js"></script>
+<!-- Firestore -->
+<script src="https://www.gstatic.com/firebasejs/10.3.0/firebase-firestore-compat.js"></script>
+
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile Setup</title>
+  <style>
+    /* Styles are kept for uniformity */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 14px;
+      background-color: #f4f4f4;
+    }
+    h1 {
+      font-size: 16px;
+      text-align: center;
+    }
+    label {
+      display: block;
+      margin: 5px 0 5px;
+    }
+    input, select, button {
+      width: 95%;
+      padding: 5px;
+      margin-bottom: 5px;
+      font-size: 14px;
+    }
+    button {
+      background-color: #FA7842;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>Welcome</h1>
+
+  <!-- Google Login and Logout -->
+  <button id="loginButton">Login with Google</button>
+  <div id="loginStatus"></div>
+  <button id="logoutButton" class="hidden">Logout</button>
+
+  <!-- Profile Form -->
+  <div id="profileFormContainer" class="hidden">
+    <h2>Set Up Your Profile</h2>
+    <form id="profileForm">
+      <label for="profileName">Profile Name</label>
+      <input type="text" id="profileName" placeholder="Enter your profile name" required>
+
+      <label for="gender">Gender</label>
+      <select id="gender" required>
+        <option value="Not specified">Not specified</option>
+        <option value="Female">Female</option>
+        <option value="Male">Male</option>
+      </select>
+
+      <label for="weight">Weight (Kg): <span id="weightValue">50</span></label>
+      <input type="range" id="weight" min="10" max="120" value="50" oninput="document.getElementById('weightValue').textContent = this.value">
+
+      <label for="age">Age (years): <span id="ageValue">20</span></label>
+      <input type="range" id="age" min="10" max="100" value="20" oninput="document.getElementById('ageValue').textContent = this.value">
+
+      <label for="experience">Experience Level</label>
+      <select id="experience" required>
+        <option value="Minor">Minor</option>
+        <option value="Advanced">Advanced</option>
+      </select>
+
+      <label for="vehicleName">Vehicle Name</label>
+      <input type="text" id="vehicleName" placeholder="Enter your vehicle name" required>
+
+      <label for="vehicleType">Vehicle Type</label>
+      <select id="vehicleType" required>
+        <option value="Average">Average</option>
+        <option value="High Class">High Class</option>
+      </select>
+
+      <label for="scooterAge">Manufacture Year: <span id="scooterAgeValue">2020</span></label>
+      <input type="range" id="scooterAge" min="2000" max="2024" value="2020" oninput="document.getElementById('scooterAgeValue').textContent = this.value">
+
+      <button type="button" id="saveProfile">Save Profile</button>
+    </form>
+  </div>
+
+  <script>
+    // Firebase Config
+    const firebaseConfig = {
+      apiKey: "AIzaSyAHcG2EV_Izlr8gKlIVu1sxKZGcBk814jg",
+      authDomain: "mylittle-61b8f.firebaseapp.com",
+      projectId: "mylittle-61b8f",
+      storageBucket: "mylittle-61b8f.firebasestorage.app",
+      messagingSenderId: "115858560969",
+      appId: "1:115858560969:web:b6fb967e4f3d622ac3ba18"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // Reference to elements
+    const loginButton = document.getElementById("loginButton");
+    const logoutButton = document.getElementById("logoutButton");
+    const profileFormContainer = document.getElementById("profileFormContainer");
+    const loginStatus = document.getElementById("loginStatus");
+    const saveProfileButton = document.getElementById("saveProfile");
+
+    // Google Sign-In
+    loginButton.addEventListener("click", async () => {
+      const googleProvider = new firebase.auth.GoogleAuthProvider();
+      try {
+        const result = await auth.signInWithPopup(googleProvider);
+        const user = result.user;
+
+        // Display success message and logout button
+        loginStatus.textContent = `Logged in as: ${user.displayName}`;
+        loginButton.classList.add("hidden");
+        logoutButton.classList.remove("hidden");
+
+        // Show profile setup form
+        profileFormContainer.classList.remove("hidden");
+      } catch (error) {
+        console.error("Login error:", error.message);
+      }
+    });
+
+    // Google Logout
+    logoutButton.addEventListener("click", async () => {
+      await auth.signOut();
+      loginStatus.textContent = "Logged out.";
+      loginButton.classList.remove("hidden");
+      logoutButton.classList.add("hidden");
+      profileFormContainer.classList.add("hidden");
+    });
+
+    // Save Profile
+    saveProfileButton.addEventListener("click", async () => {
+      const profileName = document.getElementById("profileName").value.trim();
+      const gender = document.getElementById("gender").value;
+      const weight = document.getElementById("weight").value;
+      const age = document.getElementById("age").value;
+      const experience = document.getElementById("experience").value;
+      const vehicleName = document.getElementById("vehicleName").value.trim();
+     })
+  </script>
+</body>
+</html>
