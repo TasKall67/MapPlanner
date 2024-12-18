@@ -66,6 +66,7 @@
   <button id="loginButton">Login with Google</button>
   <div id="loginStatus"></div>
   <button id="logoutButton" class="hidden">Logout</button>
+  <button id="deleteProfileButton" class="hidden">Delete Profile</button>
 
   <!-- Profile Dropdown -->
   <div id="profileDropdownContainer" class="hidden">
@@ -144,6 +145,8 @@ const profileFormContainer = document.getElementById("profileFormContainer");
 const profileDropdownContainer = document.getElementById("profileDropdownContainer");
 const profileSelector = document.getElementById("profileSelector");
 const loginStatus = document.getElementById("loginStatus");
+// Reference to the delete profile button in HTML
+const deleteProfileButton = document.getElementById("deleteProfileButton");
 
 // Google Sign-In provider
 const googleProvider = new firebase.auth.GoogleAuthProvider();
@@ -264,6 +267,8 @@ profileSelector.addEventListener("change", async function () {
 
     if (profile) {
       populateFormWithProfileData(profile);
+	  // Show the delete button if a profile is selected
+      deleteProfileButton.classList.remove("hidden");
 
       // Prepare the profile data to send to Thunkable (or parent window)
       profileData = {  // Use the outer `profileData` here, no redeclaration
@@ -294,6 +299,7 @@ profileSelector.addEventListener("change", async function () {
     console.log("Profile data is empty, nothing to send to Thunkable.");
   }
 });
+
 
 // Function to load a user profile by its name from Firestore (assuming you've written this method)
 async function loadUserProfileByName(userId, profileName) {
@@ -384,6 +390,38 @@ document.getElementById("saveProfile").addEventListener("click", async function 
       } else if (window.parent) {
         window.parent.postMessage(JSON.stringify(profileData), "*");
       }
+});
+
+
+// Event listener for delete profile button
+deleteProfileButton.addEventListener("click", async function () {
+  const selectedProfile = profileSelector.value;
+  const user = firebase.auth().currentUser;
+
+  if (!selectedProfile || selectedProfile === "new") {
+    alert("Please select a profile to delete.");
+    return;
+  }
+
+  try {
+    // Delete profile from Firestore
+    const profile = await loadUserProfileByName(user.uid, selectedProfile);
+    if (profile) {
+      // Delete the selected profile from Firestore
+      await deleteUserProfile(user.uid, selectedProfile);
+      alert("Profile deleted successfully!");
+
+      // Update UI (Remove deleted profile from selector and reset form)
+      profileSelector.removeChild(profileSelector.querySelector(`option[value='${selectedProfile}']`));
+      resetProfileForm();
+      deleteProfileButton.classList.add("hidden"); // Hide delete button after deletion
+    } else {
+      alert("Profile not found.");
+    }
+  } catch (error) {
+    console.error("Error deleting profile:", error.message);
+    alert("Error deleting profile.");
+  }
 });
 
 
