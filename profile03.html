@@ -1,20 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
-  <!-- Firebase App (Required) -->
-<script src="https://www.gstatic.com/firebasejs/10.3.0/firebase-app-compat.js"></script>
-<!-- Firebase Auth -->
-<script src="https://www.gstatic.com/firebasejs/10.3.0/firebase-auth-compat.js"></script>
-<!-- Firestore -->
-<script src="https://www.gstatic.com/firebasejs/10.3.0/firebase-firestore-compat.js"></script>
-
+  <script src="https://www.gstatic.com/firebasejs/10.3.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.3.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.3.0/firebase-firestore-compat.js"></script>
 
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Profile Setup</title>
+  <title>Profile Setup TK</title>
   <style>
-    /* Styles are kept for uniformity */
     body {
       font-family: Arial, sans-serif;
       margin: 0;
@@ -61,20 +55,20 @@
     <form id="profileForm">
       <label for="profileName">Profile Name</label>
       <input type="text" id="profileName" placeholder="Enter your profile name" required>
-
+      
       <label for="gender">Gender</label>
       <select id="gender" required>
         <option value="Not specified">Not specified</option>
         <option value="Female">Female</option>
         <option value="Male">Male</option>
       </select>
-
+      
       <label for="weight">Weight (Kg): <span id="weightValue">50</span></label>
       <input type="range" id="weight" min="10" max="120" value="50" oninput="document.getElementById('weightValue').textContent = this.value">
-
+      
       <label for="age">Age (years): <span id="ageValue">20</span></label>
       <input type="range" id="age" min="10" max="100" value="20" oninput="document.getElementById('ageValue').textContent = this.value">
-
+      
       <label for="experience">Experience Level</label>
       <select id="experience" required>
         <option value="Minor">Minor</option>
@@ -92,12 +86,12 @@
 
       <label for="scooterAge">Manufacture Year: <span id="scooterAgeValue">2020</span></label>
       <input type="range" id="scooterAge" min="2000" max="2024" value="2020" oninput="document.getElementById('scooterAgeValue').textContent = this.value">
-
+      
       <button type="button" id="saveProfile">Save Profile</button>
     </form>
   </div>
-<!-- Display Profile Details -->
-<div id="profileDetails"></div>
+
+  <div id="profileDetails"></div>
 
   <script>
 // Firebase Config
@@ -123,7 +117,7 @@ const loginStatus = document.getElementById("loginStatus");
 const saveProfileButton = document.getElementById("saveProfile");
 
 // Google Sign-In provider
-const googleProvider = new firebase.auth.GoogleAuthProvider(); // move this out of the click event handler
+const googleProvider = new firebase.auth.GoogleAuthProvider();
 
 // Login Button Event Listener
 loginButton.addEventListener("click", async () => {
@@ -131,13 +125,16 @@ loginButton.addEventListener("click", async () => {
     const result = await auth.signInWithPopup(googleProvider);
     const user = result.user;
 
-    // Display success message and logout button
     loginStatus.textContent = `Logged in as: ${user.displayName}`;
     loginButton.classList.add("hidden");
     logoutButton.classList.remove("hidden");
 
-    // Show profile setup form
     profileFormContainer.classList.remove("hidden");
+    
+    // After login, load user's profiles
+    const profiles = await loadUserProfiles(user.uid);
+    displayProfiles(profiles);
+
   } catch (error) {
     console.error("Login error:", error.message);
   }
@@ -147,156 +144,97 @@ loginButton.addEventListener("click", async () => {
 logoutButton.addEventListener("click", async () => {
   try {
     await auth.signOut();
-    
-    // Update UI after logout
+
     loginButton.classList.remove("hidden");
     logoutButton.classList.add("hidden");
     profileFormContainer.classList.add("hidden");
     loginStatus.textContent = "Not logged in.";
+    document.getElementById("profileDetails").innerHTML = "";
   } catch (error) {
     console.error("Logout error:", error.message);
   }
 });
 
-    
-    // Save Profile
-    async function saveUserProfile(uid, profileData) {
-  try {
-    await db.collection('users').doc(uid).collection('profiles').add(profileData);
-    console.log("Profile saved successfully!");
-    alert("Profile saved successfully!"); // Notify the user
-  } catch (error) {
-    console.error("Error saving profile:", error.message);
-    alert("Error saving profile: " + error.message); // Notify the user
-  }
-}
-
-document.getElementById("saveProfile").addEventListener("click", async function () {
-	console.log("Save Profile button clicked");
+// Save Profile Function
+async function saveProfile() {
   const user = firebase.auth().currentUser;
   if (!user) {
     alert("You need to log in before saving a profile.");
     return;
   }
 
-  // Gather profile data
-	const profileName = document.getElementById("profileName") ? document.getElementById("profileName").value.trim() : "";
-    const gender = document.getElementById("gender") ? document.getElementById("gender").value : "";
-    const weight = document.getElementById("weight") ? document.getElementById("weight").value : "";
-    const age = document.getElementById("age") ? document.getElementById("age").value : "";
-    const experience = document.getElementById("experience") ? document.getElementById("experience").value : "";
-    const vehicleName = document.getElementById("vehicleName") ? document.getElementById("vehicleName").value.trim() : "";
-    const VehicleType = document.getElementById("VehicleType") ? document.getElementById("VehicleType").value : "";
+  const profileName = document.getElementById("profileName").value.trim();
+  const gender = document.getElementById("gender").value;
+  const weight = document.getElementById("weight").value;
+  const age = document.getElementById("age").value;
+  const experience = document.getElementById("experience").value;
+  const vehicleName = document.getElementById("vehicleName").value.trim();
+  const vehicleType = document.getElementById("vehicleType").value;
 
-  // Validate input
-    if (!profileName) {
-      alert("Please enter a profile name.");
-      return;
-    }
-    if (!vehicleName) {
-      alert("Please enter a vehicle name.");
-      return;
-    }
+  if (!profileName || !vehicleName) {
+    alert("Please fill in both profile and vehicle name.");
+    return;
+  }
 
-    // Create profile object
-    const profileData = {
-      profileName,
-      gender,
-      weight,
-      age,
-      experience,
-      vehicleName,
-      VehicleType,
-    };
+  const profileData = {
+    profileName,
+    gender,
+    weight,
+    age,
+    experience,
+    vehicleName,
+    vehicleType,
+  };
 
-    
-    // Show success message
-    alert(`Profile "${profileName}" saved successfully!`);
-    // Reset inputs
-    document.getElementById("profileForm").reset();
-  });
+  try {
+    await saveUserProfile(user.uid, profileData);
+    alert("Profile saved successfully!");
+    document.getElementById("profileForm").reset(); // Reset form inputs after saving
+  } catch (error) {
+    console.error("Error saving profile:", error);
+  }
+}
 
-// Save profile to Firestore
+// Save user profile to Firestore
 async function saveUserProfile(uid, profileData) {
-    try {
-        const profileRef = await firebase.firestore().collection("users").doc(uid).collection("profiles").add(profileData);
-        console.log("Profile saved to Firestore successfully:", profileRef.id);
-    } catch (error) {
-        console.error("Error saving profile to Firestore:", error.message);
-    }
+  const profileRef = await db.collection('users').doc(uid).collection('profiles').add(profileData);
+  console.log("Profile saved successfully: ", profileRef.id);
 }
 
+// Load user's profiles from Firestore
 async function loadUserProfiles(uid) {
-    try {
-        // Get the user's profiles collection from Firestore
-        const snapshot = await firebase.firestore()
-            .collection('users')
-            .doc(uid)
-            .collection('profiles')
-            .get();
-        
-        // Get all the profiles as an array of objects
-        const profiles = snapshot.docs.map(doc => doc.data());
-        
-        // Log profiles for debugging purposes (you can remove this later)
-        console.log("Loaded profiles:", profiles);
-        
-        // Return profiles (or update the UI)
-        return profiles;
-    } catch (error) {
-        console.error("Error loading profiles:", error.message);
-    }
+  const snapshot = await db.collection('users').doc(uid).collection('profiles').get();
+  const profiles = snapshot.docs.map(doc => doc.data());
+  return profiles;
 }
 
-document.getElementById("loginButton").addEventListener("click", async () => {
-    try {
-        // Sign in the user with Google authentication
-        const result = await firebase.auth().signInWithPopup(googleProvider);
-        const user = result.user;
-
-        // Display the logged-in user's name
-        document.getElementById("loginStatus").textContent = `Welcome, ${user.displayName}!`;
-
-        // Now fetch and display the user's profiles
-        const profiles = await loadUserProfiles(user.uid);
-        
-        // Display the profiles (if any)
-        displayProfiles(profiles);
-    } catch (error) {
-        console.error("Login error:", error.message);
-    }
-});
-
-// Function to display profiles
+// Display loaded profiles
 function displayProfiles(profiles) {
-    const profileDetailsDiv = document.getElementById("profileDetails");
-
-    if (profiles.length > 0) {
-        let profilesHtml = "<h2>Your Profiles:</h2>";
-
-        profiles.forEach(profile => {
-            profilesHtml += `
-                <div class="profileCard">
-                    <h3>${profile.profileName}</h3>
-                    <p>Gender: ${profile.gender}</p>
-                    <p>Weight: ${profile.weight} Kg</p>
-                    <p>Age: ${profile.age} years</p>
-                    <p>Experience: ${profile.experience}</p>
-                    <p>Vehicle: ${profile.vehicleName}</p>
-                    <p>Vehicle Type: ${profile.VehicleType}</p>
-                    <hr>
-                </div>
-            `;
-        });
-
-        profileDetailsDiv.innerHTML = profilesHtml;
-    } else {
-        profileDetailsDiv.innerHTML = "<p>You don't have any profiles saved.</p>";
-    }
+  const profileDetailsDiv = document.getElementById("profileDetails");
+  if (profiles.length > 0) {
+    let profilesHtml = "<h2>Your Profiles:</h2>";
+    profiles.forEach(profile => {
+      profilesHtml += `
+        <div class="profileCard">
+          <h3>${profile.profileName}</h3>
+          <p>Gender: ${profile.gender}</p>
+          <p>Weight: ${profile.weight} Kg</p>
+          <p>Age: ${profile.age} years</p>
+          <p>Experience: ${profile.experience}</p>
+          <p>Vehicle: ${profile.vehicleName}</p>
+          <p>Vehicle Type: ${profile.vehicleType}</p>
+        </div>
+        <hr>
+      `;
+    });
+    profileDetailsDiv.innerHTML = profilesHtml;
+  } else {
+    profileDetailsDiv.innerHTML = "<p>No profiles found.</p>";
+  }
 }
 
-
-
+// Event listener for save profile button
+saveProfileButton.addEventListener("click", saveProfile);
   </script>
 </body>
 </html>
