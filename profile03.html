@@ -7,7 +7,7 @@
 
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Profile Setup 11</title>
+  <title>Profile Setup</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -231,6 +231,16 @@ async function checkIfProfileExists(uid, profileName) {
 // Handle profile selection and display form with data
 profileSelector.addEventListener("change", async function () {
   const selectedProfile = profileSelector.value;
+  const profileData = {
+    profileName,
+    gender,
+    weight,
+    age,
+    experience,
+    vehicleName,
+    VehicleType,
+    scooterAge,
+  };
 
   if (selectedProfile === "new") {
     // Show empty form for new profile
@@ -250,6 +260,7 @@ profileSelector.addEventListener("change", async function () {
       } else if (window.parent) {
         window.parent.postMessage(JSON.stringify(profileData), "*");
       }
+	  
 });
 
 // Load a profile from Firestore by name
