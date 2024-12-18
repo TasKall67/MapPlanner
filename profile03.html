@@ -7,7 +7,7 @@
 
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Profile Setup LITTLE</title>
+  <title>Profile Setup</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -45,7 +45,7 @@
   </style>
 </head>
 <body>
-  <h1>Welcome</h1>
+  <h1>Welcome LITTLE people</h1>
 
   <!-- Google Login and Logout -->
   <button id="loginButton">Login with Google</button>
@@ -131,6 +131,30 @@ const loginStatus = document.getElementById("loginStatus");
 // Google Sign-In provider
 const googleProvider = new firebase.auth.GoogleAuthProvider();
 
+/// Load profiles from Firestore
+async function loadUserProfiles(uid) {
+  const snapshot = await db.collection("users").doc(uid).collection("profiles").get();
+  
+  const profiles = [];
+  snapshot.forEach(doc => {
+    profiles.push(doc.data());  // Store the profile data
+  });
+
+  return profiles;  // Return the list of profiles
+}
+
+// Populate dropdown with profiles
+function populateProfileDropdown(profiles) {
+  profileSelector.innerHTML = '<option value="new">Create New Profile</option>';
+  
+  profiles.forEach(profile => {
+    const option = document.createElement("option");
+    option.value = profile.profileName;
+    option.textContent = profile.profileName;
+    profileSelector.appendChild(option);
+  });
+}
+
 // Login Button Event Listener
 loginButton.addEventListener("click", async () => {
   try {
@@ -145,8 +169,8 @@ loginButton.addEventListener("click", async () => {
     profileDropdownContainer.classList.remove("hidden");
 
     // Load user's profiles and populate the dropdown
-    const profiles = await loadUserProfiles(user.uid);
-    populateProfileDropdown(profiles);
+    const profiles = await loadUserProfiles(user.uid);  // Now this will work
+    populateProfileDropdown(profiles);  // This will populate the dropdown with existing profiles
 
   } catch (error) {
     console.error("Login error:", error.message);
