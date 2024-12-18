@@ -7,7 +7,7 @@
 
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Profile Setup 3</title>
+  <title>Profile Setup Q</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -271,7 +271,7 @@ profileSelector.addEventListener("change", async function () {
       deleteProfileButton.classList.remove("hidden");
 
       // Prepare the profile data to send to Thunkable (or parent window)
-      profileData = {  // Use the outer `profileData` here, no redeclaration
+      profileData = {  
         name: profile.profileName,
         gender: profile.gender,
         weight: profile.weight,
@@ -297,6 +297,37 @@ profileSelector.addEventListener("change", async function () {
     }
   } else {
     console.log("Profile data is empty, nothing to send to Thunkable.");
+  }
+});
+
+// Event listener for delete profile button
+deleteProfileButton.addEventListener("click", async function () {
+  const selectedProfile = profileSelector.value;
+  const user = firebase.auth().currentUser;
+
+  if (!selectedProfile || selectedProfile === "new") {
+    alert("Please select a profile to delete.");
+    return;
+  }
+
+  try {
+    // Delete profile from Firestore
+    const profile = await loadUserProfileByName(user.uid, selectedProfile);
+    if (profile) {
+      // Delete the selected profile from Firestore
+      await deleteUserProfile(user.uid, selectedProfile);
+      alert("Profile deleted successfully!");
+
+      // Update UI (Remove deleted profile from selector and reset form)
+      profileSelector.removeChild(profileSelector.querySelector(`option[value='${selectedProfile}']`));
+      resetProfileForm();
+      deleteProfileButton.classList.add("hidden"); // Hide delete button after deletion
+    } else {
+      alert("Profile not found.");
+    }
+  } catch (error) {
+    console.error("Error deleting profile:", error.message);
+    alert("Error deleting profile.");
   }
 });
 
@@ -393,36 +424,7 @@ document.getElementById("saveProfile").addEventListener("click", async function 
 });
 
 
-// Event listener for delete profile button
-deleteProfileButton.addEventListener("click", async function () {
-  const selectedProfile = profileSelector.value;
-  const user = firebase.auth().currentUser;
 
-  if (!selectedProfile || selectedProfile === "new") {
-    alert("Please select a profile to delete.");
-    return;
-  }
-
-  try {
-    // Delete profile from Firestore
-    const profile = await loadUserProfileByName(user.uid, selectedProfile);
-    if (profile) {
-      // Delete the selected profile from Firestore
-      await deleteUserProfile(user.uid, selectedProfile);
-      alert("Profile deleted successfully!");
-
-      // Update UI (Remove deleted profile from selector and reset form)
-      profileSelector.removeChild(profileSelector.querySelector(`option[value='${selectedProfile}']`));
-      resetProfileForm();
-      deleteProfileButton.classList.add("hidden"); // Hide delete button after deletion
-    } else {
-      alert("Profile not found.");
-    }
-  } catch (error) {
-    console.error("Error deleting profile:", error.message);
-    alert("Error deleting profile.");
-  }
-});
 
 
   </script>
