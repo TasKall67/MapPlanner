@@ -7,7 +7,7 @@
 
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Profile Setup 3</title>
+  <title>Profile Setup 0</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -190,15 +190,7 @@ logoutButton.addEventListener("click", async () => {
   } catch (error) {
     console.error("Logout error:", error.message);
   }
-// Console log profile before sending
-  console.log("Profile data being sent to Thunkable SKETO:");
-  console.log("Profile data being sent to Thunkable:", JSON.stringify(profileData));
-// Send the data to Thunkable
-      if (window.ReactNativeWebView) {
-        window.ReactNativeWebView.postMessage(JSON.stringify(profile));
-      } else if (window.parent) {
-        window.parent.postMessage(JSON.stringify(profile), "*");
-      }
+
     });
 
 // Populate dropdown with profiles
@@ -228,15 +220,6 @@ async function saveProfileData(uid, profileName, profileData) {
     await db.collection("users").doc(uid).collection("profiles").add(profileData);
     console.log("Profile saved successfully!");
   }
-  // Console log profile before sending
-  console.log("Profile data being sent to Thunkable:SKETO");
-  console.log("Profile data being sent to Thunkable:", JSON.stringify(profileData));
-// Send the data to Thunkable
-      if (window.ReactNativeWebView) {
-        window.ReactNativeWebView.postMessage(JSON.stringify(profileData));
-      } else if (window.parent) {
-        window.parent.postMessage(JSON.stringify(profileData), "*");
-      }
 }
 
 // Check if profile already exists (if yes, get it for update)
@@ -324,6 +307,15 @@ document.getElementById("saveProfile").addEventListener("click", async function 
   await saveProfileData(user.uid, profileName, profileData);
   alert(`Profile "${profileName}" saved successfully!`);
   resetProfileForm();
+  // Console log profile before sending
+  console.log("Profile data being sent to Thunkable:SKETO");
+  console.log("Profile data being sent to Thunkable:", JSON.stringify(profileData));
+// Send the data to Thunkable
+      if (window.ReactNativeWebView) {
+        window.ReactNativeWebView.postMessage(JSON.stringify(profile));
+      } else if (window.parent) {
+        window.parent.postMessage(JSON.stringify(profile), "*");
+      }
 });
 
 
