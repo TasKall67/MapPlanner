@@ -114,11 +114,13 @@
     const db = firebase.firestore();
 
     // Reference to elements
-    const loginButton = document.getElementById("loginButton");
-    const logoutButton = document.getElementById("logoutButton");
-    const profileFormContainer = document.getElementById("profileFormContainer");
-    const loginStatus = document.getElementById("loginStatus");
-    const saveProfileButton = document.getElementById("saveProfile");
+    const profileName = document.getElementById("profileName") ? document.getElementById("profileName").value.trim() : "";
+    const gender = document.getElementById("gender") ? document.getElementById("gender").value : "";
+    const weight = document.getElementById("weight") ? document.getElementById("weight").value : "";
+    const age = document.getElementById("age") ? document.getElementById("age").value : "";
+    const experience = document.getElementById("experience") ? document.getElementById("experience").value : "";
+    const vehicleName = document.getElementById("vehicleName") ? document.getElementById("vehicleName").value.trim() : "";
+    const VehicleType = document.getElementById("VehicleType") ? document.getElementById("VehicleType").value : "";
 
     // Google Sign-In
     loginButton.addEventListener("click", async () => {
