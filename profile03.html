@@ -12,7 +12,7 @@
 
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Profile Setup</title>
+  <title>Profile Setup Google</title>
   <style>
     /* Styles are kept for uniformity */
     body {
@@ -96,6 +96,8 @@
       <button type="button" id="saveProfile">Save Profile</button>
     </form>
   </div>
+<!-- Display Profile Details -->
+<div id="profileDetails"></div>
 
   <script>
     // Firebase Config
@@ -214,6 +216,77 @@ async function saveUserProfile(uid, profileData) {
         console.error("Error saving profile to Firestore:", error.message);
     }
 }
+
+async function loadUserProfiles(uid) {
+    try {
+        // Get the user's profiles collection from Firestore
+        const snapshot = await firebase.firestore()
+            .collection('users')
+            .doc(uid)
+            .collection('profiles')
+            .get();
+        
+        // Get all the profiles as an array of objects
+        const profiles = snapshot.docs.map(doc => doc.data());
+        
+        // Log profiles for debugging purposes (you can remove this later)
+        console.log("Loaded profiles:", profiles);
+        
+        // Return profiles (or update the UI)
+        return profiles;
+    } catch (error) {
+        console.error("Error loading profiles:", error.message);
+    }
+}
+
+document.getElementById("loginButton").addEventListener("click", async () => {
+    try {
+        // Sign in the user with Google authentication
+        const result = await firebase.auth().signInWithPopup(googleProvider);
+        const user = result.user;
+
+        // Display the logged-in user's name
+        document.getElementById("loginStatus").textContent = `Welcome, ${user.displayName}!`;
+
+        // Now fetch and display the user's profiles
+        const profiles = await loadUserProfiles(user.uid);
+        
+        // Display the profiles (if any)
+        displayProfiles(profiles);
+    } catch (error) {
+        console.error("Login error:", error.message);
+    }
+});
+
+// Function to display profiles
+function displayProfiles(profiles) {
+    const profileDetailsDiv = document.getElementById("profileDetails");
+
+    if (profiles.length > 0) {
+        let profilesHtml = "<h2>Your Profiles:</h2>";
+
+        profiles.forEach(profile => {
+            profilesHtml += `
+                <div class="profileCard">
+                    <h3>${profile.profileName}</h3>
+                    <p>Gender: ${profile.gender}</p>
+                    <p>Weight: ${profile.weight} Kg</p>
+                    <p>Age: ${profile.age} years</p>
+                    <p>Experience: ${profile.experience}</p>
+                    <p>Vehicle: ${profile.vehicleName}</p>
+                    <p>Vehicle Type: ${profile.VehicleType}</p>
+                    <hr>
+                </div>
+            `;
+        });
+
+        profileDetailsDiv.innerHTML = profilesHtml;
+    } else {
+        profileDetailsDiv.innerHTML = "<p>You don't have any profiles saved.</p>";
+    }
+}
+
+
 
   </script>
 </body>
