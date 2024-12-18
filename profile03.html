@@ -12,7 +12,7 @@
 
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Profile Setup Google</title>
+  <title>Profile Setup</title>
   <style>
     /* Styles are kept for uniformity */
     body {
@@ -100,56 +100,65 @@
 <div id="profileDetails"></div>
 
   <script>
-    // Firebase Config
-    const firebaseConfig = {
-      apiKey: "AIzaSyAHcG2EV_Izlr8gKlIVu1sxKZGcBk814jg",
-      authDomain: "mylittle-61b8f.firebaseapp.com",
-      projectId: "mylittle-61b8f",
-      storageBucket: "mylittle-61b8f.firebasestorage.app",
-      messagingSenderId: "115858560969",
-      appId: "1:115858560969:web:b6fb967e4f3d622ac3ba18"
-    };
+// Firebase Config
+const firebaseConfig = {
+  apiKey: "AIzaSyAHcG2EV_Izlr8gKlIVu1sxKZGcBk814jg",
+  authDomain: "mylittle-61b8f.firebaseapp.com",
+  projectId: "mylittle-61b8f",
+  storageBucket: "mylittle-61b8f.firebasestorage.app",
+  messagingSenderId: "115858560969",
+  appId: "1:115858560969:web:b6fb967e4f3d622ac3ba18"
+};
 
-    // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-    // Reference to elements
-    const loginButton = document.getElementById("loginButton");
-    const logoutButton = document.getElementById("logoutButton");
-    const profileFormContainer = document.getElementById("profileFormContainer");
-    const loginStatus = document.getElementById("loginStatus");
-    const saveProfileButton = document.getElementById("saveProfile");
+// Reference to elements
+const loginButton = document.getElementById("loginButton");
+const logoutButton = document.getElementById("logoutButton");
+const profileFormContainer = document.getElementById("profileFormContainer");
+const loginStatus = document.getElementById("loginStatus");
+const saveProfileButton = document.getElementById("saveProfile");
 
-    // Google Sign-In
-    loginButton.addEventListener("click", async () => {
-      const googleProvider = new firebase.auth.GoogleAuthProvider();
-      try {
-        const result = await auth.signInWithPopup(googleProvider);
-        const user = result.user;
+// Google Sign-In provider
+const googleProvider = new firebase.auth.GoogleAuthProvider(); // move this out of the click event handler
 
-        // Display success message and logout button
-        loginStatus.textContent = `Logged in as: ${user.displayName}`;
-        loginButton.classList.add("hidden");
-        logoutButton.classList.remove("hidden");
+// Login Button Event Listener
+loginButton.addEventListener("click", async () => {
+  try {
+    const result = await auth.signInWithPopup(googleProvider);
+    const user = result.user;
 
-        // Show profile setup form
-        profileFormContainer.classList.remove("hidden");
-      } catch (error) {
-        console.error("Login error:", error.message);
-      }
-    });
+    // Display success message and logout button
+    loginStatus.textContent = `Logged in as: ${user.displayName}`;
+    loginButton.classList.add("hidden");
+    logoutButton.classList.remove("hidden");
 
-    // Google Logout
-    logoutButton.addEventListener("click", async () => {
-      await auth.signOut();
-      loginStatus.textContent = "Logged out.";
-      loginButton.classList.remove("hidden");
-      logoutButton.classList.add("hidden");
-      profileFormContainer.classList.add("hidden");
-    });
+    // Show profile setup form
+    profileFormContainer.classList.remove("hidden");
+  } catch (error) {
+    console.error("Login error:", error.message);
+  }
+});
 
+// Logout Button Event Listener
+logoutButton.addEventListener("click", async () => {
+  try {
+    await auth.signOut();
+    
+    // Update UI after logout
+    loginButton.classList.remove("hidden");
+    logoutButton.classList.add("hidden");
+    profileFormContainer.classList.add("hidden");
+    loginStatus.textContent = "Not logged in.";
+  } catch (error) {
+    console.error("Logout error:", error.message);
+  }
+});
+
+    
     // Save Profile
     async function saveUserProfile(uid, profileData) {
   try {
@@ -171,7 +180,7 @@ document.getElementById("saveProfile").addEventListener("click", async function 
   }
 
   // Gather profile data
-  const profileName = document.getElementById("profileName") ? document.getElementById("profileName").value.trim() : "";
+	const profileName = document.getElementById("profileName") ? document.getElementById("profileName").value.trim() : "";
     const gender = document.getElementById("gender") ? document.getElementById("gender").value : "";
     const weight = document.getElementById("weight") ? document.getElementById("weight").value : "";
     const age = document.getElementById("age") ? document.getElementById("age").value : "";
@@ -190,7 +199,7 @@ document.getElementById("saveProfile").addEventListener("click", async function 
     }
 
     // Create profile object
-    const profile = {
+    const profileData = {
       profileName,
       gender,
       weight,
