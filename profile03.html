@@ -7,7 +7,7 @@
 
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Profile Setup 3</title>
+  <title>Profile Setup</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -268,12 +268,28 @@ profileSelector.addEventListener("change", async function () {
 	  
 });
 
-// Load a profile from Firestore by name
-async function loadUserProfileByName(uid, profileName) {
-  const snapshot = await db.collection("users").doc(uid).collection("profiles")
-    .where("profileName", "==", profileName).get();
-  
-  return snapshot.empty ? null : snapshot.docs[0].data();
+// Function to load a user profile by its name from Firestore (assuming you've written this method)
+async function loadUserProfileByName(userId, profileName) {
+  try {
+    const profileDoc = await firebase.firestore()
+      .collection('users')
+      .doc(userId)
+      .collection('profiles')
+      .where("profileName", "==", profileName)
+      .get();
+    
+    if (!profileDoc.empty) {
+      // Assumes only one profile will be returned
+      const profile = profileDoc.docs[0].data();
+      return profile;
+    } else {
+      console.log("Profile not found");
+      return {};
+    }
+  } catch (error) {
+    console.error("Error loading profile:", error.message);
+    return {};
+  }
 }
 
 // Pre-populate the form with the selected profile data
