@@ -7,7 +7,7 @@
 
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Profile Setup 0</title>
+  <title>Profile Setup 3</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -452,6 +452,42 @@ document.getElementById("saveProfile").addEventListener("click", async function 
       } else if (window.parent) {
         window.parent.postMessage(JSON.stringify(profileData), "*");
       }
+});
+
+function sendHeightToThunkable() {
+  const height = document.body.scrollHeight; // Get the full document height
+  console.log("Sending window height to Thunkable:", height); // Debugging
+
+  // Send the height to Thunkable
+  if (window.ReactNativeWebView) {
+    window.ReactNativeWebView.postMessage(JSON.stringify({ height }));
+  } else if (window.parent) {
+    window.parent.postMessage(JSON.stringify({ height }), "*");
+  }
+}
+
+// Call this function whenever the layout changes
+function adjustLayout() {
+  sendHeightToThunkable();
+}
+
+// Example: Triggering height updates after login or form display
+document.addEventListener("DOMContentLoaded", function () {
+  sendHeightToThunkable(); // Initial height
+
+  // Adjust after login completes
+  firebase.auth().onAuthStateChanged(function (user) {
+    if (user) {
+      console.log("User logged in");
+      setTimeout(adjustLayout, 500); // Allow some time for rendering before sending the height
+    }
+  });
+
+  // Adjust after form population
+  const profileSelector = document.getElementById("profileSelector");
+  profileSelector.addEventListener("change", function () {
+    setTimeout(adjustLayout, 500); // Allow form to expand before sending the height
+  });
 });
 
 
