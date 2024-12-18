@@ -12,7 +12,7 @@
 
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Profile Setup Google</title>
+  <title>Profile Setup</title>
   <style>
     /* Styles are kept for uniformity */
     body {
@@ -114,13 +114,11 @@
     const db = firebase.firestore();
 
     // Reference to elements
-    const profileName = document.getElementById("profileName") ? document.getElementById("profileName").value.trim() : "";
-    const gender = document.getElementById("gender") ? document.getElementById("gender").value : "";
-    const weight = document.getElementById("weight") ? document.getElementById("weight").value : "";
-    const age = document.getElementById("age") ? document.getElementById("age").value : "";
-    const experience = document.getElementById("experience") ? document.getElementById("experience").value : "";
-    const vehicleName = document.getElementById("vehicleName") ? document.getElementById("vehicleName").value.trim() : "";
-    const VehicleType = document.getElementById("VehicleType") ? document.getElementById("VehicleType").value : "";
+    const loginButton = document.getElementById("loginButton");
+    const logoutButton = document.getElementById("logoutButton");
+    const profileFormContainer = document.getElementById("profileFormContainer");
+    const loginStatus = document.getElementById("loginStatus");
+    const saveProfileButton = document.getElementById("saveProfile");
 
     // Google Sign-In
     loginButton.addEventListener("click", async () => {
@@ -171,34 +169,51 @@ document.getElementById("saveProfile").addEventListener("click", async function 
   }
 
   // Gather profile data
-  const profileName = document.getElementById("profileName").value.trim();
-  const gender = document.getElementById("gender").value;
-  const weight = document.getElementById("weight").value;
-  const age = document.getElementById("age").value;
-  const experience = document.getElementById("experience").value;
-  const vehicleName = document.getElementById("vehicleName").value.trim();
-  const vehicleType = document.getElementById("VehicleType").value;
+  const profileName = document.getElementById("profileName") ? document.getElementById("profileName").value.trim() : "";
+    const gender = document.getElementById("gender") ? document.getElementById("gender").value : "";
+    const weight = document.getElementById("weight") ? document.getElementById("weight").value : "";
+    const age = document.getElementById("age") ? document.getElementById("age").value : "";
+    const experience = document.getElementById("experience") ? document.getElementById("experience").value : "";
+    const vehicleName = document.getElementById("vehicleName") ? document.getElementById("vehicleName").value.trim() : "";
+    const VehicleType = document.getElementById("VehicleType") ? document.getElementById("VehicleType").value : "";
 
-  if (!profileName || !vehicleName) {
-    alert("Please complete all required fields.");
-    return;
-  }
+  // Validate input
+    if (!profileName) {
+      alert("Please enter a profile name.");
+      return;
+    }
+    if (!vehicleName) {
+      alert("Please enter a vehicle name.");
+      return;
+    }
 
-  const profileData = {
-    profileName,
-    gender,
-    weight,
-    age,
-    experience,
-    vehicleName,
-    vehicleType,
-    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-  };
+    // Create profile object
+    const profile = {
+      profileName,
+      gender,
+      weight,
+      age,
+      experience,
+      vehicleName,
+      VehicleType,
+    };
 
-  // Save profile in Firestore
-  await saveUserProfile(user.uid, profileData);
-	alert(`Profile "${profileName}" saved successfully!`);
-});
+    
+    // Show success message
+    alert(`Profile "${profileName}" saved successfully!`);
+    // Reset inputs
+    document.getElementById("profileForm").reset();
+  });
+
+// Save profile to Firestore
+async function saveUserProfile(uid, profileData) {
+    try {
+        const profileRef = await firebase.firestore().collection("users").doc(uid).collection("profiles").add(profileData);
+        console.log("Profile saved to Firestore successfully:", profileRef.id);
+    } catch (error) {
+        console.error("Error saving profile to Firestore:", error.message);
+    }
+}
 
   </script>
 </body>
