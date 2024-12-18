@@ -195,6 +195,7 @@ document.getElementById("saveProfile").addEventListener("click", async function 
 
   // Save profile in Firestore
   await saveUserProfile(user.uid, profileData);
+	alert(`Profile "${profileName}" saved successfully!`);
 });
 
   </script>
