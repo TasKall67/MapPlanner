@@ -231,7 +231,21 @@ async function checkIfProfileExists(uid, profileName) {
 // Handle profile selection and display form with data
 profileSelector.addEventListener("change", async function () {
   const selectedProfile = profileSelector.value;
-  // Prepare the profile data to send to Thunkable (or parent window)
+  const user = firebase.auth().currentUser;
+  
+  let profileData = {}; // Initialize the profileData object here
+  
+
+  if (selectedProfile === "new") {
+    // Show empty form for new profile
+    resetProfileForm();
+  } else {
+    // Load selected profile and pre-fill form
+    
+    const profile = await loadUserProfileByName(user.uid, selectedProfile);
+    populateFormWithProfileData(profile);
+	
+	// Prepare the profile data to send to Thunkable (or parent window)
     const profileData = {
         name: profileData.profileName,
         gender: profileData.gender,
@@ -241,15 +255,6 @@ profileSelector.addEventListener("change", async function () {
         vehicleName: profileData.vehicleName,
         vehicleType: profileData.vehicleType
     };
-
-  if (selectedProfile === "new") {
-    // Show empty form for new profile
-    resetProfileForm();
-  } else {
-    // Load selected profile and pre-fill form
-    const user = firebase.auth().currentUser;
-    const profile = await loadUserProfileByName(user.uid, selectedProfile);
-    populateFormWithProfileData(profile);
   }
   // Console log profile before sending
   console.log("Profile data being sent to Thunkable:fetched");
