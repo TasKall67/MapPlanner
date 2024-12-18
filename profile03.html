@@ -7,7 +7,7 @@
 
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Profile Setup</title>
+  <title>Profile Setup 2</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -191,6 +191,7 @@ logoutButton.addEventListener("click", async () => {
     console.error("Logout error:", error.message);
   }
 // Console log profile before sending
+  console.log("Profile data being sent to Thunkable:");
   console.log("Profile data being sent to Thunkable:", JSON.stringify(profile));
 // Send the data to Thunkable
       if (window.ReactNativeWebView) {
@@ -228,6 +229,7 @@ async function saveProfileData(uid, profileName, profileData) {
     console.log("Profile saved successfully!");
   }
   // Console log profile before sending
+  console.log("Profile data being sent to Thunkable:");
   console.log("Profile data being sent to Thunkable:", JSON.stringify(profile));
 // Send the data to Thunkable
       if (window.ReactNativeWebView) {
