@@ -457,12 +457,13 @@ document.getElementById("saveProfile").addEventListener("click", async function 
 function sendHeightToThunkable() {
   const height = document.body.scrollHeight; // Get the full document height
   console.log("Sending window height to Thunkable:", height); // Debugging
+  console.log("height send:", { myheight: height });
 
   // Send the height to Thunkable
   if (window.ReactNativeWebView) {
-    window.ReactNativeWebView.postMessage(JSON.stringify({ height }));
+    window.ReactNativeWebView.postMessage(JSON.stringify({ myheight: height }));
   } else if (window.parent) {
-    window.parent.postMessage(JSON.stringify({ height }), "*");
+    window.parent.postMessage(JSON.stringify({ myheight: height }), "*");
   }
 }
 
