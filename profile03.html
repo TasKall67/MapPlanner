@@ -12,7 +12,7 @@
 
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Profile Setup</title>
+  <title>Profile Setup Google</title>
   <style>
     /* Styles are kept for uniformity */
     body {
@@ -149,14 +149,54 @@
     });
 
     // Save Profile
-    saveProfileButton.addEventListener("click", async () => {
-      const profileName = document.getElementById("profileName").value.trim();
-      const gender = document.getElementById("gender").value;
-      const weight = document.getElementById("weight").value;
-      const age = document.getElementById("age").value;
-      const experience = document.getElementById("experience").value;
-      const vehicleName = document.getElementById("vehicleName").value.trim();
-     })
+    async function saveUserProfile(uid, profileData) {
+  try {
+    await db.collection('users').doc(uid).collection('profiles').add(profileData);
+    console.log("Profile saved successfully!");
+    alert("Profile saved successfully!"); // Notify the user
+  } catch (error) {
+    console.error("Error saving profile:", error.message);
+    alert("Error saving profile: " + error.message); // Notify the user
+  }
+}
+
+document.getElementById("saveProfile").addEventListener("click", async function () {
+	console.log("Save Profile button clicked");
+  const user = firebase.auth().currentUser;
+  if (!user) {
+    alert("You need to log in before saving a profile.");
+    return;
+  }
+
+  // Gather profile data
+  const profileName = document.getElementById("profileName").value.trim();
+  const gender = document.getElementById("gender").value;
+  const weight = document.getElementById("weight").value;
+  const age = document.getElementById("age").value;
+  const experience = document.getElementById("experience").value;
+  const vehicleName = document.getElementById("vehicleName").value.trim();
+  const vehicleType = document.getElementById("VehicleType").value;
+
+  if (!profileName || !vehicleName) {
+    alert("Please complete all required fields.");
+    return;
+  }
+
+  const profileData = {
+    profileName,
+    gender,
+    weight,
+    age,
+    experience,
+    vehicleName,
+    vehicleType,
+    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+  };
+
+  // Save profile in Firestore
+  await saveUserProfile(user.uid, profileData);
+});
+
   </script>
 </body>
 </html>
