@@ -7,7 +7,7 @@
 
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Profile Setup Q</title>
+  <title>Profile Setup 0</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -331,6 +331,37 @@ deleteProfileButton.addEventListener("click", async function () {
   }
 });
 
+// Function to delete a profile from Firestore
+async function deleteUserProfile(userId, profileName) {
+  const profilesCollectionRef = firebase.firestore().collection('users').doc(userId).collection('profiles');
+  
+  // Query for the profile by name
+  const profileSnapshot = await profilesCollectionRef.where('profileName', '==', profileName).get();
+  
+  if (!profileSnapshot.empty) {
+    const profileDocId = profileSnapshot.docs[0].id;  // Get the document ID of the profile
+    await profilesCollectionRef.doc(profileDocId).delete();  // Delete the profile
+    console.log(`Profile "${profileName}" deleted successfully`);
+  } else {
+    console.log("Profile not found in Firestore");
+  }
+}
+
+// Function to reset the profile form (implementation as before)
+function resetProfileForm() {
+  document.getElementById("profileForm").reset();
+}
+
+// Function to populate the form with profile data (implementation as before)
+function populateFormWithProfileData(profile) {
+  document.getElementById("profileName").value = profile.profileName || "";
+  document.getElementById("gender").value = profile.gender || "";
+  document.getElementById("weight").value = profile.weight || "";
+  document.getElementById("age").value = profile.age || "";
+  document.getElementById("experience").value = profile.experience || "";
+  document.getElementById("vehicleName").value = profile.vehicleName || "";
+  document.getElementById("vehicleType").value = profile.vehicleType || "";
+}
 
 // Function to load a user profile by its name from Firestore (assuming you've written this method)
 async function loadUserProfileByName(userId, profileName) {
