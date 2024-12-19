@@ -211,7 +211,9 @@ firebase.auth().getRedirectResult().then(async (result) => {
     const profiles = await loadUserProfiles(user.uid);
     populateProfileDropdown(profiles);
 
-    sendHeightToThunkable(); // Ensure height adjustment is sent to Thunkable
+    sendHeightToThunkable(); // Adjust height
+  } else {
+    console.log("No user detected. Not logged in.");
   }
 }).catch((error) => {
   console.error("Error getting redirect result:", error.message);
