@@ -4,6 +4,9 @@
   <script src="https://www.gstatic.com/firebasejs/10.3.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.3.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.3.0/firebase-firestore-compat.js"></script>
+  
+  <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin">
+<meta http-equiv="Cross-Origin-Embedder-Policy" content="require-corp">
 
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -181,44 +184,27 @@ function populateProfileDropdown(profiles) {
   });
 }
 
-
-
-// Start login with redirect when the login button is clicked
-loginButton.addEventListener("click", () => {
-  auth.signInWithRedirect(googleProvider); // Redirect flow
-});
-
-// Check and handle the result of the redirect after page load
-firebase.auth().getRedirectResult().then((result) => {
-  if (result.user) {
-    // Successfully logged in through redirect
+// Login Button Event Listener
+loginButton.addEventListener("click", async () => {
+  try {
+    const result = await auth.signInWithPopup(googleProvider);
     const user = result.user;
-    console.log('User signed in via redirect:', user);
-    
+	 // Update UI after successful login
     loginStatus.textContent = `Logged in as: ${user.displayName}`;
     loginButton.classList.add("hidden");
     logoutButton.classList.remove("hidden");
-
-    // Continue with your existing form population and profile handling logic
+	// Show profile form container after login
     profileFormContainer.classList.remove("hidden");
     profileDropdownContainer.classList.remove("hidden");
 
-    loadUserProfiles(user.uid)
-      .then(profiles => {
-        populateProfileDropdown(profiles);
-      })
-      .catch(error => {
-        console.error("Error loading profiles:", error);
-      });
-    
-  } else {
-    // If no user is logged in
-    console.log('No user is signed in.');
+    // Load user's profiles and populate the dropdown
+    const profiles = await loadUserProfiles(user.uid);  
+    populateProfileDropdown(profiles);  // This will populate the dropdown with existing profiles
+  } catch (error) {
+    console.error("Login error:", error.message);
   }
-}).catch((error) => {
-  console.error("Error handling redirect result:", error.message);
+	sendHeightToThunkable();
 });
-
 
 // Logout Button Event Listener
 logoutButton.addEventListener("click", async () => {
