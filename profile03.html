@@ -492,7 +492,7 @@ document.addEventListener("DOMContentLoaded", function () {
   firebase.auth().onAuthStateChanged(function (user) {
     if (user) {
       console.log("User logged in");
-      setTimeout(adjustLayout, 500); // Allow some time for rendering before sending the height
+      setTimeout(adjustLayout, 100); // Allow some time for rendering before sending the height
     }else {
       console.log("User logged out or not logged in");
     }
