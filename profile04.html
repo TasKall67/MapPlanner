@@ -181,43 +181,44 @@ function populateProfileDropdown(profiles) {
   });
 }
 
-// Login Button Event Listener
-loginButton.addEventListener("click", async () => {
-  try {
-    // Start the login flow with redirect
-    await auth.signInWithRedirect(googleProvider);
-    // Note: No immediate user result here; we handle this later when the page loads.
 
-    loginStatus.textContent = "Redirecting to login..."; // Optional status update for users
-    sendHeightToThunkable(); // Send height adjustment for Thunkable
-  } catch (error) {
-    console.error("Login redirect error:", error.message);
-  }
+
+// Start login with redirect when the login button is clicked
+loginButton.addEventListener("click", () => {
+  auth.signInWithRedirect(googleProvider); // Redirect flow
 });
 
-// Handle Login Result After Redirect
-firebase.auth().getRedirectResult().then(async (result) => {
+// Check and handle the result of the redirect after page load
+firebase.auth().getRedirectResult().then((result) => {
   if (result.user) {
+    // Successfully logged in through redirect
     const user = result.user;
-
+    console.log('User signed in via redirect:', user);
+    
     loginStatus.textContent = `Logged in as: ${user.displayName}`;
     loginButton.classList.add("hidden");
     logoutButton.classList.remove("hidden");
 
+    // Continue with your existing form population and profile handling logic
     profileFormContainer.classList.remove("hidden");
     profileDropdownContainer.classList.remove("hidden");
 
-    // Load user's profiles and populate the dropdown
-    const profiles = await loadUserProfiles(user.uid);
-    populateProfileDropdown(profiles);
-
-    sendHeightToThunkable(); // Adjust height
+    loadUserProfiles(user.uid)
+      .then(profiles => {
+        populateProfileDropdown(profiles);
+      })
+      .catch(error => {
+        console.error("Error loading profiles:", error);
+      });
+    
   } else {
-    console.log("No user detected. Not logged in.");
+    // If no user is logged in
+    console.log('No user is signed in.');
   }
 }).catch((error) => {
-  console.error("Error getting redirect result:", error.message);
+  console.error("Error handling redirect result:", error.message);
 });
+
 
 // Logout Button Event Listener
 logoutButton.addEventListener("click", async () => {
