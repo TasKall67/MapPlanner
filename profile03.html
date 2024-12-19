@@ -195,6 +195,7 @@ loginButton.addEventListener("click", async () => {
   } catch (error) {
     console.error("Login error:", error.message);
   }
+	sendHeightToThunkable();
 });
 
 // Logout Button Event Listener
