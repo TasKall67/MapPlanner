@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="https://www.gstatic.com/firebasejs/10.3.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.3.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.3.0/firebase-firestore-compat.js"></script>
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile Setup</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 14px;
+      background-color: #f4f4f4;
+    }
+    h1 {
+      font-size: 14px;
+      color: #333;
+      text-align: center;
+    }
+    h2 {
+      font-size: 12px;
+      color: #903CA6;
+      font-weight: bold;
+      text-align: left;
+    }
+    label {
+      width: 95%;
+      font-size: 10px;
+      color: #555;
+      display: block;
+      margin: 5px 0 5px;
+    }
+    input, select, button {
+      width: 95%;
+      padding: 5px;
+      margin-bottom: 5px;
+      font-size: 10px;
+    }
+    button {
+      background-color: #FA7842;
+      color: white;
+      border: none;
+      padding: 5px 15px;
+      font-size: 10px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .hidden {
+      display: none;
+    }
+    .dropdown {
+      width: 95%;
+    }
+  </style>
+</head>
+<body>
+  <h1>Welcome LITTLE people</h1>
+
+  <!-- Google Login and Logout -->
+  <button id="loginButton">Login with Google</button>
+  <div id="loginStatus"></div>
+  <button id="logoutButton" class="hidden">Logout</button>
+  <button id="deleteProfileButton" class="hidden">Delete Profile</button>
+
+  <!-- Profile Dropdown -->
+  <div id="profileDropdownContainer" class="hidden">
+    <label for="profileSelector">Select Profile</label>
+    <select id="profileSelector" class="dropdown">
+      <option value="new">Create New Profile</option>
+    </select>
+  </div>
+
+  <!-- Profile Form -->
+  <div id="profileFormContainer" class="hidden">
+    <h2>Set Up Your Profile</h2>
+    <form id="profileForm">
+      <label for="profileName">Profile Name</label>
+      <input type="text" id="profileName" placeholder="Enter your profile name" required>
+
+      <label for="gender">Gender</label>
+      <select id="gender" required>
+        <option value="Not specified">Not specified</option>
+        <option value="Female">Female</option>
+        <option value="Male">Male</option>
+      </select>
+
+      <label for="weight">Weight (Kg): <span id="weightValue">50</span></label>
+      <input type="range" id="weight" min="10" max="120" value="50" oninput="document.getElementById('weightValue').textContent = this.value">
+
+      <label for="age">Age (years): <span id="ageValue">20</span></label>
+      <input type="range" id="age" min="10" max="100" value="20" oninput="document.getElementById('ageValue').textContent = this.value">
+
+      <label for="experience">Experience Level</label>
+      <select id="experience" required>
+        <option value="Minor">Minor</option>
+        <option value="Advanced">Advanced</option>
+      </select>
+
+      <label for="vehicleName">Vehicle Name</label>
+      <input type="text" id="vehicleName" placeholder="Enter your vehicle name" required>
+
+      <label for="vehicleType">Vehicle Type</label>
+      <select id="vehicleType" required>
+        <option value="Scooter">Scooter</option>
+        <option value="Bicycle">Bicycle</option>
+      </select>
+	  
+	   <label for="vehicleClass">Vehicle Class</label>
+      <select id="vehicleClass" required>
+        <option value="Average">Average</option>
+        <option value="High Class">High Class</option>
+      </select>
+
+      <label for="scooterAge">Manufacture Year: <span id="scooterAgeValue">2020</span></label>
+      <input type="range" id="scooterAge" min="2000" max="2024" value="2020" oninput="document.getElementById('scooterAgeValue').textContent = this.value">
+
+      <button type="button" id="saveProfile">Save Profile</button>
+    </form>
+  </div>
+
+  <div id="profileDetails"></div>
+
+  <script>
+      // Set the max value of the vehicle year slider to the current year
+  document.getElementById("scooterAge").max = new Date().getFullYear();
+// Firebase Config
+const firebaseConfig = {
+  apiKey: "AIzaSyAHcG2EV_Izlr8gKlIVu1sxKZGcBk814jg",
+  authDomain: "mylittle-61b8f.firebaseapp.com",
+  projectId: "mylittle-61b8f",
+  storageBucket: "mylittle-61b8f.firebasestorage.app",
+  messagingSenderId: "115858560969",
+  appId: "1:115858560969:web:b6fb967e4f3d622ac3ba18"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// Reference to elements
+const loginButton = document.getElementById("loginButton");
+const logoutButton = document.getElementById("logoutButton");
+const profileFormContainer = document.getElementById("profileFormContainer");
+const profileDropdownContainer = document.getElementById("profileDropdownContainer");
+const profileSelector = document.getElementById("profileSelector");
+const loginStatus = document.getElementById("loginStatus");
+// Reference to the delete profile button in HTML
+const deleteProfileButton = document.getElementById("deleteProfileButton");
+
+// Google Sign-In provider
+const googleProvider = new firebase.auth.GoogleAuthProvider();
+
+/// Load profiles from Firestore
+async function loadUserProfiles(uid) {
+  const snapshot = await db.collection("users").doc(uid).collection("profiles").get();
+  
+  const profiles = [];
+  snapshot.forEach(doc => {
+    profiles.push(doc.data());  // Store the profile data
+  });
+
+  return profiles;  // Return the list of profiles
+}
+
+// Populate dropdown with profiles
+function populateProfileDropdown(profiles) {
+  profileSelector.innerHTML = '<option value="new">Create New Profile</option>';
+  
+  profiles.forEach(profile => {
+    const option = document.createElement("option");
+    option.value = profile.profileName;
+    option.textContent = profile.profileName;
+    profileSelector.appendChild(option);
+  });
+}
+
+// Login Button Event Listener
+loginButton.addEventListener("click", async () => {
+  try {
+    // Start the login flow with redirect
+    await auth.signInWithRedirect(googleProvider);
+    // Note: No immediate user result here; we handle this later when the page loads.
+
+    loginStatus.textContent = "Redirecting to login..."; // Optional status update for users
+    sendHeightToThunkable(); // Send height adjustment for Thunkable
+  } catch (error) {
+    console.error("Login redirect error:", error.message);
+  }
+});
+
+// Handle Login Result After Redirect
+firebase.auth().getRedirectResult().then(async (result) => {
+  if (result.user) {
+    const user = result.user;
+
+    loginStatus.textContent = `Logged in as: ${user.displayName}`;
+    loginButton.classList.add("hidden");
+    logoutButton.classList.remove("hidden");
+
+    profileFormContainer.classList.remove("hidden");
+    profileDropdownContainer.classList.remove("hidden");
+
+    // Load user's profiles and populate the dropdown
+    const profiles = await loadUserProfiles(user.uid);
+    populateProfileDropdown(profiles);
+
+    sendHeightToThunkable(); // Ensure height adjustment is sent to Thunkable
+  }
+}).catch((error) => {
+  console.error("Error getting redirect result:", error.message);
+});
+
+// Logout Button Event Listener
+logoutButton.addEventListener("click", async () => {
+  try {
+    await auth.signOut();
+    loginButton.classList.remove("hidden");
+    logoutButton.classList.add("hidden");
+    profileFormContainer.classList.add("hidden");
+    profileDropdownContainer.classList.add("hidden");
+    loginStatus.textContent = "Not logged in.";
+    document.getElementById("profileDetails").innerHTML = "";
+  } catch (error) {
+    console.error("Logout error:", error.message);
+  }
+
+    });
+
+// Populate dropdown with profiles
+function populateProfileDropdown(profiles) {
+  // Clear current options
+  profileSelector.innerHTML = '<option value="new">Create New Profile</option>';
+  
+  // Add profiles to dropdown
+  profiles.forEach(profile => {
+    const option = document.createElement("option");
+    option.value = profile.profileName;
+    option.textContent = profile.profileName;
+    profileSelector.appendChild(option);
+  });
+}
+
+// Save profile to Firestore
+async function saveProfileData(uid, profileName, profileData) {
+  const existingProfile = await checkIfProfileExists(uid, profileName);
+  
+  if (existingProfile) {
+    // Update the profile
+    await db.collection("users").doc(uid).collection("profiles").doc(existingProfile.id).set(profileData);
+    console.log("Profile updated successfully!");
+  } else {
+    // Create new profile
+    await db.collection("users").doc(uid).collection("profiles").add(profileData);
+    console.log("Profile saved successfully!");
+  }
+}
+
+// Check if profile already exists (if yes, get it for update)
+async function checkIfProfileExists(uid, profileName) {
+  const snapshot = await db.collection("users").doc(uid).collection("profiles").where("profileName", "==", profileName).get();
+  return snapshot.empty ? null : snapshot.docs[0]; // Return null if not found
+}
+
+// Handle profile selection and display form with data
+profileSelector.addEventListener("change", async function () {
+  const selectedProfile = profileSelector.value;
+  const user = firebase.auth().currentUser;
+  
+  let profileData = {}; // Initialize the profileData object here
+
+  if (selectedProfile === "new") {
+    // Show empty form for new profile
+    resetProfileForm();
+  } else {
+    // Load selected profile and pre-fill form
+    const profile = await loadUserProfileByName(user.uid, selectedProfile);
+
+    // Debugging: Log the profile object to check its contents
+    console.log("Loaded profile:", profile);
+
+    if (profile) {
+      populateFormWithProfileData(profile);
+	  // Show the delete button if a profile is selected
+      deleteProfileButton.classList.remove("hidden");
+
+      // Prepare the profile data to send to Thunkable (or parent window)
+      profileData = {  
+        name: profile.profileName,
+        gender: profile.gender,
+        weight: profile.weight,
+        age: profile.age,
+        experience: profile.experience,
+        vehicleName: profile.vehicleName,
+        vehicleType: profile.vehicleType,
+		vehicleClass: profile.vehicleClass,
+		scooterAge: profile.scooterAge
+      };
+
+      // Console log profileData to check its content before sending
+      console.log("Profile data being sent to Thunkable:", JSON.stringify(profileData));
+    } else {
+      console.log("No profile found for the selected user.");
+    }
+  }
+
+  // Send the data to Thunkable if the profile data is populated
+  if (profileData && Object.keys(profileData).length > 0) {
+    if (window.ReactNativeWebView) {
+      window.ReactNativeWebView.postMessage(JSON.stringify(profileData));  // Send data to React Native WebView
+    } else if (window.parent) {
+      window.parent.postMessage(JSON.stringify(profileData), "*");  // Send data to parent window
+    }
+  } else {
+    console.log("Profile data is empty, nothing to send to Thunkable.");
+  }
+});
+
+// Event listener for delete profile button
+deleteProfileButton.addEventListener("click", async function () {
+  const selectedProfile = profileSelector.value;
+  const user = firebase.auth().currentUser;
+
+  if (!selectedProfile || selectedProfile === "new") {
+    alert("Please select a profile to delete.");
+    return;
+  }
+
+  try {
+    // Delete profile from Firestore
+    const profile = await loadUserProfileByName(user.uid, selectedProfile);
+    if (profile) {
+      // Delete the selected profile from Firestore
+      await deleteUserProfile(user.uid, selectedProfile);
+      alert("Profile deleted successfully!");
+
+      // Update UI (Remove deleted profile from selector and reset form)
+      profileSelector.removeChild(profileSelector.querySelector(`option[value='${selectedProfile}']`));
+      resetProfileForm();
+      deleteProfileButton.classList.add("hidden"); // Hide delete button after deletion
+    } else {
+      alert("Profile not found.");
+    }
+  } catch (error) {
+    console.error("Error deleting profile:", error.message);
+    alert("Error deleting profile.");
+  }
+});
+
+// Function to delete a profile from Firestore
+async function deleteUserProfile(userId, profileName) {
+  const profilesCollectionRef = firebase.firestore().collection('users').doc(userId).collection('profiles');
+  
+  // Query for the profile by name
+  const profileSnapshot = await profilesCollectionRef.where('profileName', '==', profileName).get();
+  
+  if (!profileSnapshot.empty) {
+    const profileDocId = profileSnapshot.docs[0].id;  // Get the document ID of the profile
+    await profilesCollectionRef.doc(profileDocId).delete();  // Delete the profile
+    console.log(`Profile "${profileName}" deleted successfully`);
+  } else {
+    console.log("Profile not found in Firestore");
+  }
+}
+
+// Function to reset the profile form (implementation as before)
+function resetProfileForm() {
+  document.getElementById("profileForm").reset();
+}
+
+// Function to populate the form with profile data (implementation as before)
+function populateFormWithProfileData(profile) {
+  document.getElementById("profileName").value = profile.profileName || "";
+  document.getElementById("gender").value = profile.gender || "";
+  document.getElementById("weight").value = profile.weight || "";
+  document.getElementById("age").value = profile.age || "";
+  document.getElementById("experience").value = profile.experience || "";
+  document.getElementById("vehicleName").value = profile.vehicleName || "";
+  document.getElementById("vehicleType").value = profile.vehicleType || "";
+  document.getElementById("vehicleClass").value = profile.vehicleClass || "";
+}
+
+// Function to load a user profile by its name from Firestore (assuming you've written this method)
+async function loadUserProfileByName(userId, profileName) {
+  try {
+    const profileDoc = await firebase.firestore()
+      .collection('users')
+      .doc(userId)
+      .collection('profiles')
+      .where("profileName", "==", profileName)
+      .get();
+    
+    if (!profileDoc.empty) {
+      // Assumes only one profile will be returned
+      const profile = profileDoc.docs[0].data();
+      return profile;
+    } else {
+      console.log("Profile not found");
+      return {};
+    }
+  } catch (error) {
+    console.error("Error loading profile:", error.message);
+    return {};
+  }
+}
+
+// Pre-populate the form with the selected profile data
+function populateFormWithProfileData(profile) {
+  document.getElementById("profileName").value = profile.profileName;
+  document.getElementById("gender").value = profile.gender;
+  document.getElementById("weight").value = profile.weight;
+  document.getElementById("age").value = profile.age;
+  document.getElementById("experience").value = profile.experience;
+  document.getElementById("vehicleName").value = profile.vehicleName;
+  document.getElementById("vehicleType").value = profile.vehicleType;
+  document.getElementById("vehicleClass").value = profile.vehicleClass;
+  document.getElementById("scooterAge").value = profile.scooterAge;
+
+  document.getElementById("weightValue").textContent = profile.weight;
+  document.getElementById("ageValue").textContent = profile.age;
+  document.getElementById("scooterAgeValue").textContent = profile.scooterAge;
+}
+
+// Reset the form to empty fields
+function resetProfileForm() {
+  document.getElementById("profileForm").reset();
+  document.getElementById("weightValue").textContent = "50";
+  document.getElementById("ageValue").textContent = "20";
+  document.getElementById("scooterAgeValue").textContent = "2020";
+}
+
+// Save Profile Button Click Handler
+document.getElementById("saveProfile").addEventListener("click", async function () {
+  const user = firebase.auth().currentUser;
+  const profileName = document.getElementById("profileName").value.trim();
+  const gender = document.getElementById("gender").value;
+  const weight = document.getElementById("weight").value;
+  const age = document.getElementById("age").value;
+  const experience = document.getElementById("experience").value;
+  const vehicleName = document.getElementById("vehicleName").value.trim();
+  const vehicleType = document.getElementById("vehicleType").value;
+  const vehicleClass = document.getElementById("vehicleClass").value;
+  const scooterAge = document.getElementById("scooterAge").value;
+
+  // Validate form input
+  if (!profileName || !vehicleName) {
+    alert("Please fill out all required fields.");
+    return;
+  }
+
+  const profileData = {
+    profileName,
+    gender,
+    weight,
+    age,
+    experience,
+    vehicleName,
+	vehicleType,
+    vehicleClass,
+    scooterAge,
+  };
+
+  await saveProfileData(user.uid, profileName, profileData);
+  alert(`Profile "${profileName}" saved successfully!`);
+  resetProfileForm();
+  // Console log profile before sending
+  console.log("Profile data being sent to Thunkable:NEW");
+  console.log("Profile data being sent to Thunkable:", JSON.stringify(profileData));
+// Send the data to Thunkable
+      if (window.ReactNativeWebView) {
+        window.ReactNativeWebView.postMessage(JSON.stringify(profileData));
+      } else if (window.parent) {
+        window.parent.postMessage(JSON.stringify(profileData), "*");
+      }
+});
+
+function sendHeightToThunkable() {
+  const height = document.body.scrollHeight; // Get the full document height
+  console.log("height send:", { myheight: height });
+
+  // Send the height to Thunkable
+  if (window.ReactNativeWebView) {
+    window.ReactNativeWebView.postMessage(JSON.stringify({ myheight: height }));
+  } else if (window.parent) {
+    window.parent.postMessage(JSON.stringify({ myheight: height }), "*");
+  }
+}
+
+// Call this function whenever the layout changes
+function adjustLayout() {
+  //sendHeightToThunkable();
+}
+
+// Example: Triggering height updates after login or form display
+document.addEventListener("DOMContentLoaded", function () {
+  //sendHeightToThunkable(); // Initial height
+
+  // Adjust after login completes
+  firebase.auth().onAuthStateChanged(function (user) {
+    if (user) {
+      console.log("User logged in");
+      setTimeout(adjustLayout, 100); // Allow some time for rendering before sending the height
+    }else {
+      console.log("User logged out or not logged in");
+    }
+  });
+
+  // Adjust after form population
+  const profileSelector = document.getElementById("profileSelector");
+  profileSelector.addEventListener("change", function () {
+    setTimeout(adjustLayout, 100); // Allow form to expand before sending the height
+  });
+});
+
+
+
+
+
+  </script>
+</body>
+</html>
