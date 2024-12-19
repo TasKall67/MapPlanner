@@ -105,7 +105,13 @@
       <label for="vehicleName">Vehicle Name</label>
       <input type="text" id="vehicleName" placeholder="Enter your vehicle name" required>
 
-      <label for="vehicleClass">Vehicle Class</label>
+      <label for="vehicleType">Vehicle Type</label>
+      <select id="vehicleType" required>
+        <option value="Scooter">Scooter</option>
+        <option value="Bicycle">Bicycle</option>
+      </select>
+	  
+	   <label for="vehicleClass">Vehicle Class</label>
       <select id="vehicleClass" required>
         <option value="Average">Average</option>
         <option value="High Class">High Class</option>
@@ -279,7 +285,8 @@ profileSelector.addEventListener("change", async function () {
         age: profile.age,
         experience: profile.experience,
         vehicleName: profile.vehicleName,
-        vehicleClass: profile.vehicleClass,
+        vehicleType: profile.vehicleType,
+		vehicleClass: profile.vehicleClass,
 		scooterAge: profile.scooterAge
       };
 
@@ -362,6 +369,7 @@ function populateFormWithProfileData(profile) {
   document.getElementById("age").value = profile.age || "";
   document.getElementById("experience").value = profile.experience || "";
   document.getElementById("vehicleName").value = profile.vehicleName || "";
+  document.getElementById("vehicleType").value = profile.vehicleType || "";
   document.getElementById("vehicleClass").value = profile.vehicleClass || "";
 }
 
@@ -397,6 +405,7 @@ function populateFormWithProfileData(profile) {
   document.getElementById("age").value = profile.age;
   document.getElementById("experience").value = profile.experience;
   document.getElementById("vehicleName").value = profile.vehicleName;
+  document.getElementById("vehicleType").value = profile.vehicleType;
   document.getElementById("vehicleClass").value = profile.vehicleClass;
   document.getElementById("scooterAge").value = profile.scooterAge;
 
@@ -422,6 +431,7 @@ document.getElementById("saveProfile").addEventListener("click", async function 
   const age = document.getElementById("age").value;
   const experience = document.getElementById("experience").value;
   const vehicleName = document.getElementById("vehicleName").value.trim();
+  const vehicleType = document.getElementById("vehicleType").value;
   const vehicleClass = document.getElementById("vehicleClass").value;
   const scooterAge = document.getElementById("scooterAge").value;
 
@@ -438,6 +448,7 @@ document.getElementById("saveProfile").addEventListener("click", async function 
     age,
     experience,
     vehicleName,
+	vehicleType
     vehicleClass,
     scooterAge,
   };
