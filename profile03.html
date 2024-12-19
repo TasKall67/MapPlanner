@@ -469,12 +469,12 @@ function sendHeightToThunkable() {
 
 // Call this function whenever the layout changes
 function adjustLayout() {
-  sendHeightToThunkable();
+  //sendHeightToThunkable();
 }
 
 // Example: Triggering height updates after login or form display
 document.addEventListener("DOMContentLoaded", function () {
-  sendHeightToThunkable(); // Initial height
+  //sendHeightToThunkable(); // Initial height
 
   // Adjust after login completes
   firebase.auth().onAuthStateChanged(function (user) {
